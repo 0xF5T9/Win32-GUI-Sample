@@ -1,5 +1,5 @@
 # Win32 GUI Sample
-Win32 GUI Example | ...
+Win32 GUI Example
 
 Compiler: Visual Studio 2022+ (C++17)
 
