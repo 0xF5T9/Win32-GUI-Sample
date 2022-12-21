@@ -1,3 +1,7 @@
+/*
+	Win32 GUI Sample
+*/
+
 #include "./Headers/func.h"
 
 int WINAPI wWinMain(
