@@ -103,11 +103,11 @@ namespace mSol
 	}
 
 	// Quick-create winapi font object
-	HFONT CreateHFONT(std::wstring fName, int fSize)
+	HFONT CreateHFONT(std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
 	{
 		HFONT ret_hFONT = CreateFontW(fSize, 0, 0, 0x1,
-			FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
-			OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+			fWeight, FALSE, FALSE, FALSE, ANSI_CHARSET,
+			OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, fQuality,
 			DEFAULT_PITCH | FF_DONTCARE, (LPCWSTR)fName.c_str());
 
 		return ret_hFONT;
@@ -286,28 +286,13 @@ namespace mApp
 	/* Set & Update application theme */
 	void SetAppTheme(std::wstring Theme = L"Light", bool OnInit = 0)
 	{
-		// Release objects and clear vectors
+		// Release old brushes objects
 		if (!OnInit)
 		{
-			for (auto& x : Vector_StaticObjects_Brushes) DeleteObject(x); // Static objects
-			for (auto& x : Vector_MainObjects_Brushes) DeleteObject(x); // Main objects
-
-			// Subclass objects
-			DeleteObject(NS_BA_Main::hBrush_Background);
-			DeleteObject(NS_BA_Main::hBrush_Background_H);
-			DeleteObject(NS_BA_Main::hBrush_Background_H_Close);
-			DeleteObject(NS_BA_Main::hBrush_Background_H_Minimize);
-			DeleteObject(NS_BA_Main::hBrush_Background_F);
-			DeleteObject(NS_BA_Main::hBrush_Background_S);
-
-			// Icon objects
-			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(x);
-
-			// Clear vectors as original elements has become invalid
-			Vector_StaticObjects_Brushes.clear();
-			Vector_MainObjects_Brushes.clear();
-			Vector_MainObjects_Icons.clear();
-			HoverMap_1.clear();
+			for (auto& x : Vector_StaticObjects_Brushes) DeleteObject(*x); // Static brush objects
+			for (auto& x : Vector_MainObjects_Brushes) DeleteObject(*x); // Main brush objects
+			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(*x);	// Icon objects
+			for (auto& x : Vector_Subclasses_BAMain_Brushes) DeleteObject(*x); // Subclass objects
 		}
 
 		// Update COLORREFs, HBRUSHs
@@ -342,14 +327,6 @@ namespace mApp
 			NS_BA_Main::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
 
 			// ICON HANDLE
-			/*
-			hIcon_Close = (HICON)LoadImageW(NULL, L"./Assets/cross_black.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Close_NF = (HICON)LoadImageW(NULL, L"./Assets/cross_grey.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Close_H = (HICON)LoadImageW(NULL, L"./Assets/cross_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize = (HICON)LoadImageW(NULL, L"./Assets/minus_black.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize_NF = (HICON)LoadImageW(NULL, L"./Assets/minus_grey.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize_H = (HICON)LoadImageW(NULL, L"./Assets/minus_black.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			*/
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON1), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Close_NF = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON2), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Close_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -391,14 +368,6 @@ namespace mApp
 			NS_BA_Main::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
 
 			// ICON HANDLE
-			/*
-			hIcon_Close = (HICON)LoadImageW(NULL, L"./Assets/cross_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Close_NF = (HICON)LoadImageW(NULL, L"./Assets/cross_grey.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Close_H = (HICON)LoadImageW(NULL, L"./Assets/cross_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize = (HICON)LoadImageW(NULL, L"./Assets/minus_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize_NF = (HICON)LoadImageW(NULL, L"./Assets/minus_grey.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize_H = (HICON)LoadImageW(NULL, L"./Assets/minus_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			*/
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Close_NF = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON2), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Close_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -440,14 +409,6 @@ namespace mApp
 			NS_BA_Main::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
 
 			// ICON HANDLE
-			/*
-			hIcon_Close = (HICON)LoadImageW(NULL, L"./Assets/cross_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Close_NF = (HICON)LoadImageW(NULL, L"./Assets/cross_grey.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Close_H = (HICON)LoadImageW(NULL, L"./Assets/cross_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize = (HICON)LoadImageW(NULL, L"./Assets/minus_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize_NF = (HICON)LoadImageW(NULL, L"./Assets/minus_grey.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			hIcon_Minimize_H = (HICON)LoadImageW(NULL, L"./Assets/minus_white.ico", IMAGE_ICON, 20, 20, LR_LOADFROMFILE);
-			*/
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Close_NF = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON2), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Close_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -457,24 +418,6 @@ namespace mApp
 
 			APPLICATION_THEME = L"Dark_Obisidan"; // Update theme status
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
-		}
-
-		// Update vectors
-		if (!OnInit)
-		{
-			Vector_StaticObjects_Brushes.push_back(hBrush_DEBUG);
-			Vector_MainObjects_Brushes.push_back(hBrush_Primary);
-			Vector_MainObjects_Brushes.push_back(hBrush_Secondary);
-			Vector_MainObjects_Brushes.push_back(hBrush_BorderActive);
-			Vector_MainObjects_Brushes.push_back(hBrush_BorderInactive);
-			Vector_MainObjects_Icons.push_back(hIcon_Close);
-			Vector_MainObjects_Icons.push_back(hIcon_Close_NF);
-			Vector_MainObjects_Icons.push_back(hIcon_Close_H);
-			Vector_MainObjects_Icons.push_back(hIcon_Minimize);
-			Vector_MainObjects_Icons.push_back(hIcon_Minimize_NF);
-			Vector_MainObjects_Icons.push_back(hIcon_Minimize_H);
-			HoverMap_1.insert(std::make_pair(std::make_pair(BTN_Close, hIcon_Close), std::make_pair(hIcon_Close_H, hIcon_Close_NF)));
-			HoverMap_1.insert(std::make_pair(std::make_pair(BTN_Minimize, hIcon_Minimize), std::make_pair(hIcon_Minimize_H, hIcon_Minimize_NF)));
 		}
 
 		// Redraw application window
@@ -524,26 +467,26 @@ namespace mApp
 		BTN_Close = CreateWindowExW(NULL, L"BUTTON", L"",
 			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 36, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
 		SetWindowSubclass(BTN_Close, &SC_BA_Main, NULL, NULL);
-		Vector_Subclasses.push_back(BTN_Close);
+		Vector_Subclasses.push_back(&BTN_Close);
 
 		// Minimize button
 		BTN_Minimize = CreateWindowExW(NULL, L"BUTTON", L"",
 			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 36, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
 		SetWindowSubclass(BTN_Minimize, &SC_BA_Main, NULL, NULL);
-		Vector_Subclasses.push_back(BTN_Minimize);
+		Vector_Subclasses.push_back(&BTN_Minimize);
 
 		// Window title
 		WCHAR* TextBuffer_AppTitle = new WCHAR[(UINT64)GetWindowTextLengthW(hWnd) + (UINT64)1];
 		GetWindowTextW(hWnd, TextBuffer_AppTitle, GetWindowTextLengthW(hWnd) + 1);
 		SS_Title = CreateWindowW(L"STATIC", TextBuffer_AppTitle,
-			WS_CHILD | SS_NOPREFIX | SS_LEFT, 13, 6, 300, 31, hWnd, NULL, NULL, NULL);
+			WS_CHILD | SS_NOPREFIX | SS_LEFT, 13, 7, 300, 28, hWnd, NULL, NULL, NULL);
 		delete[] TextBuffer_AppTitle;
 
 		// Main content container (view port: borders & caption areas excluded)
 		SS_MAINCONTENTCTR = CreateWindowExW(NULL, L"STATIC", L"", WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, CAPTIONBAR_HEIGHT,
 			0, 0, hWnd, NULL, NULL, NULL);
 		SetWindowSubclass(SS_MAINCONTENTCTR, &WindowProcedure_MainContentCTR, NULL, NULL);
-		Vector_Subclasses.push_back(SS_MAINCONTENTCTR);
+		Vector_Subclasses.push_back(&SS_MAINCONTENTCTR);
 
 		// Main content container's scrollbar
 		SB_MAINCONTENTCTR = mSol::CreateVerticalSB(hWnd, STD_SCROLLBAR_WIDTH, CAPTIONBAR_HEIGHT);
@@ -582,32 +525,48 @@ namespace mApp
 	bool InitEnd(HWND hWnd)
 	{
 		// Create and apply fonts to controls
-		hFont_Title = mSol::CreateHFONT(L"Segoe UI Light", 27);
+		hFont_Title = mSol::CreateHFONT(L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
 		SendMessageW(SS_Title, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 		SendMessageW(SS_Test1, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 		SendMessageW(BTN_Test1, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 
-		// Update vectors
-		Vector_StaticObjects_Brushes.push_back(hBrush_DEBUG);
+		// Update vectors:
+		{
+			// Static objects (DEBUG)
+			Vector_StaticObjects_Brushes.push_back(&hBrush_DEBUG);
+		}
 
-		Vector_MainObjects_Brushes.push_back(hBrush_Primary);
-		Vector_MainObjects_Brushes.push_back(hBrush_Secondary);
-		Vector_MainObjects_Brushes.push_back(hBrush_BorderActive);
-		Vector_MainObjects_Brushes.push_back(hBrush_BorderInactive);
+		{
+			// Main objects
+			Vector_MainObjects_Brushes.push_back(&hBrush_Primary);
+			Vector_MainObjects_Brushes.push_back(&hBrush_Secondary);
+			Vector_MainObjects_Brushes.push_back(&hBrush_BorderActive);
+			Vector_MainObjects_Brushes.push_back(&hBrush_BorderInactive);
 
-		Vector_MainObjects_Icons.push_back(hIcon_Close);
-		Vector_MainObjects_Icons.push_back(hIcon_Close_NF);
-		Vector_MainObjects_Icons.push_back(hIcon_Close_H);
-		Vector_MainObjects_Icons.push_back(hIcon_Minimize);
-		Vector_MainObjects_Icons.push_back(hIcon_Minimize_NF);
-		Vector_MainObjects_Icons.push_back(hIcon_Minimize_H);
+			Vector_MainObjects_Icons.push_back(&hIcon_Close);
+			Vector_MainObjects_Icons.push_back(&hIcon_Close_NF);
+			Vector_MainObjects_Icons.push_back(&hIcon_Close_H);
+			Vector_MainObjects_Icons.push_back(&hIcon_Minimize);
+			Vector_MainObjects_Icons.push_back(&hIcon_Minimize_NF);
+			Vector_MainObjects_Icons.push_back(&hIcon_Minimize_H);
 
-		Vector_MainObjects_Fonts.push_back(hFont_Default);
-		Vector_MainObjects_Fonts.push_back(hFont_Title);
+			Vector_MainObjects_Fonts.push_back(&hFont_Default);
+			Vector_MainObjects_Fonts.push_back(&hFont_Title);
+		}
+
+		{
+			// Subclass objects
+			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background);
+			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_H);
+			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_H_Close);
+			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_H_Minimize);
+			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_F);
+			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_S);
+		}
 
 		// Update maps
-		HoverMap_1.insert(std::make_pair(std::make_pair(BTN_Close, hIcon_Close), std::make_pair(hIcon_Close_H, hIcon_Close_NF)));
-		HoverMap_1.insert(std::make_pair(std::make_pair(BTN_Minimize, hIcon_Minimize), std::make_pair(hIcon_Minimize_H, hIcon_Minimize_NF)));
+		HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Close, &hIcon_Close), std::make_pair(&hIcon_Close_H, &hIcon_Close_NF)));
+		HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Minimize, &hIcon_Minimize), std::make_pair(&hIcon_Minimize_H, &hIcon_Minimize_NF)));
 
 		return true;
 	}
@@ -645,7 +604,7 @@ namespace mApp
 		- Release objects
 		- Uninitialize APIs
 	*/
-	void OnDestroy(bool Debug = 0)
+	void OnDestroy(bool Debug = 1)
 	{
 		if (Debug)
 		{
@@ -653,40 +612,40 @@ namespace mApp
 
 			// Release static objects
 			for (auto& x : Vector_StaticObjects_Brushes)
-				if (DeleteObject(x)) c++;
+				if (DeleteObject(*x)) c++;
 			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" static objects").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
 			c = 0;
 
 			// Release main objects
 			for (auto& x : Vector_MainObjects_Brushes)
-				if (DeleteObject(x)) c++;
+				if (DeleteObject(*x)) c++;
 			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (brushes)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
 			c = 0;
 			for (auto& x : Vector_MainObjects_Fonts)
-				if (DeleteObject(x)) c++;
+				if (DeleteObject(*x)) c++;
 			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (fonts)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
 			c = 0;
 			for (auto& x : Vector_MainObjects_Icons)
-				if (DestroyIcon(x)) c++;
+				if (DestroyIcon(*x)) c++;
 			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (icons)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
 			c = 0;
 
 			// Release subclass objects
 			for (auto& x : Vector_Subclasses)
-				if (DestroyWindow(x)) c++;
+				if (DestroyWindow(*x)) c++;
 			MessageBoxW(NULL, (L"Destroyed " + std::to_wstring(c) + L" subclasses").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
 			c = 0;
 		}
 		else
 		{
 			// Release static objects
-			for (auto& x : Vector_StaticObjects_Brushes) DeleteObject(x);
+			for (auto& x : Vector_StaticObjects_Brushes) DeleteObject(*x);
 			// Release main objects
-			for (auto& x : Vector_MainObjects_Brushes) DeleteObject(x);
-			for (auto& x : Vector_MainObjects_Fonts) DeleteObject(x);
-			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(x);
+			for (auto& x : Vector_MainObjects_Brushes) DeleteObject(*x);
+			for (auto& x : Vector_MainObjects_Fonts) DeleteObject(*x);
+			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(*x);
 			// Release subclass objects
-			for (auto& x : Vector_Subclasses) DestroyWindow(x);
+			for (auto& x : Vector_Subclasses) DestroyWindow(*x);
 		}
 
 		mSol::UnInitAPI();

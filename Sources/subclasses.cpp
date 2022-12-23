@@ -57,11 +57,11 @@ namespace NS_BA_Main
 		static HICON hIcon, hIcon_H, hIcon_NF;
 		for (const auto& x : HoverMap_1)
 		{
-			if (x.first.first == hWnd)
+			if (*x.first.first == hWnd)
 			{
-				hIcon = x.first.second;
-				hIcon_H = x.second.first;
-				hIcon_NF = x.second.second;
+				hIcon = *x.first.second;
+				hIcon_H = *x.second.first;
+				hIcon_NF = *x.second.second;
 				if (GetActiveWindow() != MAIN_HWND) hIcon = hIcon_NF;
 				break;
 			}
@@ -94,11 +94,11 @@ namespace NS_BA_Main
 		static HICON hIcon, hIcon_H, hIcon_NF;
 		for (const auto& x : HoverMap_1)
 		{
-			if (x.first.first == hWnd)
+			if (*x.first.first == hWnd)
 			{
-				hIcon = x.first.second;
-				hIcon_H = x.second.first;
-				hIcon_NF = x.second.second;
+				hIcon = *x.first.second;
+				hIcon_H = *x.second.first;
+				hIcon_NF = *x.second.second;
 				if (GetActiveWindow() != MAIN_HWND) hIcon = hIcon_NF;
 				break;
 			}

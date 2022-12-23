@@ -46,13 +46,14 @@ hBrush_Primary, hBrush_Secondary, hBrush_BorderActive, hBrush_BorderInactive;
 HFONT hFont_Default, hFont_Title;
 
 // VECTORS (Manage objects for memory deallocation or visibility of control handles)
-vector<HBRUSH> Vector_MainObjects_Brushes;
-vector<HFONT> Vector_MainObjects_Fonts;
-vector<HICON> Vector_MainObjects_Icons;
-vector<HBRUSH> Vector_StaticObjects_Brushes;
-vector<HWND> Vector_Subclasses;
+vector<HBRUSH*> Vector_MainObjects_Brushes;
+vector<HFONT*> Vector_MainObjects_Fonts;
+vector<HICON*> Vector_MainObjects_Icons;
+vector<HBRUSH*> Vector_StaticObjects_Brushes;
+vector<HBRUSH*> Vector_Subclasses_BAMain_Brushes;
+vector<HWND*> Vector_Subclasses;
 vector<HWND*> Vector_MAINCONTENTCTR;
 
 // ICONS & BITMAPS HANDLES
-map<std::pair<HWND, HICON>, std::pair<HICON, HICON>> HoverMap_1;
+map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 HICON hIcon_Close, hIcon_Close_NF, hIcon_Close_H, hIcon_Minimize, hIcon_Minimize_NF, hIcon_Minimize_H;

@@ -26,7 +26,7 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
-	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, L"Win32GUISample", L"Window title", WS_MYSTYLE,
+	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, L"Win32GUISample", L"Win32 GUI Sample", WS_MYSTYLE,
 		300, 350, APPLICATION_WIDTH, APPLICATION_HEIGHT,
 		NULL, NULL, hInstance, NULL);
 	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), NULL, LWA_COLORKEY);
