@@ -604,7 +604,7 @@ namespace mApp
 		- Release objects
 		- Uninitialize APIs
 	*/
-	void OnDestroy(bool Debug = 1)
+	void OnDestroy(bool Debug = 0)
 	{
 		if (Debug)
 		{
