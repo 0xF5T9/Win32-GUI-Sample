@@ -44,10 +44,10 @@ extern std::vector<HBRUSH*> Vector_MainObjects_Brushes;
 extern std::vector<HFONT*> Vector_MainObjects_Fonts;
 extern std::vector<HICON*> Vector_MainObjects_Icons;
 extern std::vector<HBRUSH*> Vector_StaticObjects_Brushes;
-extern std::vector<HBRUSH*> Vector_Subclasses_BAMain_Brushes;
 extern std::vector<HWND*> Vector_Subclasses;
 extern std::vector<HWND*> Vector_MAINCONTENTCTR;
+extern std::vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;
+extern std::map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 
 // ICONS & BITMAPS HANDLES
-extern std::map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 extern HICON hIcon_Close, hIcon_Close_NF, hIcon_Close_H, hIcon_Minimize, hIcon_Minimize_NF, hIcon_Minimize_H;

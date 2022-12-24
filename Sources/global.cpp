@@ -45,15 +45,15 @@ HBRUSH hBrush_CTLCOLORSTATIC, hBrush_CTLCOLORBTN, hBrush_CURBORDER, hBrush_DEBUG
 hBrush_Primary, hBrush_Secondary, hBrush_BorderActive, hBrush_BorderInactive;
 HFONT hFont_Default, hFont_Title;
 
-// VECTORS (Manage objects for memory deallocation or visibility of control handles)
-vector<HBRUSH*> Vector_MainObjects_Brushes;
-vector<HFONT*> Vector_MainObjects_Fonts;
-vector<HICON*> Vector_MainObjects_Icons;
-vector<HBRUSH*> Vector_StaticObjects_Brushes;
-vector<HBRUSH*> Vector_Subclasses_BAMain_Brushes;
-vector<HWND*> Vector_Subclasses;
-vector<HWND*> Vector_MAINCONTENTCTR;
+// VECTORS/MAPS (Manage objects for memory deallocation or visibility of control handles)
+vector<HBRUSH*> Vector_MainObjects_Brushes;				// Contains main application brush objects
+vector<HFONT*> Vector_MainObjects_Fonts;				// Contains main application font objects
+vector<HICON*> Vector_MainObjects_Icons;				// Contains main application icon objects
+vector<HBRUSH*> Vector_StaticObjects_Brushes;			// Contains static and debug objects
+vector<HWND*> Vector_Subclasses;						// Contains HWNDs that is subclassed
+vector<HWND*> Vector_MAINCONTENTCTR;					// Viewport container (Main content)
+vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;	// Contains "Caption bar button animation subclass" brush objects
+map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1; // "Caption bar button animation subclass" map
 
 // ICONS & BITMAPS HANDLES
-map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 HICON hIcon_Close, hIcon_Close_NF, hIcon_Close_H, hIcon_Minimize, hIcon_Minimize_NF, hIcon_Minimize_H;

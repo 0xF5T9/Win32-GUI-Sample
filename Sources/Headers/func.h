@@ -28,7 +28,7 @@
 using namespace Gdiplus;
 
 // Forward declaration variables from subclasses definition file
-namespace NS_BA_Main
+namespace NS_BA_CaptionBar
 {
 	extern HBRUSH hBrush_Background,
 		hBrush_Background_H,
@@ -103,14 +103,12 @@ namespace mSol
 	}
 
 	// Quick-create winapi font object
-	HFONT CreateHFONT(std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
+	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
 	{
-		HFONT ret_hFONT = CreateFontW(fSize, 0, 0, 0x1,
+		*hFontPtr = CreateFontW(fSize, 0, 0, 0x1,
 			fWeight, FALSE, FALSE, FALSE, ANSI_CHARSET,
 			OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, fQuality,
 			DEFAULT_PITCH | FF_DONTCARE, (LPCWSTR)fName.c_str());
-
-		return ret_hFONT;
 	}
 
 	// Draw GDI+ Round Rect
@@ -283,20 +281,20 @@ namespace mApp
 		}
 	}
 
-	/* Set & Update application theme */
+	/* Set & update application theme */
 	void SetAppTheme(std::wstring Theme = L"Light", bool OnInit = 0)
 	{
-		// Release old brushes objects
+		// Release current drawing objects (Brushes, icons, ..)
 		if (!OnInit)
 		{
 			for (auto& x : Vector_StaticObjects_Brushes) DeleteObject(*x); // Static brush objects
 			for (auto& x : Vector_MainObjects_Brushes) DeleteObject(*x); // Main brush objects
 			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(*x);	// Icon objects
-			for (auto& x : Vector_Subclasses_BAMain_Brushes) DeleteObject(*x); // Subclass objects
+			for (auto& x : Vector_Subclasses_BACaptionBar_Brushes) DeleteObject(*x); // Subclass objects
 		}
 
-		// Update COLORREFs, HBRUSHs
-		if (Theme == L"Light")
+		// Update new COLORREFs and other drawing objects
+		if (Theme == L"Light") // Light theme
 		{
 			// Static CLR
 			CLR_DEBUG = RGB(0, 0, 255);
@@ -319,12 +317,12 @@ namespace mApp
 			hBrush_BorderActive = CreateSolidBrush(CLR_BorderActive);
 			hBrush_BorderInactive = CreateSolidBrush(CLR_BorderInactive);
 			// Subclass HBR
-			NS_BA_Main::hBrush_Background = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
-			NS_BA_Main::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
-			NS_BA_Main::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
+			NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
+			NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON1), IMAGE_ICON, 20, 20, NULL);
@@ -337,7 +335,7 @@ namespace mApp
 			APPLICATION_THEME = L"Light"; // Update theme status
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
 		}
-		else if (Theme == L"Dark")
+		else if (Theme == L"Dark") // Dark theme
 		{
 			// Static CLR
 			CLR_DEBUG = RGB(0, 0, 255);
@@ -360,12 +358,12 @@ namespace mApp
 			hBrush_BorderActive = CreateSolidBrush(CLR_BorderActive);
 			hBrush_BorderInactive = CreateSolidBrush(CLR_BorderInactive);
 			// Subclass HBR
-			NS_BA_Main::hBrush_Background = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
-			NS_BA_Main::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
-			NS_BA_Main::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
+			NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
+			NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -378,7 +376,7 @@ namespace mApp
 			APPLICATION_THEME = L"Dark"; // Update theme status
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
 		}
-		else if (Theme == L"Dark_Obisidan")
+		else if (Theme == L"Dark_Obisidan") // Dark obisidan theme
 		{
 			// Static CLR
 			CLR_DEBUG = RGB(0, 0, 255);
@@ -401,12 +399,12 @@ namespace mApp
 			hBrush_BorderActive = CreateSolidBrush(CLR_BorderActive);
 			hBrush_BorderInactive = CreateSolidBrush(CLR_BorderInactive);
 			// Subclass HBR
-			NS_BA_Main::hBrush_Background = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
-			NS_BA_Main::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
-			NS_BA_Main::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
-			NS_BA_Main::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
+			NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
+			NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
+			NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -430,8 +428,8 @@ namespace mApp
 	}
 
 	/*
-		Stage 1 WM_CREATE:
-		- Init APIs
+		WM_CREATE (1/4):
+		- Init APIs (Dark mode, GDI buffered painting, GDI+)
 		- Extend frame into client area (For frame shadow effects)
 	*/
 	bool InitBegin(HWND hWnd)
@@ -446,8 +444,8 @@ namespace mApp
 	}
 
 	/*
-		Stage 2 WM_CREATE:
-		- Set application theme (Set colors, load assets, ..)
+		WM_CREATE (2/4):
+		- Set application theme (Set color parameters and create drawing objects)
 	*/
 	bool InitTheme(HWND hWnd)
 	{
@@ -458,8 +456,8 @@ namespace mApp
 	}
 
 	/*
-		Stage 3 WM_CREATE:
-		- Create child controls
+		WM_CREATE (3/4):
+		- Create application hwnd controls
 	*/
 	bool InitControl(HWND hWnd)
 	{
@@ -482,7 +480,7 @@ namespace mApp
 			WS_CHILD | SS_NOPREFIX | SS_LEFT, 13, 7, 300, 28, hWnd, NULL, NULL, NULL);
 		delete[] TextBuffer_AppTitle;
 
-		// Main content container (view port: borders & caption areas excluded)
+		// Main content container (borders & caption areas excluded)
 		SS_MAINCONTENTCTR = CreateWindowExW(NULL, L"STATIC", L"", WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, CAPTIONBAR_HEIGHT,
 			0, 0, hWnd, NULL, NULL, NULL);
 		SetWindowSubclass(SS_MAINCONTENTCTR, &WindowProcedure_MainContentCTR, NULL, NULL);
@@ -517,27 +515,27 @@ namespace mApp
 	}
 
 	/*
-		Stage 4 WM_CREATE
-		- Create font objects and apply to child controls
-		- Group objects, controls into vectors (Visibility control & Object deallocation)
+		WM_CREATE (4/4):
+		- Create font objects and apply to hwnd controls
+		- Group objects, hwnd controls into vectors (Visibility control & Object deallocation)
 		- Maping controls with asset objects for animations
 	*/
 	bool InitEnd(HWND hWnd)
 	{
 		// Create and apply fonts to controls
-		hFont_Title = mSol::CreateHFONT(L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
+		mSol::CreateHFONT(&hFont_Title, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
 		SendMessageW(SS_Title, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 		SendMessageW(SS_Test1, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 		SendMessageW(BTN_Test1, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 
 		// Update vectors:
 		{
-			// Static objects (DEBUG)
+			// Static and debug objects
 			Vector_StaticObjects_Brushes.push_back(&hBrush_DEBUG);
 		}
 
 		{
-			// Main objects
+			// Main application brush/icon/font objects
 			Vector_MainObjects_Brushes.push_back(&hBrush_Primary);
 			Vector_MainObjects_Brushes.push_back(&hBrush_Secondary);
 			Vector_MainObjects_Brushes.push_back(&hBrush_BorderActive);
@@ -555,33 +553,31 @@ namespace mApp
 		}
 
 		{
-			// Subclass objects
-			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background);
-			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_H);
-			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_H_Close);
-			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_H_Minimize);
-			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_F);
-			Vector_Subclasses_BAMain_Brushes.push_back(&NS_BA_Main::hBrush_Background_S);
+			// "Caption bar button animation subclass" objects
+			Vector_Subclasses_BACaptionBar_Brushes.push_back(&NS_BA_CaptionBar::hBrush_Background);
+			Vector_Subclasses_BACaptionBar_Brushes.push_back(&NS_BA_CaptionBar::hBrush_Background_H);
+			Vector_Subclasses_BACaptionBar_Brushes.push_back(&NS_BA_CaptionBar::hBrush_Background_H_Close);
+			Vector_Subclasses_BACaptionBar_Brushes.push_back(&NS_BA_CaptionBar::hBrush_Background_H_Minimize);
+			Vector_Subclasses_BACaptionBar_Brushes.push_back(&NS_BA_CaptionBar::hBrush_Background_F);
+			Vector_Subclasses_BACaptionBar_Brushes.push_back(&NS_BA_CaptionBar::hBrush_Background_S);
+			// "Caption bar button animation subclass" maps
+			HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Close, &hIcon_Close), std::make_pair(&hIcon_Close_H, &hIcon_Close_NF)));
+			HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Minimize, &hIcon_Minimize), std::make_pair(&hIcon_Minimize_H, &hIcon_Minimize_NF)));
 		}
-
-		// Update maps
-		HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Close, &hIcon_Close), std::make_pair(&hIcon_Close_H, &hIcon_Close_NF)));
-		HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Minimize, &hIcon_Minimize), std::make_pair(&hIcon_Minimize_H, &hIcon_Minimize_NF)));
 
 		return true;
 	}
 
 	/*
-		Execute when the application's main window is fully created:
-		- Show main window, close & minimize buttons, main window's title, main content container.
+		Execute when the application's main window is created and ready to displays
 	*/
 	void OnReady()
 	{
-		ShowWindow(MAIN_HWND, SW_NORMAL);
-		ShowWindow(BTN_Close, SW_NORMAL);
-		ShowWindow(BTN_Minimize, SW_NORMAL);
-		ShowWindow(SS_Title, SW_NORMAL);
-		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);
+		ShowWindow(MAIN_HWND, SW_NORMAL);			// Show main window
+		ShowWindow(BTN_Close, SW_NORMAL);			// Show close button
+		ShowWindow(BTN_Minimize, SW_NORMAL);		// Show minimize button
+		ShowWindow(SS_Title, SW_NORMAL);			// Show main window title
+		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);	// Show main content container
 
 		IS_APPREADY = true;
 	}

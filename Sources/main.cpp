@@ -121,6 +121,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_CTLCOLORSTATIC:
 		{
+			// Handling static control & read-only edit control messages
+
 			if ((HWND)lp == SS_Title)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
@@ -148,6 +150,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_CTLCOLORBTN:
 		{
+			// Handling button control messages
+
 			if ((HWND)lp == BTN_Close || (HWND)lp == BTN_Minimize)
 				hBrush_CTLCOLORBTN = hBrush_Primary;
 			else hBrush_CTLCOLORBTN = hBrush_DEBUG; // Apply debug color to non-handled button controls
@@ -199,11 +203,14 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case WM_NCCALCSIZE:
 		{
 			// Return zero remove standard window frame (non-client areas)
+			// The application use custom-draw caption bar and borders, everything is draw in client-area
 			return (LRESULT)0;
 		}
 
 		case WM_NCHITTEST:
 		{
+			// Handling caption bar and resize messages
+
 			const LRESULT result = ::DefWindowProcW(hWnd, msg, wp, lp); // Default WM_NCHITTEST response
 
 			RECT lrc = RECT_Caption;
@@ -351,7 +358,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			lpMMI->ptMinTrackSize.x = 440;
 			lpMMI->ptMinTrackSize.y = 200;
-			return 0;
+			return (LRESULT)0;
 		}
 
 		case WM_VSCROLL:
@@ -392,7 +399,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SetWindowPos(BTN_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 310, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
-			return 0;
+			return (LRESULT)0;
 		}
 
 		case WM_MOUSEWHEEL:
@@ -436,12 +443,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			// Extra invalidates
 			InvalidateRect(BTN_Test1, NULL, TRUE);
 
-			return 0;
+			return (LRESULT)0;
 		}
 
 		case WM_LBUTTONDOWN:
 			SetFocus(hWnd);
-			return 0;
+			return (LRESULT)0;
 
 		case WM_KEYDOWN:
 		{
@@ -457,13 +464,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					if (APPLICATION_THEME == L"Dark")
 						mApp::SetAppTheme(L"Light");
 					else mApp::SetAppTheme(L"Dark");
-					return 0;
+					return (LRESULT)0;
 				}
 
 				case VK_F2:
 				{
 					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
-					return 0;
+					return (LRESULT)0;
 				}
 			}
 
@@ -510,7 +517,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 		case WM_NCDESTROY:
 		{
 			RemoveWindowSubclass(hWnd, &WindowProcedure_MainContentCTR, uIdSubclass);
-			return 0;
+			return (LRESULT)0;
 		}
 
 		case WM_COMMAND:
@@ -518,8 +525,8 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			switch (wp)
 			{
 				case BUTTON_LOREMIPSUM:
-					MessageBeep(MB_OK);
-					return 0;
+					MessageBoxW(MAIN_HWND, L"LOREM IPSUM BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
+					return (LRESULT)0;
 
 				default:
 					break;

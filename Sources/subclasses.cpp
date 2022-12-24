@@ -19,7 +19,7 @@ namespace mSol
 	void FillRoundRect(Graphics* pGraphics, Brush* pBrush, Rect r, Color border, int radius);
 }
 
-namespace NS_BA_Main
+namespace NS_BA_CaptionBar
 {
 	HBRUSH hBrush_Background; // Default color
 	HBRUSH hBrush_Background_H; // Hover color
@@ -65,11 +65,11 @@ namespace NS_BA_Main
 				break;
 			}
 		}
-		HBRUSH hBrush_Hover = NS_BA_Main::hBrush_Background_H;
-		if (hWnd == BTN_Close) hBrush_Hover = NS_BA_Main::hBrush_Background_H_Close;
-		else if (hWnd == BTN_Minimize) hBrush_Hover = NS_BA_Main::hBrush_Background_H_Minimize;
+		HBRUSH hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H;
+		if (hWnd == BTN_Close) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Close;
+		else if (hWnd == BTN_Minimize) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Minimize;
 
-		FillRect(hdc, &rc, NS_BA_Main::hBrush_Background_S);
+		FillRect(hdc, &rc, NS_BA_CaptionBar::hBrush_Background_S);
 		if (state)
 		{
 			DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
@@ -102,11 +102,11 @@ namespace NS_BA_Main
 				break;
 			}
 		}
-		HBRUSH hBrush_Hover = NS_BA_Main::hBrush_Background_H;
-		if (hWnd == BTN_Close) hBrush_Hover = NS_BA_Main::hBrush_Background_H_Close;
-		else if (hWnd == BTN_Minimize) hBrush_Hover = NS_BA_Main::hBrush_Background_H_Minimize;
+		HBRUSH hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H;
+		if (hWnd == BTN_Close) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Close;
+		else if (hWnd == BTN_Minimize) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Minimize;
 
-		FillRect(hdc, &rc, NS_BA_Main::hBrush_Background_S);
+		FillRect(hdc, &rc, NS_BA_CaptionBar::hBrush_Background_S);
 		if (state)
 		{
 			FillRect(hdc, &rc, hBrush_Hover);
@@ -137,7 +137,7 @@ namespace NS_BA_Main
 				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
 				animParams.style = BPAS_SINE; // Alternative: BPAS_NONE
 
-				animParams.dwDuration = (cState_H != nState_H ? 100 : 0);
+				animParams.dwDuration = (cState_H != nState_H ? 150 : 0);
 
 				RECT rc;
 				GetClientRect(hWnd, &rc);
@@ -184,7 +184,7 @@ namespace NS_BA_Main
 				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
 				animParams.style = BPAS_SINE;
 
-				animParams.dwDuration = (cState_LB != nState_LB ? 100 : 0);
+				animParams.dwDuration = (cState_LB != nState_LB ? 150 : 0);
 
 				RECT rc;
 				GetClientRect(hWnd, &rc);
@@ -233,14 +233,14 @@ LRESULT CALLBACK SC_BA_Main(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
 		case WM_NCDESTROY:
 		{
 			RemoveWindowSubclass(hWnd, &SC_BA_Main, uIdSubclass);
-			if (!NS_BA_Main::IsReleased) NS_BA_Main::ReleaseObject();
+			if (!NS_BA_CaptionBar::IsReleased) NS_BA_CaptionBar::ReleaseObject();
 			return 0;
 		}
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) NS_BA_Main::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else NS_BA_Main::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) NS_BA_CaptionBar::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else NS_BA_CaptionBar::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -250,7 +250,7 @@ LRESULT CALLBACK SC_BA_Main(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_Main::StartAnimation(hWnd, nState_LB, cState_LB);
+			NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB);
 
 			SendMessageW(MAIN_HWND, WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
@@ -265,7 +265,7 @@ LRESULT CALLBACK SC_BA_Main(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
 				cState_H = 0;
 				nState_H = 1;
 				BufferedPaintStopAllAnimations(hWnd);
-				NS_BA_Main::StartAnimation(hWnd, nState_LB, cState_LB);
+				NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB);
 				return 0;
 			}
 
@@ -280,19 +280,19 @@ LRESULT CALLBACK SC_BA_Main(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
 			nState_H = 1;
 			isLBDown = 0;
 			isHover = 0;
-			NS_BA_Main::StartAnimation(hWnd, nState_H, cState_H);
+			NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H);
 
 			return 0;
 		}
 
-		case WM_MOUSEHOVER:
+		/*case WM_MOUSEHOVER:
 		{
 			TRACKMOUSEEVENT tme;
 			tme.cbSize = sizeof(TRACKMOUSEEVENT);
 			tme.dwFlags = TME_LEAVE;
 			tme.hwndTrack = hWnd;
 			TrackMouseEvent(&tme);
-			NS_BA_Main::StartAnimation(hWnd, nState_H, cState_H);
+			NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H);
 			isHover = 1;
 			return 0;
 		}
@@ -308,6 +308,28 @@ LRESULT CALLBACK SC_BA_Main(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
 				tme.dwHoverTime = 1;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
+				return 0;
+			}
+
+			break;
+		}*/
+
+		case WM_MOUSEHOVER:
+			break;
+
+		case WM_MOUSEMOVE:
+		{
+			if (!isHover)
+			{
+				cHWND = hWnd;
+				TRACKMOUSEEVENT tme;
+				tme.cbSize = sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags = TME_LEAVE;
+				tme.hwndTrack = hWnd;
+				TrackMouseEvent(&tme);
+				NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H);
+				isHover = 1;
+
 				return 0;
 			}
 
