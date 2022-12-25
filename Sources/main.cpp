@@ -259,10 +259,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			RECT_Caption.right = LOWORD(lp) - BORDER_WIDTH;
 
 			// Main content container
-			SetWindowPos(SS_MAINCONTENTCTR, NULL, NULL, NULL,
+			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 				LOWORD(lp) - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH, // W
-				HIWORD(lp) - BORDER_WIDTH - CAPTIONBAR_HEIGHT, // H
-				SWP_NOMOVE | SWP_NOZORDER);
+				HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+				SWP_NOZORDER);
 
 			// Top size border
 			RECT_SizeBorder_Top.right = LOWORD(lp);
@@ -288,10 +288,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			if (HIWORD(lp) - (BORDER_WIDTH * 2) - CAPTIONBAR_HEIGHT > sbHeight || HIWORD(lp) - (BORDER_WIDTH * 2) - CAPTIONBAR_HEIGHT < sbHeight)
 				// Update new scrollbar's height to fit new container size (height resize)
-				SetWindowPos(SB_MAINCONTENTCTR, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, CAPTIONBAR_HEIGHT, sbWidth, HIWORD(lp) - 38, SWP_NOZORDER);
+				SetWindowPos(SB_MAINCONTENTCTR, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, RECT_Caption.bottom, sbWidth, HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), SWP_NOZORDER);
 			else
 				// Update new scrollbar's posX (width resize)
-				SetWindowPos(SB_MAINCONTENTCTR, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, CAPTIONBAR_HEIGHT, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(SB_MAINCONTENTCTR, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, RECT_Caption.bottom, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 
 			// Main content container & its scrollbar info
 			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
@@ -332,6 +332,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SetWindowPos(BTN_Minimize, NULL, LOWORD(lp) - BORDER_WIDTH - 116, BORDER_WIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 
 			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+			APPLICATION_WIDTH = (int)LOWORD(lp);
+			APPLICATION_HEIGHT = (int)HIWORD(lp);
 			return (LRESULT)0;
 		}
 
@@ -459,7 +461,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			switch (wp)
 			{
-				case VK_F1:
+				case VK_F5:
 				{
 					if (APPLICATION_THEME == L"Dark")
 						mApp::SetAppTheme(L"Light");
@@ -467,9 +469,22 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					return (LRESULT)0;
 				}
 
+				case VK_F1:
+				{
+					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+
+					MessageBoxW(MAIN_HWND, (L"Window size: " + std::to_wstring(APPLICATION_WIDTH) + L"x" + std::to_wstring(APPLICATION_HEIGHT) + L"\n"
+											+ L"Caption size: " + std::to_wstring(RECT_Caption.bottom - RECT_Caption.top) + L"\n"
+											+ L"Container size (Main content): " + std::to_wstring(rMCCTR.bottom) + L"\n"
+											+ L"Theme: " + APPLICATION_THEME + L" (F5)\n"
+											+ L"IsReady: " + (IS_APPREADY ? L"Yes" : L"No")
+						).c_str(), L"", MB_OK);
+					return (LRESULT)0;
+				}
+
 				case VK_F2:
 				{
-					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+					mSol::cShowSizeInfo(SS_MAINCONTENTCTR);
 					return (LRESULT)0;
 				}
 			}

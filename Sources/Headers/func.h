@@ -463,13 +463,13 @@ namespace mApp
 	{
 		// Close button
 		BTN_Close = CreateWindowExW(NULL, L"BUTTON", L"",
-			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 36, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
+			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
 		SetWindowSubclass(BTN_Close, &SC_BA_Main, NULL, NULL);
 		Vector_Subclasses.push_back(&BTN_Close);
 
 		// Minimize button
 		BTN_Minimize = CreateWindowExW(NULL, L"BUTTON", L"",
-			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 36, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
+			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
 		SetWindowSubclass(BTN_Minimize, &SC_BA_Main, NULL, NULL);
 		Vector_Subclasses.push_back(&BTN_Minimize);
 
@@ -481,7 +481,7 @@ namespace mApp
 		delete[] TextBuffer_AppTitle;
 
 		// Main content container (borders & caption areas excluded)
-		SS_MAINCONTENTCTR = CreateWindowExW(NULL, L"STATIC", L"", WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, CAPTIONBAR_HEIGHT,
+		SS_MAINCONTENTCTR = CreateWindowExW(NULL, L"STATIC", L"", WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, BORDER_WIDTH + CAPTIONBAR_HEIGHT,
 			0, 0, hWnd, NULL, NULL, NULL);
 		SetWindowSubclass(SS_MAINCONTENTCTR, &WindowProcedure_MainContentCTR, NULL, NULL);
 		Vector_Subclasses.push_back(&SS_MAINCONTENTCTR);
@@ -495,7 +495,7 @@ namespace mApp
 			si.nPos = 0; // Initiate scrollbar pos
 			si.nMin = 0; // Min scrollbar pos
 			si.nMax = 340 + 10 + (MAINCONTENTCTR_PADDING * 2); // Max scrollbar pos
-			si.nPage = 213; // Actual width|height of the container
+			si.nPage = 211; // Actual width|height of the container
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 			Vector_MAINCONTENTCTR.push_back(&SB_MAINCONTENTCTR);
 		}
@@ -604,33 +604,25 @@ namespace mApp
 	{
 		if (Debug)
 		{
-			int c = 0;
+			unsigned short c = 0;
 
 			// Release static objects
-			for (auto& x : Vector_StaticObjects_Brushes)
-				if (DeleteObject(*x)) c++;
-			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" static objects").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
-			c = 0;
+			for (auto& x : Vector_StaticObjects_Brushes) if (DeleteObject(*x)) c++;
+			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" static objects").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION); c = 0;
 
 			// Release main objects
-			for (auto& x : Vector_MainObjects_Brushes)
-				if (DeleteObject(*x)) c++;
-			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (brushes)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
-			c = 0;
-			for (auto& x : Vector_MainObjects_Fonts)
-				if (DeleteObject(*x)) c++;
-			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (fonts)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
-			c = 0;
-			for (auto& x : Vector_MainObjects_Icons)
-				if (DestroyIcon(*x)) c++;
-			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (icons)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
-			c = 0;
+			for (auto& x : Vector_MainObjects_Brushes) if (DeleteObject(*x)) c++;
+			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (brushes)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION); c = 0;
+
+			for (auto& x : Vector_MainObjects_Fonts) if (DeleteObject(*x)) c++;
+			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (fonts)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION); c = 0;
+			
+			for (auto& x : Vector_MainObjects_Icons) if (DestroyIcon(*x)) c++;
+			MessageBoxW(NULL, (L"Deleted " + std::to_wstring(c) + L" main objects (icons)").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION); c = 0;
 
 			// Release subclass objects
-			for (auto& x : Vector_Subclasses)
-				if (DestroyWindow(*x)) c++;
-			MessageBoxW(NULL, (L"Destroyed " + std::to_wstring(c) + L" subclasses").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION);
-			c = 0;
+			for (auto& x : Vector_Subclasses) if (DestroyWindow(*x)) c++;
+			MessageBoxW(NULL, (L"Destroyed " + std::to_wstring(c) + L" subclasses").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION); c = 0;
 		}
 		else
 		{
