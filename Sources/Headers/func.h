@@ -102,6 +102,18 @@ namespace mSol
 		return true;
 	}
 
+	// Get current user desktop resolution
+	void GetDesktopResolution(int& horizontal, int& vertical)
+	{
+		RECT desktop;
+		const HWND hDesktop = GetDesktopWindow();
+
+		GetWindowRect(hDesktop, &desktop);
+		
+		horizontal = desktop.right;
+		vertical = desktop.bottom;
+	}
+
 	// Quick-create winapi font object
 	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
 	{

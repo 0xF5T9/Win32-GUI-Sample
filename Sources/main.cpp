@@ -26,8 +26,10 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
+	int DesktopWidth = 0, DesktopHeight = 0; mSol::GetDesktopResolution(DesktopWidth, DesktopHeight);
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, L"Win32GUISample", L"Win32 GUI Sample", WS_MYSTYLE,
-		300, 350, APPLICATION_WIDTH, APPLICATION_HEIGHT,
+		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4), // Semi-center
+		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initiate application window size
 		NULL, NULL, hInstance, NULL);
 	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), NULL, LWA_COLORKEY);
 

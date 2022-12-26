@@ -15,7 +15,7 @@
 using std::wstring, std::map, std::vector, Gdiplus::GdiplusStartupInput;
 
 // APPLICATION PARAMETERS
-int APPLICATION_WIDTH = 500, APPLICATION_HEIGHT = 250;
+int APPLICATION_WIDTH = 500, APPLICATION_HEIGHT = 250; // Initiate application window size
 bool IS_APPREADY = 0;
 wstring APPLICATION_THEME = L"Dark";
 
