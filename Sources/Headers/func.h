@@ -123,6 +123,13 @@ namespace mSol
 			DEFAULT_PITCH | FF_DONTCARE, (LPCWSTR)fName.c_str());
 	}
 
+	// Set font callback function
+	bool CALLBACK cbSetFont(HWND child_hWnd, LPARAM hFont)
+	{
+		SendMessageW(child_hWnd, WM_SETFONT, hFont, TRUE);
+		return true;
+	}
+
 	// Draw GDI+ Round Rect
 	void GetRoundRectPath(GraphicsPath* pPath, Rect r, int dia)
 	{
@@ -535,10 +542,11 @@ namespace mApp
 	bool InitEnd(HWND hWnd)
 	{
 		// Create and apply fonts to controls
+		mSol::CreateHFONT(&hFont_Default, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
 		mSol::CreateHFONT(&hFont_Title, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
+
+		EnumChildWindows(hWnd, (WNDENUMPROC)mSol::cbSetFont, (LPARAM)hFont_Default);
 		SendMessageW(SS_Title, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
-		SendMessageW(SS_Test1, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
-		SendMessageW(BTN_Test1, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
 
 		// Update vectors:
 		{
@@ -612,7 +620,7 @@ namespace mApp
 		- Release objects
 		- Uninitialize APIs
 	*/
-	void OnDestroy(bool Debug = 0)
+	void OnDestroy(bool Debug = 1)
 	{
 		if (Debug)
 		{
