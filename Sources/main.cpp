@@ -10,12 +10,18 @@ int WINAPI wWinMain(
 	_In_ LPWSTR lpCmdLine,
 	_In_ int nShowCmd)
 {
+	if (FindWindowW(WndClassName, NULL) != NULL)
+	{
+		MessageBoxW(NULL, L"Application is already running", L"", MB_OK | MB_ICONINFORMATION);
+		return 0;
+	}
+
 	WNDCLASSW wc = { 0 };
 	wc.hbrBackground = NULL;							// Handle WM_ERASEBKGND manually
 	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON7));
 	wc.hInstance = hInstance;
-	wc.lpszClassName = L"Win32GUISample";
+	wc.lpszClassName = WndClassName;
 	wc.lpfnWndProc = WindowProcedure;
 
 	MAIN_HINSTANCE = hInstance;
@@ -27,7 +33,7 @@ int WINAPI wWinMain(
 	}
 
 	int DesktopWidth = 0, DesktopHeight = 0; mSol::GetDesktopResolution(DesktopWidth, DesktopHeight);
-	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, L"Win32GUISample", L"Win32 GUI Sample", WS_MYSTYLE,
+	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
 		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4), // Semi-center
 		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initiate application window size
 		NULL, NULL, hInstance, NULL);
@@ -550,7 +556,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			switch (wp)
 			{
 				case BUTTON_LOREMIPSUM:
-					//MessageBoxW(MAIN_HWND, L"LOREM IPSUM BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
+					MessageBoxW(MAIN_HWND, L"LOREM IPSUM BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
 					MessageBeep(MB_OK);
 					return (LRESULT)0;
 

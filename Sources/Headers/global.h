@@ -9,6 +9,7 @@
 #include <gdiplus.h>
 
 // APPLICATION PARAMETERS
+extern LPCWSTR WndClassName;
 extern int APPLICATION_WIDTH, APPLICATION_HEIGHT;
 extern bool IS_APPREADY, SHOW_SCROLLBAR;
 extern std::wstring APPLICATION_THEME;

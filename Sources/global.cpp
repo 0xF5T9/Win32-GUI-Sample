@@ -15,6 +15,7 @@
 using std::wstring, std::map, std::vector, Gdiplus::GdiplusStartupInput;
 
 // APPLICATION PARAMETERS
+LPCWSTR WndClassName = L"Win32GUISample";
 int APPLICATION_WIDTH = 500, APPLICATION_HEIGHT = 250; // Initiate application window size
 bool IS_APPREADY = 0, SHOW_SCROLLBAR = 0;
 wstring APPLICATION_THEME = L"Ristretto";
