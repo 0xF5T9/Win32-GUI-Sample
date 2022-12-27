@@ -16,8 +16,8 @@ using std::wstring, std::map, std::vector, Gdiplus::GdiplusStartupInput;
 
 // APPLICATION PARAMETERS
 int APPLICATION_WIDTH = 500, APPLICATION_HEIGHT = 250; // Initiate application window size
-bool IS_APPREADY = 0;
-wstring APPLICATION_THEME = L"Dark";
+bool IS_APPREADY = 0, SHOW_SCROLLBAR = 0;
+wstring APPLICATION_THEME = L"Ristretto";
 
 // API OBJECTS
 GdiplusStartupInput API_StartupInput;
@@ -52,6 +52,7 @@ vector<HICON*> Vector_MainObjects_Icons;				// Contains main application icon ob
 vector<HBRUSH*> Vector_StaticObjects_Brushes;			// Contains static and debug objects
 vector<HWND*> Vector_Subclasses;						// Contains HWNDs that is subclassed
 vector<HWND*> Vector_MAINCONTENTCTR;					// Viewport container (Main content)
+vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;
 vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;	// Contains "Caption bar button animation subclass" brush objects
 map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1; // "Caption bar button animation subclass" map
 

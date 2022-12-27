@@ -37,11 +37,28 @@ namespace NS_BA_CaptionBar
 		hBrush_Background_F,
 		hBrush_Background_S;
 };
+namespace NS_BA_Standard
+{
+	extern Color CL_Background,
+		CL_Background_H,
+		CL_Background_F,
+		CL_Background_S,
+		CL_NonFocus,
+		CL_Focus;
+	extern HBRUSH hBrush_Background,
+		hBrush_Background_H,
+		hBrush_Background_F,
+		hBrush_Background_S;
+	extern HFONT* hFont_PDefault;
+	extern COLORREF CLR_DefaultTextColor,
+		CLR_HighlightTextColor;
+};
 
 // CALLBACK FORWARD DECLARATIONS:
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK SC_BA_Main(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 namespace mSol
 {
@@ -128,6 +145,14 @@ namespace mSol
 	{
 		SendMessageW(child_hWnd, WM_SETFONT, hFont, TRUE);
 		return true;
+	}
+
+	// Remove specific window style from control
+	void RemoveWindowStyle(HWND& hWnd, LONG Style)
+	{
+		DWORD dwStyle = ::GetClassLongW(hWnd, GCL_STYLE);
+		dwStyle &= ~Style;
+		::SetClassLongW(hWnd, GCL_STYLE, dwStyle);
 	}
 
 	// Draw GDI+ Round Rect
@@ -285,7 +310,7 @@ namespace mApp
 					SetWindowTheme(*x, L"Explorer", L"Button");
 			}
 		}
-		else if (Theme == L"Dark" || Theme == L"Dark_Obisidan")
+		else if (Theme == L"Dark" || Theme == L"Ristretto")
 		{
 			WCHAR TextBuffer[256];
 			for (auto& x : Vector_MAINCONTENTCTR)
@@ -310,6 +335,7 @@ namespace mApp
 			for (auto& x : Vector_MainObjects_Brushes) DeleteObject(*x); // Main brush objects
 			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(*x);	// Icon objects
 			for (auto& x : Vector_Subclasses_BACaptionBar_Brushes) DeleteObject(*x); // Subclass objects
+			for (auto& x : Vector_Subclasses_BAStandard_Brushes) DeleteObject(*x); // Subclass objects
 		}
 
 		// Update new COLORREFs and other drawing objects
@@ -335,13 +361,30 @@ namespace mApp
 			hBrush_Secondary = CreateSolidBrush(CLR_Secondary);
 			hBrush_BorderActive = CreateSolidBrush(CLR_BorderActive);
 			hBrush_BorderInactive = CreateSolidBrush(CLR_BorderInactive);
-			// Subclass HBR
-			NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
-			NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
-			NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			// Subclass Objects
+			{
+				NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
+				NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
+				NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			}
+			{
+				NS_BA_Standard::CL_Background = Color(255, 225, 225, 225); // Default color
+				NS_BA_Standard::CL_Background_H = Color(255, 229, 241, 251); // Hover color
+				NS_BA_Standard::CL_Background_F = Color(255, 204, 228, 247); // Down color
+				NS_BA_Standard::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Standard::CL_NonFocus = Color(255, 173, 173, 173); // Default border color
+				NS_BA_Standard::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
+				NS_BA_Standard::hBrush_Background = CreateSolidBrush(RGB(225, 225, 225)); // Default color
+				NS_BA_Standard::hBrush_Background_H = CreateSolidBrush(RGB(229, 241, 251)); // Hover color
+				NS_BA_Standard::hBrush_Background_F = CreateSolidBrush(RGB(204, 228, 247)); // Down color
+				NS_BA_Standard::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Standard::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Standard::CLR_DefaultTextColor = RGB(0, 0, 0); // Default text color
+				NS_BA_Standard::CLR_HighlightTextColor = RGB(0, 0, 0); // Highlight text color
+			}
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON1), IMAGE_ICON, 20, 20, NULL);
@@ -352,7 +395,27 @@ namespace mApp
 			hIcon_Minimize_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON4), IMAGE_ICON, 20, 20, NULL);
 
 			APPLICATION_THEME = L"Light"; // Update theme status
+			SHOW_SCROLLBAR = true;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
+			
+			{	// Show scrollbar if needed
+				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+				SCROLLINFO si;
+				si.cbSize = sizeof(SCROLLINFO);
+				si.fMask = SIF_ALL;
+
+				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+
+				if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
+				{
+					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+				}
+				else
+				{
+					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+				}
+			}
 		}
 		else if (Theme == L"Dark") // Dark theme
 		{
@@ -376,13 +439,30 @@ namespace mApp
 			hBrush_Secondary = CreateSolidBrush(CLR_Secondary);
 			hBrush_BorderActive = CreateSolidBrush(CLR_BorderActive);
 			hBrush_BorderInactive = CreateSolidBrush(CLR_BorderInactive);
-			// Subclass HBR
-			NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
-			NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
-			NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			// Subclass Objects
+			{
+				NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
+				NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
+				NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			}
+			{
+				NS_BA_Standard::CL_Background = Color(255, 51, 51, 51); // Default color
+				NS_BA_Standard::CL_Background_H = Color(255, 69, 69, 69); // Hover color
+				NS_BA_Standard::CL_Background_F = Color(255, 102, 102, 102); // Down color
+				NS_BA_Standard::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Standard::CL_NonFocus = Color(255, 155, 155, 155); // Default border color
+				NS_BA_Standard::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
+				NS_BA_Standard::hBrush_Background = CreateSolidBrush(RGB(51, 51, 51)); // Default color
+				NS_BA_Standard::hBrush_Background_H = CreateSolidBrush(RGB(69, 69, 69)); // Hover color
+				NS_BA_Standard::hBrush_Background_F = CreateSolidBrush(RGB(102, 102, 102)); // Down color
+				NS_BA_Standard::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Standard::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Standard::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Standard::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -393,22 +473,42 @@ namespace mApp
 			hIcon_Minimize_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON6), IMAGE_ICON, 20, 20, NULL);
 
 			APPLICATION_THEME = L"Dark"; // Update theme status
+			SHOW_SCROLLBAR = true;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
+
+			{	// Show scrollbar if needed
+				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+				SCROLLINFO si;
+				si.cbSize = sizeof(SCROLLINFO);
+				si.fMask = SIF_ALL;
+
+				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+
+				if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
+				{
+					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+				}
+				else
+				{
+					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+				}
+			}
 		}
-		else if (Theme == L"Dark_Obisidan") // Dark obisidan theme
+		else if (Theme == L"Ristretto") // Dark obisidan theme
 		{
 			// Static CLR
 			CLR_DEBUG = RGB(0, 0, 255);
 			// Main CLR
-			CLR_Primary = RGB(29, 34, 39);
-			CLR_Secondary = RGB(48, 56, 65);
-			CLR_BorderActive = RGB(45, 50, 54);
-			CLR_BorderInactive = RGB(51, 56, 60);
-			CLR_DefaultTextColor = RGB(216, 222, 233);
-			CLR_DefaultInactiveTextColor = RGB(162, 162, 162);
+			CLR_Primary = RGB(39, 29, 28);
+			CLR_Secondary = RGB(30, 24, 23);
+			CLR_BorderActive = RGB(68, 50, 48);
+			CLR_BorderInactive = RGB(76, 56, 54);
+			CLR_DefaultTextColor = RGB(215, 218, 222);
+			CLR_DefaultInactiveTextColor = RGB(129, 115, 114);
 			// Subclass CLR
 			CLR_CloseBtnHover = RGB(232, 17, 35);
-			CLR_MinimizeBtnHover = RGB(51, 56, 60);
+			CLR_MinimizeBtnHover = RGB(76, 56, 54);
 
 			// Static HBR
 			hBrush_DEBUG = CreateSolidBrush(CLR_DEBUG);
@@ -417,13 +517,30 @@ namespace mApp
 			hBrush_Secondary = CreateSolidBrush(CLR_Secondary);
 			hBrush_BorderActive = CreateSolidBrush(CLR_BorderActive);
 			hBrush_BorderInactive = CreateSolidBrush(CLR_BorderInactive);
-			// Subclass HBR
-			NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
-			NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
-			NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
-			NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			// Subclass Objects
+			{
+				NS_BA_CaptionBar::hBrush_Background = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_H = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_H_Close = CreateSolidBrush(CLR_CloseBtnHover);
+				NS_BA_CaptionBar::hBrush_Background_H_Minimize = CreateSolidBrush(CLR_MinimizeBtnHover);
+				NS_BA_CaptionBar::hBrush_Background_F = CreateSolidBrush(CLR_Primary);
+				NS_BA_CaptionBar::hBrush_Background_S = CreateSolidBrush(CLR_Primary);
+			}
+			{
+				NS_BA_Standard::CL_Background = Color(255, 94, 70, 68); // Default color
+				NS_BA_Standard::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Standard::CL_Background_F = Color(255, 89, 67, 65); // Down color
+				NS_BA_Standard::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Standard::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
+				NS_BA_Standard::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
+				NS_BA_Standard::hBrush_Background = CreateSolidBrush(RGB(94, 70, 68)); // Default color
+				NS_BA_Standard::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Standard::hBrush_Background_F = CreateSolidBrush(RGB(89, 67, 65)); // Down color
+				NS_BA_Standard::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Standard::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Standard::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Standard::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -433,8 +550,10 @@ namespace mApp
 			hIcon_Minimize_NF = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON5), IMAGE_ICON, 20, 20, NULL);
 			hIcon_Minimize_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON6), IMAGE_ICON, 20, 20, NULL);
 
-			APPLICATION_THEME = L"Dark_Obisidan"; // Update theme status
+			APPLICATION_THEME = L"Ristretto"; // Update theme status
+			SHOW_SCROLLBAR = false;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
+			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
 		}
 
 		// Redraw application window
@@ -483,13 +602,13 @@ namespace mApp
 		// Close button
 		BTN_Close = CreateWindowExW(NULL, L"BUTTON", L"",
 			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
-		SetWindowSubclass(BTN_Close, &SC_BA_Main, NULL, NULL);
+		SetWindowSubclass(BTN_Close, &SC_BA_CaptionBar, NULL, NULL);
 		Vector_Subclasses.push_back(&BTN_Close);
 
 		// Minimize button
 		BTN_Minimize = CreateWindowExW(NULL, L"BUTTON", L"",
 			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
-		SetWindowSubclass(BTN_Minimize, &SC_BA_Main, NULL, NULL);
+		SetWindowSubclass(BTN_Minimize, &SC_BA_CaptionBar, NULL, NULL);
 		Vector_Subclasses.push_back(&BTN_Minimize);
 
 		// Window title
@@ -523,9 +642,15 @@ namespace mApp
 		SS_Test1 = CreateWindowExW(NULL, L"STATIC", L"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
 			WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
 			0, 0, 300, 300, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-		BTN_Test1 = CreateWindowExW(NULL, L"BUTTON", L"Lorem Ipsum",
+		/*BTN_Test1 = CreateWindowExW(NULL, L"BUTTON", L"Lorem Ipsum",
 			WS_VISIBLE | WS_CHILD, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_LOREMIPSUM, NULL, NULL);
-		Vector_MAINCONTENTCTR.push_back(&BTN_Test1);
+		Vector_MAINCONTENTCTR.push_back(&BTN_Test1);*/
+		BTN_Test1 = CreateWindowExW(NULL, L"BUTTON", L"Lorem Ipsum",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_LOREMIPSUM, NULL, NULL);
+		SetWindowSubclass(BTN_Test1, &SC_BA_Standard, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Test1);
+
+		mSol::RemoveWindowStyle(BTN_Test1, CS_DBLCLKS); // *
 
 		// Update theme class for controls
 		SetAppThemeClass(APPLICATION_THEME);
@@ -583,6 +708,12 @@ namespace mApp
 			// "Caption bar button animation subclass" maps
 			HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Close, &hIcon_Close), std::make_pair(&hIcon_Close_H, &hIcon_Close_NF)));
 			HoverMap_1.insert(std::make_pair(std::make_pair(&BTN_Minimize, &hIcon_Minimize), std::make_pair(&hIcon_Minimize_H, &hIcon_Minimize_NF)));
+
+			// "Standard button animation subclass" objects
+			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background);
+			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_H);
+			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_F);
+			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_S);
 		}
 
 		return true;
@@ -620,7 +751,7 @@ namespace mApp
 		- Release objects
 		- Uninitialize APIs
 	*/
-	void OnDestroy(bool Debug = 1)
+	void OnDestroy(bool Debug = 0)
 	{
 		if (Debug)
 		{

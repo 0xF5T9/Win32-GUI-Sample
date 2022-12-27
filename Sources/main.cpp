@@ -316,16 +316,20 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 				// Show|Hide the scrollbar if needed
-				static bool isVisible = 0;
-				if ((unsigned int)si.nPage > (unsigned int)si.nMax)
+				if (!SHOW_SCROLLBAR)
 				{
 					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
-					isVisible = 0;
 				}
-				else if (!isVisible)
-				{ 
-					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW); 
-					isVisible = 1;
+				else
+				{
+					if ((unsigned int)si.nPage > (unsigned int)si.nMax)
+					{
+						ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+					}
+					else
+					{
+						ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+					}
 				}
 			}
 
@@ -465,9 +469,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				case VK_F5:
 				{
-					if (APPLICATION_THEME == L"Dark")
+					if (APPLICATION_THEME == L"Light")
+						mApp::SetAppTheme(L"Dark");
+					else if (APPLICATION_THEME == L"Dark")
+						mApp::SetAppTheme(L"Ristretto");
+					else if (APPLICATION_THEME == L"Ristretto")
 						mApp::SetAppTheme(L"Light");
-					else mApp::SetAppTheme(L"Dark");
+
 					return (LRESULT)0;
 				}
 
@@ -542,7 +550,8 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			switch (wp)
 			{
 				case BUTTON_LOREMIPSUM:
-					MessageBoxW(MAIN_HWND, L"LOREM IPSUM BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
+					//MessageBoxW(MAIN_HWND, L"LOREM IPSUM BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
+					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
 				default:
@@ -571,10 +580,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			static HBRUSH lhBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
 			if ((HWND)lp == BTN_Test1)
 			{
-				SetBkMode((HDC)wp, TRANSPARENT);
-				SetBkColor((HDC)wp, CLR_Secondary);
-				SetTextColor((HDC)wp, CLR_DefaultTextColor);
-				lhBrush = hBrush_Secondary;
+				lhBrush = hBrush_DEBUG;
 			}
 			else lhBrush = hBrush_DEBUG;
 			return (LRESULT)lhBrush;

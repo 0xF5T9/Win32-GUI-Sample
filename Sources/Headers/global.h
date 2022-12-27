@@ -10,7 +10,7 @@
 
 // APPLICATION PARAMETERS
 extern int APPLICATION_WIDTH, APPLICATION_HEIGHT;
-extern bool IS_APPREADY;
+extern bool IS_APPREADY, SHOW_SCROLLBAR;
 extern std::wstring APPLICATION_THEME;
 
 // API OBJECTS
@@ -46,6 +46,7 @@ extern std::vector<HICON*> Vector_MainObjects_Icons;
 extern std::vector<HBRUSH*> Vector_StaticObjects_Brushes;
 extern std::vector<HWND*> Vector_Subclasses;
 extern std::vector<HWND*> Vector_MAINCONTENTCTR;
+extern std::vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;
 extern std::vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;
 extern std::map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 
