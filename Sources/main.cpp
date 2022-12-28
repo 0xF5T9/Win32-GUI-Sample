@@ -314,8 +314,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				si.nPage = rMCCTR.bottom; // Update new page size
 
 				// Reset container's childs positions & current scroll pos
-				SetWindowPos(SS_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 310, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + (34 + 10), NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 				si.nPos = 0;
 
 				// Set scrollbar info
@@ -409,8 +409,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			si.nPage = rMCCTR.bottom; // Update new page size
 
 			// Update container's childs positions
-			SetWindowPos(SS_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 310, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+			SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+			SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + (34 + 10), NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 			return (LRESULT)0;
@@ -449,13 +449,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			si.nPage = rMCCTR.bottom; // Update new page size
 
 			// Update container's childs positions
-			SetWindowPos(SS_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Test1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 310, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+			SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+			SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + (34 + 10), NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 			// Extra invalidates
-			InvalidateRect(BTN_Test1, NULL, TRUE);
+			InvalidateRect(BTN_Standard, NULL, TRUE);
 
 			return (LRESULT)0;
 		}
@@ -555,8 +555,23 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 		{
 			switch (wp)
 			{
-				case BUTTON_LOREMIPSUM:
-					MessageBoxW(MAIN_HWND, L"LOREM IPSUM BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
+				case BUTTON_STANDARD:
+					MessageBoxW(MAIN_HWND, L"STANDARD BUTTON CLICKED", L"", MB_OK | MB_ICONINFORMATION);
+					return (LRESULT)0;
+
+				case BUTTON_RLEFT:
+					CURRENT_RADIO2 = BTN_LRadio;
+					//InvalidateRect(BTN_RRadio, NULL, FALSE);
+					//RedrawWindow(BTN_RRadio, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+					RedrawWindow(BTN_RRadio, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+					MessageBeep(MB_OK);
+					return (LRESULT)0;
+
+				case BUTTON_RRIGHT:
+					CURRENT_RADIO2 = BTN_RRadio;
+					//InvalidateRect(BTN_LRadio, NULL, FALSE);
+					//RedrawWindow(ButtonCtrl_TAB1, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+					RedrawWindow(BTN_LRadio, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
@@ -570,7 +585,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 		case WM_CTLCOLORSTATIC:
 		{
 			static HBRUSH lhBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
-			if ((HWND)lp == SS_Test1)
+			if ((HWND)lp == SS_Heading1)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
 				SetBkColor((HDC)wp, CLR_Secondary);
@@ -584,9 +599,9 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 		case WM_CTLCOLORBTN:
 		{
 			static HBRUSH lhBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
-			if ((HWND)lp == BTN_Test1)
+			if ((HWND)lp == BTN_Standard)
 			{
-				lhBrush = hBrush_DEBUG;
+				lhBrush = hBrush_Secondary;
 			}
 			else lhBrush = hBrush_DEBUG;
 			return (LRESULT)lhBrush;

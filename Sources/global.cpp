@@ -19,6 +19,7 @@ LPCWSTR WndClassName = L"Win32GUISample";
 int APPLICATION_WIDTH = 500, APPLICATION_HEIGHT = 250; // Initiate application window size
 bool IS_APPREADY = 0, SHOW_SCROLLBAR = 0;
 wstring APPLICATION_THEME = L"Ristretto";
+HWND CURRENT_RADIO2;
 
 // API OBJECTS
 GdiplusStartupInput API_StartupInput;
@@ -29,7 +30,7 @@ HINSTANCE MAIN_HINSTANCE;
 HWND MAIN_HWND;
 HWND BTN_Close, BTN_Minimize, SS_Title;
 HWND SS_MAINCONTENTCTR, SB_MAINCONTENTCTR;
-HWND SS_Test1, BTN_Test1;
+HWND SS_Heading1, BTN_Standard, BTN_LRadio, BTN_RRadio;
 
 // RECTS
 RECT RECT_Caption = { BORDER_WIDTH, BORDER_WIDTH, APPLICATION_WIDTH - BORDER_WIDTH, BORDER_WIDTH + CAPTIONBAR_HEIGHT };
@@ -44,7 +45,7 @@ CLR_Primary, CLR_Secondary, CLR_BorderActive, CLR_BorderInactive,
 CLR_DefaultTextColor, CLR_DefaultInactiveTextColor, CLR_CloseBtnHover, CLR_MinimizeBtnHover;
 HBRUSH hBrush_CTLCOLORSTATIC, hBrush_CTLCOLORBTN, hBrush_CURBORDER, hBrush_DEBUG,
 hBrush_Primary, hBrush_Secondary, hBrush_BorderActive, hBrush_BorderInactive;
-HFONT hFont_Default, hFont_Title;
+HFONT hFont_Default, hFont_Title, hFont_Heading;
 
 // VECTORS/MAPS (Manage objects for memory deallocation or visibility of control handles)
 vector<HBRUSH*> Vector_MainObjects_Brushes;				// Contains main application brush objects
@@ -55,6 +56,7 @@ vector<HWND*> Vector_Subclasses;						// Contains HWNDs that is subclassed
 vector<HWND*> Vector_MAINCONTENTCTR;					// Viewport container (Main content)
 vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;
 vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;	// Contains "Caption bar button animation subclass" brush objects
+vector<HBRUSH*> Vector_Subclasses_BARadio2_Brushes;
 map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1; // "Caption bar button animation subclass" map
 
 // ICONS & BITMAPS HANDLES

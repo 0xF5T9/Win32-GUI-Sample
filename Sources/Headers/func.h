@@ -53,12 +53,29 @@ namespace NS_BA_Standard
 	extern COLORREF CLR_DefaultTextColor,
 		CLR_HighlightTextColor;
 };
+namespace NS_BA_Radio2
+{
+	extern Color CL_Background,
+		CL_Background_H,
+		CL_Background_F,
+		CL_Background_S,
+		CL_NonFocus,
+		CL_Focus;
+	extern HBRUSH hBrush_Background,
+		hBrush_Background_H,
+		hBrush_Background_F,
+		hBrush_Background_S;
+	extern HFONT* hFont_PDefault;
+	extern COLORREF CLR_DefaultTextColor,
+		CLR_HighlightTextColor;
+};
 
 // CALLBACK FORWARD DECLARATIONS:
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 namespace mSol
 {
@@ -336,6 +353,7 @@ namespace mApp
 			for (auto& x : Vector_MainObjects_Icons) DestroyIcon(*x);	// Icon objects
 			for (auto& x : Vector_Subclasses_BACaptionBar_Brushes) DeleteObject(*x); // Subclass objects
 			for (auto& x : Vector_Subclasses_BAStandard_Brushes) DeleteObject(*x); // Subclass objects
+			for (auto& x : Vector_Subclasses_BARadio2_Brushes) DeleteObject(*x); // Subclass objects
 		}
 
 		// Update new COLORREFs and other drawing objects
@@ -384,6 +402,21 @@ namespace mApp
 				NS_BA_Standard::hFont_PDefault = &hFont_Default; // Font
 				NS_BA_Standard::CLR_DefaultTextColor = RGB(0, 0, 0); // Default text color
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(0, 0, 0); // Highlight text color
+			}
+			{
+				NS_BA_Radio2::CL_Background = Color(255, 94, 70, 68); // Default color
+				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Radio2::CL_Background_F = Color(255, 89, 67, 65); // Down color
+				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
+				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(94, 70, 68)); // Default color
+				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(89, 67, 65)); // Down color
+				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 
 			// ICON HANDLE
@@ -463,6 +496,21 @@ namespace mApp
 				NS_BA_Standard::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
+			{
+				NS_BA_Radio2::CL_Background = Color(255, 94, 70, 68); // Default color
+				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Radio2::CL_Background_F = Color(255, 89, 67, 65); // Down color
+				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
+				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(94, 70, 68)); // Default color
+				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(89, 67, 65)); // Down color
+				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -540,6 +588,21 @@ namespace mApp
 				NS_BA_Standard::hFont_PDefault = &hFont_Default; // Font
 				NS_BA_Standard::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
+			{
+				NS_BA_Radio2::CL_Background = Color(255, 58, 44, 42); // Default color
+				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Radio2::CL_Background_F = Color(255, 94, 70, 68); // Down color
+				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
+				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
+				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 
 			// ICON HANDLE
@@ -639,18 +702,26 @@ namespace mApp
 		}
 
 		// Main content container's childs:
-		SS_Test1 = CreateWindowExW(NULL, L"STATIC", L"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-			WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-			0, 0, 300, 300, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-		/*BTN_Test1 = CreateWindowExW(NULL, L"BUTTON", L"Lorem Ipsum",
-			WS_VISIBLE | WS_CHILD, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_LOREMIPSUM, NULL, NULL);
-		Vector_MAINCONTENTCTR.push_back(&BTN_Test1);*/
-		BTN_Test1 = CreateWindowExW(NULL, L"BUTTON", L"Lorem Ipsum",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_LOREMIPSUM, NULL, NULL);
-		SetWindowSubclass(BTN_Test1, &SC_BA_Standard, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Test1);
+		SS_Heading1 = CreateWindowExW(NULL, L"STATIC", L"Sample buttons:",
+			/*WS_BORDER |*/ WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+			0, 0, 155, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+		
+		BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
+		SetWindowSubclass(BTN_Standard, &SC_BA_Standard, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Standard);
 
-		mSol::RemoveWindowStyle(BTN_Test1, CS_DBLCLKS); // *
+		BTN_LRadio = CreateWindowEx(NULL, L"BUTTON", L"Left",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 130 + 10, MAINCONTENTCTR_PADDING + (34 + 10), 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_RLEFT, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_LRadio);
+		SetWindowSubclass(BTN_LRadio, &SC_BA_Radio2, NULL, NULL);
+
+		BTN_RRadio = CreateWindowEx(NULL, L"BUTTON", L"Right",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 130 + 10 + 65 + 1, MAINCONTENTCTR_PADDING + (34 + 10), 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_RRIGHT, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_RRadio);
+		SetWindowSubclass(BTN_RRadio, &SC_BA_Radio2, NULL, NULL);
+
+		mSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // *
 
 		// Update theme class for controls
 		SetAppThemeClass(APPLICATION_THEME);
@@ -669,9 +740,11 @@ namespace mApp
 		// Create and apply fonts to controls
 		mSol::CreateHFONT(&hFont_Default, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
 		mSol::CreateHFONT(&hFont_Title, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
+		mSol::CreateHFONT(&hFont_Heading, L"Segoe UI", 28, FW_BOLD, CLEARTYPE_QUALITY);
 
 		EnumChildWindows(hWnd, (WNDENUMPROC)mSol::cbSetFont, (LPARAM)hFont_Default);
 		SendMessageW(SS_Title, WM_SETFONT, (WPARAM)hFont_Title, TRUE);
+		SendMessageW(SS_Heading1, WM_SETFONT, (WPARAM)hFont_Heading, TRUE);
 
 		// Update vectors:
 		{
@@ -714,6 +787,12 @@ namespace mApp
 			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_H);
 			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_F);
 			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_S);
+
+			// ?
+			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background);
+			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background_H);
+			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background_F);
+			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background_S);
 		}
 
 		return true;

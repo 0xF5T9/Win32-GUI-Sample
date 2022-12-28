@@ -19,7 +19,9 @@
 // Button identifiers
 #define BUTTON_CLOSE 101
 #define BUTTON_MINIMIZE 102
-#define BUTTON_LOREMIPSUM 103
+#define BUTTON_STANDARD 103
+#define BUTTON_RLEFT 104
+#define BUTTON_RRIGHT 105
 
 // Miscs
 #define BORDER_WIDTH 1
