@@ -10,14 +10,15 @@ int WINAPI wWinMain(
 	_In_ LPWSTR lpCmdLine,
 	_In_ int nShowCmd)
 {
-	if (FindWindowW(WndClassName, NULL) != NULL)
+	if (FindWindowW(WndClassName, NULL) != NULL)	// Terminate if application already running
 	{
 		MessageBoxW(NULL, L"Application is already running", L"", MB_OK | MB_ICONINFORMATION);
 		return 0;
 	}
 
+	// Create custom window class
 	WNDCLASSW wc = { 0 };
-	wc.hbrBackground = NULL;							// Handle WM_ERASEBKGND manually
+	wc.hbrBackground = NULL;	// Manually handle "WM_ERASEBKGND" (reduce flickering)
 	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON7));
 	wc.hInstance = hInstance;
@@ -26,21 +27,22 @@ int WINAPI wWinMain(
 
 	MAIN_HINSTANCE = hInstance;
 
-	if (!RegisterClassW(&wc))
+	if (!RegisterClassW(&wc))	// Register window class
 	{
 		MessageBoxW(NULL, L"Error occurred!\n(Failed to register window class)", L"", MB_OK | MB_ICONERROR);
 		return -1;
 	}
 
-	int DesktopWidth = 0, DesktopHeight = 0; mSol::GetDesktopResolution(DesktopWidth, DesktopHeight);
+	int DesktopWidth = 0, DesktopHeight = 0; mSol::GetDesktopResolution(DesktopWidth, DesktopHeight); // Get user desktop resolution
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
-		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4), // Semi-center
-		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initiate application window size
+		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),	// Semi-center application on start
+		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initial application window size
 		NULL, NULL, hInstance, NULL);
-	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), NULL, LWA_COLORKEY);
+	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), NULL, LWA_COLORKEY); // Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
 
-	mApp::OnReady();
+	mApp::OnReady();	// Execute when the application's main window is created and ready to displays
 
+	// Begin message loop
 	MSG msg = { 0 };
 	while (GetMessageW(&msg, NULL, 0, 0))
 	{
@@ -60,6 +62,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	{
 		case WM_CREATE:
 		{
+			// Initialize main window
 			if (mApp::InitBegin(hWnd) && mApp::InitTheme(hWnd) && mApp::InitControl(hWnd) && mApp::InitEnd(hWnd))
 				return (LRESULT)0;
 			else { MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize main window)", L"", MB_OK | MB_ICONERROR); exit(1); }
@@ -67,6 +70,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_COMMAND:
 		{
+			// Process WM_COMMAND messages
+
 			switch (wp)
 			{
 				case BUTTON_CLOSE:
@@ -87,10 +92,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_PAINT:
 		{
+			// Painting main window
+
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
 
-			// Create DCs & BMPs for double buffering:
+			// Create DCs & BMPs for double buffering (reduce flickering)
 			HDC mem_hdc = CreateCompatibleDC(hdc);
 			static RECT rAppClient; GetClientRect(hWnd, &rAppClient);
 			HBITMAP hBitmap = CreateCompatibleBitmap(hdc,
@@ -103,7 +110,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			graphics.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 
 			// Begin painting to memory DC
-			FillRect(mem_hdc, &rAppClient, hBrush_Secondary); // Main background color
+			FillRect(mem_hdc, &rAppClient, hBrush_Secondary);	// Main background color
 			FillRect(mem_hdc, &RECT_Caption, hBrush_Primary);	// Caption bar color
 			static RECT rFrames_Paint; GetClientRect(hWnd, &rFrames_Paint);
 			FrameRect(mem_hdc, &rFrames_Paint, hBrush_CURBORDER);	// Border color
@@ -123,7 +130,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_ERASEBKGND:
 		{
-			// Handling WM_ERASEBKGND messages manually
+			// Manually handle "WM_ERASEBKGND" (reduce flickering)
 			return (LRESULT)1;
 		}
 
@@ -131,13 +138,15 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			// Handling static control & read-only edit control messages
 
+			static HBRUSH RET_CTLCOLORSTATIC = (HBRUSH)GetStockObject(BLACK_BRUSH);
+
 			if ((HWND)lp == SS_Title)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
 				SetBkColor((HDC)wp, CLR_Primary);
 				if (GetActiveWindow() == hWnd) SetTextColor((HDC)wp, CLR_DefaultTextColor);
 				else SetTextColor((HDC)wp, CLR_DefaultInactiveTextColor);
-				hBrush_CTLCOLORSTATIC = hBrush_Primary;
+				RET_CTLCOLORSTATIC = hBrush_Primary;
 			}
 			else if ((HWND)lp == SS_MAINCONTENTCTR)
 			{
@@ -149,22 +158,24 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					SetTextColor((HDC)wp, CLR_DefaultTextColor);
 					OnFirst = 0;
 				}
-				hBrush_CTLCOLORSTATIC = hBrush_Secondary;
+				RET_CTLCOLORSTATIC = hBrush_Secondary;
 			}
-			else hBrush_CTLCOLORSTATIC = hBrush_DEBUG; // Apply debug color to non-handled static controls
+			else RET_CTLCOLORSTATIC = hBrush_DEBUG; // Apply debug color to non-handled static controls
 
-			return (LRESULT)hBrush_CTLCOLORSTATIC;
+			return (LRESULT)RET_CTLCOLORSTATIC;
 		}
 
 		case WM_CTLCOLORBTN:
 		{
 			// Handling button control messages
 
-			if ((HWND)lp == BTN_Close || (HWND)lp == BTN_Minimize)
-				hBrush_CTLCOLORBTN = hBrush_Primary;
-			else hBrush_CTLCOLORBTN = hBrush_DEBUG; // Apply debug color to non-handled button controls
+			static HBRUSH RET_CTLCOLORBTN = (HBRUSH)GetStockObject(BLACK_BRUSH);
 
-			return (LRESULT)hBrush_CTLCOLORBTN;
+			if ((HWND)lp == BTN_Close || (HWND)lp == BTN_Minimize)
+				RET_CTLCOLORBTN = hBrush_Primary;
+			else RET_CTLCOLORBTN = hBrush_DEBUG; // Apply debug color to non-handled button controls
+
+			return (LRESULT)RET_CTLCOLORBTN;
 		}
 
 		case WM_SETFOCUS:
@@ -211,7 +222,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case WM_NCCALCSIZE:
 		{
 			// Return zero remove standard window frame (non-client areas)
-			// The application use custom-draw caption bar and borders, everything is draw in client-area
+			// * The application use custom-draw caption bar and borders, everything is draw in client-area
 			return (LRESULT)0;
 		}
 
@@ -261,7 +272,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_SIZE:
 		{
-			BufferedPaintStopAllAnimations(hWnd);
+			// Handling WM_SIZE messages
+
+			BufferedPaintStopAllAnimations(hWnd); // Stop all animations during resize
 
 			// Caption
 			RECT_Caption.right = LOWORD(lp) - BORDER_WIDTH;
@@ -358,6 +371,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SetWindowPos(BTN_Close, NULL, LOWORD(lp) - BORDER_WIDTH - 58, BORDER_WIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 			SetWindowPos(BTN_Minimize, NULL, LOWORD(lp) - BORDER_WIDTH - 116, BORDER_WIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 
+			// Extra invalidate
 			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 			APPLICATION_WIDTH = (int)LOWORD(lp);
 			APPLICATION_HEIGHT = (int)HIWORD(lp);
@@ -385,7 +399,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			LPMINMAXINFO lpMMI = (LPMINMAXINFO)lp;
 
-			lpMMI->ptMinTrackSize.x = 440;
+			lpMMI->ptMinTrackSize.x = 519;
 			lpMMI->ptMinTrackSize.y = 200;
 			return (LRESULT)0;
 		}
@@ -532,6 +546,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				case VK_F5:
 				{
+					// Switch theme
+
 					if (APPLICATION_THEME == L"Light")
 						mApp::SetAppTheme(L"Dark");
 					else if (APPLICATION_THEME == L"Dark")
@@ -544,19 +560,32 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				case VK_F1:
 				{
+					// Show debug info
+
 					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+					WCHAR* wcaSelectedR2 = new WCHAR[(UINT64)GetWindowTextLengthW(CURRENT_SELECTEDRADIO2) + (UINT64)1]; GetWindowTextW(CURRENT_SELECTEDRADIO2, wcaSelectedR2, GetWindowTextLengthW(CURRENT_SELECTEDRADIO2) + 1);
+					WCHAR* wcaSelectedR3 = new WCHAR[(UINT64)GetWindowTextLengthW(CURRENT_SELECTEDRADIO3) + (UINT64)1]; GetWindowTextW(CURRENT_SELECTEDRADIO3, wcaSelectedR3, GetWindowTextLengthW(CURRENT_SELECTEDRADIO3) + 1);
+					std::wstring wstrSelectedR2(wcaSelectedR2);
+					std::wstring wstrSelectedR3(wcaSelectedR3);
 
 					MessageBoxW(MAIN_HWND, (L"Window size: " + std::to_wstring(APPLICATION_WIDTH) + L"x" + std::to_wstring(APPLICATION_HEIGHT) + L"\n"
 											+ L"Caption size: " + std::to_wstring(RECT_Caption.bottom - RECT_Caption.top) + L"\n"
-											+ L"Container size (Main content): " + std::to_wstring(rMCCTR.bottom) + L"\n"
+											+ L"Container size (Main content): " + std::to_wstring(rMCCTR.bottom) + L"x" + std::to_wstring(rMCCTR.right) + L"\n"
 											+ L"Theme: " + APPLICATION_THEME + L" (F5)\n"
-											+ L"IsReady: " + (IS_APPREADY ? L"Yes" : L"No")
+											+ L"IsReady: " + (IS_APPREADY ? L"Yes" : L"No") + L"\n"
+											+ L"IsThemeShowScrollBar: " + (IS_APPTHEMESHOWSCROLLBAR ? L"Yes" : L"No") + L"\n"
+											+ L"Selected R2: " + (wstrSelectedR2 == L"" ? L"None" : wstrSelectedR2) + L"\n"
+											+ L"Selected R3: " + (wstrSelectedR3 == L"" ? L"None" : wstrSelectedR3)
 						).c_str(), L"", MB_OK);
+
+					delete[] wcaSelectedR2;
+					delete[] wcaSelectedR3;
 					return (LRESULT)0;
 				}
 
 				case VK_F2:
 				{
+					// Show current app size
 					mSol::cShowSizeInfo(MAIN_HWND);
 					return (LRESULT)0;
 				}
@@ -619,34 +648,29 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 				case BUTTON_R2LEFT:
 					CURRENT_SELECTEDRADIO2 = BTN_Radio2Left;
 					RedrawWindow(BTN_Radio2Right, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
 				case BUTTON_R2RIGHT:
 					CURRENT_SELECTEDRADIO2 = BTN_Radio2Right;
 					RedrawWindow(BTN_Radio2Left, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
 				case BUTTON_R3LEFT:
 					CURRENT_SELECTEDRADIO3 = BTN_Radio3Left;
 					RedrawWindow(BTN_Radio3Middle, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 					RedrawWindow(BTN_Radio3Right, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
 				case BUTTON_R3MIDDLE:
 					CURRENT_SELECTEDRADIO3 = BTN_Radio3Middle;
 					RedrawWindow(BTN_Radio3Left, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 					RedrawWindow(BTN_Radio3Right, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
 				case BUTTON_R3RIGHT:
 					CURRENT_SELECTEDRADIO3 = BTN_Radio3Right;
 					RedrawWindow(BTN_Radio3Left, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 					RedrawWindow(BTN_Radio3Middle, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-					MessageBeep(MB_OK);
 					return (LRESULT)0;
 
 				default:
@@ -658,27 +682,27 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 
 		case WM_CTLCOLORSTATIC:
 		{
-			static HBRUSH lhBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+			static HBRUSH RET_CTLCOLORSTATIC = (HBRUSH)GetStockObject(BLACK_BRUSH);
 			if ((HWND)lp == SS_Heading1)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
 				SetBkColor((HDC)wp, CLR_Secondary);
 				SetTextColor((HDC)wp, CLR_DefaultTextColor);
-				lhBrush = hBrush_Secondary;
+				RET_CTLCOLORSTATIC = hBrush_Secondary;
 			}
-			else lhBrush = hBrush_DEBUG;
-			return (LRESULT)lhBrush;
+			else RET_CTLCOLORSTATIC = hBrush_DEBUG;
+			return (LRESULT)RET_CTLCOLORSTATIC;
 		}
 
 		case WM_CTLCOLORBTN:
 		{
-			static HBRUSH lhBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+			static HBRUSH RET_CTLCOLORBTN = (HBRUSH)GetStockObject(BLACK_BRUSH);
 			if ((HWND)lp == BTN_Standard)
 			{
-				lhBrush = hBrush_Secondary;
+				RET_CTLCOLORBTN = hBrush_Secondary;
 			}
-			else lhBrush = hBrush_DEBUG;
-			return (LRESULT)lhBrush;
+			else RET_CTLCOLORBTN = hBrush_DEBUG;
+			return (LRESULT)RET_CTLCOLORBTN;
 		}
 	}
 

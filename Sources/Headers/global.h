@@ -38,7 +38,7 @@ RECT_SizeBorder_Right;
 extern COLORREF CLR_DEBUG,
 CLR_Primary, CLR_Secondary, CLR_BorderActive, CLR_BorderInactive,
 CLR_DefaultTextColor, CLR_DefaultInactiveTextColor, CLR_CloseBtnHover, CLR_MinimizeBtnHover;
-extern HBRUSH hBrush_CTLCOLORSTATIC, hBrush_CTLCOLORBTN, hBrush_CURBORDER, hBrush_DEBUG,
+extern HBRUSH hBrush_CURBORDER, hBrush_DEBUG,
 hBrush_Primary, hBrush_Secondary, hBrush_BorderActive, hBrush_BorderInactive;
 extern HFONT hFont_Default, hFont_Title, hFont_Heading;
 
@@ -49,11 +49,11 @@ extern std::vector<HICON*> Vector_MainObjects_Icons;
 extern std::vector<HBRUSH*> Vector_StaticObjects_Brushes;
 extern std::vector<HWND*> Vector_Subclasses;
 extern std::vector<HWND*> Vector_MAINCONTENTCTR;
+extern std::vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;
 extern std::vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;
 extern std::vector<HBRUSH*> Vector_Subclasses_BARadio2_Brushes;
 extern std::vector<HBRUSH*> Vector_Subclasses_BARadio3_Brushes;		
 extern std::vector<HPEN*> Vector_Subclasses_BARadio3_Miscs;
-extern std::vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;
 extern std::map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 
 // ICONS & BITMAPS HANDLES

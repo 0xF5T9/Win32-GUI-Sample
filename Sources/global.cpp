@@ -16,7 +16,7 @@ using std::wstring, std::map, std::vector, Gdiplus::GdiplusStartupInput;
 
 // APPLICATION PARAMETERS
 LPCWSTR WndClassName = L"Win32GUISample";
-int APPLICATION_WIDTH = 519, APPLICATION_HEIGHT = 250; // Initiate application window size
+int APPLICATION_WIDTH = 519, APPLICATION_HEIGHT = 250; // Initial application window size
 bool IS_APPREADY = 0, IS_APPTHEMESHOWSCROLLBAR = 0;
 wstring APPLICATION_THEME = L"Ristretto";
 HWND CURRENT_SELECTEDRADIO2;
@@ -44,7 +44,7 @@ RECT_SizeBorder_Right = { APPLICATION_WIDTH - BORDER_WIDTH, 1, APPLICATION_WIDTH
 COLORREF CLR_DEBUG,
 CLR_Primary, CLR_Secondary, CLR_BorderActive, CLR_BorderInactive,
 CLR_DefaultTextColor, CLR_DefaultInactiveTextColor, CLR_CloseBtnHover, CLR_MinimizeBtnHover;
-HBRUSH hBrush_CTLCOLORSTATIC, hBrush_CTLCOLORBTN, hBrush_CURBORDER, hBrush_DEBUG,
+HBRUSH hBrush_CURBORDER, hBrush_DEBUG,
 hBrush_Primary, hBrush_Secondary, hBrush_BorderActive, hBrush_BorderInactive;
 HFONT hFont_Default, hFont_Title, hFont_Heading;
 
@@ -55,8 +55,8 @@ vector<HICON*> Vector_MainObjects_Icons;				// Contains main application icon ob
 vector<HBRUSH*> Vector_StaticObjects_Brushes;			// Contains static and debug objects
 vector<HWND*> Vector_Subclasses;						// Contains HWNDs that is subclassed
 vector<HWND*> Vector_MAINCONTENTCTR;					// Viewport container (Main content)
-vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;	// Contains "Standard button animation subclass" brush objects
 vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;	// Contains "Caption bar button animation subclass" brush objects
+vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;	// Contains "Standard button animation subclass" brush objects
 vector<HBRUSH*> Vector_Subclasses_BARadio2_Brushes;		// Contains "Radio2 button animation subclass" brush objects
 vector<HBRUSH*> Vector_Subclasses_BARadio3_Brushes;		// Contains "Radio3 button animation subclass" brush objects
 vector<HPEN*> Vector_Subclasses_BARadio3_Miscs;			// Contains "Radio3 button animation subclass" misc objects
