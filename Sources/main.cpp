@@ -267,7 +267,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			RECT_Caption.right = LOWORD(lp) - BORDER_WIDTH;
 
 			// Main content container
-			if (!SHOW_SCROLLBAR)
+			if (!IS_APPTHEMESHOWSCROLLBAR)
 			{
 				SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 					LOWORD(lp) - (BORDER_WIDTH * 2), // W
@@ -337,7 +337,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 				// Show|Hide the scrollbar if needed
-				if (!SHOW_SCROLLBAR)
+				if (!IS_APPTHEMESHOWSCROLLBAR)
 				{
 					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
 				}
@@ -433,6 +433,24 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
+
+			// Extra invalidates
+			static bool NeedInvalidate = 1;
+			if (NeedInvalidate)
+			{
+				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+				if (si.nPos == si.nMin || si.nPos == si.nMax - (int)si.nPage)
+					NeedInvalidate = 0;
+			}
+			else
+			{
+				if (si.nPos != si.nMin && si.nPos != si.nMax - (int)si.nPage)
+				{
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+					NeedInvalidate = 1;
+				}
+			}
+
 			return (LRESULT)0;
 		}
 
@@ -480,8 +498,21 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 			// Extra invalidates
-			// InvalidateRect(BTN_Standard, NULL, TRUE);
-			RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE);
+			static bool NeedInvalidate = 1;
+			if (NeedInvalidate)
+			{
+				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+				if (si.nPos == si.nMin || si.nPos == si.nMax - (int)si.nPage)
+					NeedInvalidate = 0;
+			}
+			else
+			{
+				if (si.nPos != si.nMin && si.nPos != si.nMax - (int)si.nPage)
+				{
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+					NeedInvalidate = 1;
+				}
+			}
 
 			return (LRESULT)0;
 		}

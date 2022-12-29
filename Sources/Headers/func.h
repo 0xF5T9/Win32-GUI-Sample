@@ -410,7 +410,7 @@ namespace mApp
 				NS_BA_Standard::CL_Background = Color(255, 225, 225, 225); // Default color
 				NS_BA_Standard::CL_Background_H = Color(255, 229, 241, 251); // Hover color
 				NS_BA_Standard::CL_Background_F = Color(255, 204, 228, 247); // Down color
-				NS_BA_Standard::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Standard::CL_Background_S = Color(255, 252, 253, 253); // Background color
 				NS_BA_Standard::CL_NonFocus = Color(255, 173, 173, 173); // Default border color
 				NS_BA_Standard::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
 				NS_BA_Standard::hBrush_Background = CreateSolidBrush(RGB(225, 225, 225)); // Default color
@@ -422,33 +422,33 @@ namespace mApp
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(0, 0, 0); // Highlight text color
 			}
 			{
-				NS_BA_Radio2::CL_Background = Color(255, 58, 44, 42); // Default color
-				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
-				NS_BA_Radio2::CL_Background_F = Color(255, 94, 70, 68); // Down color
-				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
-				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
+				NS_BA_Radio2::CL_Background = Color(255, 225, 225, 225); // Default color
+				NS_BA_Radio2::CL_Background_H = Color(255, 229, 241, 251); // Hover color
+				NS_BA_Radio2::CL_Background_F = Color(255, 204, 228, 247); // Down color
+				NS_BA_Radio2::CL_Background_S = Color(255, 252, 253, 253); // Background color
+				NS_BA_Radio2::CL_NonFocus = Color(255, 173, 173, 173); // Default border color
 				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
-				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
-				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
-				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(225, 225, 225)); // Default color
+				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(229, 241, 251)); // Hover color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(204, 228, 247)); // Down color
 				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
 				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
-				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
-				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+				NS_BA_Radio2::CLR_DefaultTextColor = RGB(0, 0, 0); // Default text color
+				NS_BA_Radio2::CLR_HighlightTextColor = RGB(0, 0, 0); // Highlight text color
 			}
 			{
-				NS_BA_Radio3::CL_Background = Color(255, 58, 44, 42); // Default color
-				NS_BA_Radio3::CL_Background_H = Color(255, 84, 63, 61); // Hover color
-				NS_BA_Radio3::CL_Background_F = Color(255, 94, 70, 68); // Down color
-				NS_BA_Radio3::CL_Background_S = Color(255, 32, 32, 32); // Background color
-				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, RGB(32, 32, 32)); // Default border color
-				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
-				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
-				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio3::CL_Background = Color(255, 225, 225, 225); // Default color
+				NS_BA_Radio3::CL_Background_H = Color(255, 229, 241, 251); // Hover color
+				NS_BA_Radio3::CL_Background_F = Color(255, 204, 228, 247); // Down color
+				NS_BA_Radio3::CL_Background_S = Color(255, 252, 253, 253); // Background color
+				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, RGB(252, 253, 253)); // Default border color
+				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(225, 225, 225)); // Default color
+				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(229, 241, 251)); // Hover color
+				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(204, 228, 247)); // Down color
 				NS_BA_Radio3::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
 				NS_BA_Radio3::hFont_PDefault = &hFont_Default; // Font
-				NS_BA_Radio3::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
-				NS_BA_Radio3::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+				NS_BA_Radio3::CLR_DefaultTextColor = RGB(0, 0, 0); // Default text color
+				NS_BA_Radio3::CLR_HighlightTextColor = RGB(0, 0, 0); // Highlight text color
 			}
 
 			// ICON HANDLE
@@ -460,7 +460,7 @@ namespace mApp
 			hIcon_Minimize_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON4), IMAGE_ICON, 20, 20, NULL);
 
 			APPLICATION_THEME = L"Light"; // Update theme status
-			SHOW_SCROLLBAR = true;
+			IS_APPTHEMESHOWSCROLLBAR = true;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
 
 			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
@@ -534,29 +534,29 @@ namespace mApp
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 			{
-				NS_BA_Radio2::CL_Background = Color(255, 58, 44, 42); // Default color
-				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
-				NS_BA_Radio2::CL_Background_F = Color(255, 94, 70, 68); // Down color
+				NS_BA_Radio2::CL_Background = Color(255, 51, 51, 51); // Default color
+				NS_BA_Radio2::CL_Background_H = Color(255, 69, 69, 69); // Hover color
+				NS_BA_Radio2::CL_Background_F = Color(255, 102, 102, 102); // Down color
 				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
-				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
+				NS_BA_Radio2::CL_NonFocus = Color(255, 155, 155, 155); // Default border color
 				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
-				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
-				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
-				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(51, 51, 51)); // Default color
+				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(69, 69, 69)); // Hover color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(102, 102, 102)); // Down color
 				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
 				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
 				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
 				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 			{
-				NS_BA_Radio3::CL_Background = Color(255, 58, 44, 42); // Default color
-				NS_BA_Radio3::CL_Background_H = Color(255, 84, 63, 61); // Hover color
-				NS_BA_Radio3::CL_Background_F = Color(255, 94, 70, 68); // Down color
+				NS_BA_Radio3::CL_Background = Color(255, 51, 51, 51); // Default color
+				NS_BA_Radio3::CL_Background_H = Color(255, 69, 69, 69); // Hover color
+				NS_BA_Radio3::CL_Background_F = Color(255, 102, 102, 102); // Down color
 				NS_BA_Radio3::CL_Background_S = Color(255, 32, 32, 32); // Background color
-				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, RGB(32, 32, 32)); // Default border color
-				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
-				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
-				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, CLR_Secondary); // Default border color
+				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(51, 51, 51)); // Default color
+				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(69, 69, 69)); // Hover color
+				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(102, 102, 102)); // Down color
 				NS_BA_Radio3::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
 				NS_BA_Radio3::hFont_PDefault = &hFont_Default; // Font
 				NS_BA_Radio3::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
@@ -572,7 +572,7 @@ namespace mApp
 			hIcon_Minimize_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON6), IMAGE_ICON, 20, 20, NULL);
 
 			APPLICATION_THEME = L"Dark"; // Update theme status
-			SHOW_SCROLLBAR = true;
+			IS_APPTHEMESHOWSCROLLBAR = true;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
 
 			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
@@ -684,7 +684,7 @@ namespace mApp
 			hIcon_Minimize_H = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON6), IMAGE_ICON, 20, 20, NULL);
 
 			APPLICATION_THEME = L"Ristretto"; // Update theme status
-			SHOW_SCROLLBAR = false;
+			IS_APPTHEMESHOWSCROLLBAR = false;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
 			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
 
