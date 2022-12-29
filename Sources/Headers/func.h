@@ -69,6 +69,21 @@ namespace NS_BA_Radio2
 	extern COLORREF CLR_DefaultTextColor,
 		CLR_HighlightTextColor;
 };
+namespace NS_BA_Radio3
+{
+	extern Color CL_Background,
+		CL_Background_H,
+		CL_Background_F,
+		CL_Background_S;
+	extern HPEN hPen_Background;
+	extern HBRUSH hBrush_Background,
+		hBrush_Background_H,
+		hBrush_Background_F,
+		hBrush_Background_S;
+	extern HFONT* hFont_PDefault;
+	extern COLORREF CLR_DefaultTextColor,
+		CLR_HighlightTextColor;
+};
 
 // CALLBACK FORWARD DECLARATIONS:
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -76,6 +91,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 namespace mSol
 {
@@ -354,6 +370,8 @@ namespace mApp
 			for (auto& x : Vector_Subclasses_BACaptionBar_Brushes) DeleteObject(*x); // Subclass objects
 			for (auto& x : Vector_Subclasses_BAStandard_Brushes) DeleteObject(*x); // Subclass objects
 			for (auto& x : Vector_Subclasses_BARadio2_Brushes) DeleteObject(*x); // Subclass objects
+			for (auto& x : Vector_Subclasses_BARadio3_Brushes) DeleteObject(*x);  // Subclass objects
+			for (auto& x : Vector_Subclasses_BARadio3_Miscs) DeleteObject(*x); // Subclass objects
 		}
 
 		// Update new COLORREFs and other drawing objects
@@ -404,19 +422,33 @@ namespace mApp
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(0, 0, 0); // Highlight text color
 			}
 			{
-				NS_BA_Radio2::CL_Background = Color(255, 94, 70, 68); // Default color
+				NS_BA_Radio2::CL_Background = Color(255, 58, 44, 42); // Default color
 				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
-				NS_BA_Radio2::CL_Background_F = Color(255, 89, 67, 65); // Down color
+				NS_BA_Radio2::CL_Background_F = Color(255, 94, 70, 68); // Down color
 				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
 				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
 				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
-				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(94, 70, 68)); // Default color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
 				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
-				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(89, 67, 65)); // Down color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
 				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
 				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
 				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
 				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
+			{
+				NS_BA_Radio3::CL_Background = Color(255, 58, 44, 42); // Default color
+				NS_BA_Radio3::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Radio3::CL_Background_F = Color(255, 94, 70, 68); // Down color
+				NS_BA_Radio3::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, RGB(32, 32, 32)); // Default border color
+				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
+				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio3::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Radio3::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Radio3::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Radio3::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 
 			// ICON HANDLE
@@ -430,6 +462,11 @@ namespace mApp
 			APPLICATION_THEME = L"Light"; // Update theme status
 			SHOW_SCROLLBAR = true;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
+
+			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH, // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+				SWP_NOZORDER);
 			
 			{	// Show scrollbar if needed
 				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
@@ -497,19 +534,33 @@ namespace mApp
 				NS_BA_Standard::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 			{
-				NS_BA_Radio2::CL_Background = Color(255, 94, 70, 68); // Default color
+				NS_BA_Radio2::CL_Background = Color(255, 58, 44, 42); // Default color
 				NS_BA_Radio2::CL_Background_H = Color(255, 84, 63, 61); // Hover color
-				NS_BA_Radio2::CL_Background_F = Color(255, 89, 67, 65); // Down color
+				NS_BA_Radio2::CL_Background_F = Color(255, 94, 70, 68); // Down color
 				NS_BA_Radio2::CL_Background_S = Color(255, 32, 32, 32); // Background color
 				NS_BA_Radio2::CL_NonFocus = Color(255, 68, 50, 48); // Default border color
 				NS_BA_Radio2::CL_Focus = Color(255, 181, 180, 185); // Highlight border color
-				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(94, 70, 68)); // Default color
+				NS_BA_Radio2::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
 				NS_BA_Radio2::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
-				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(89, 67, 65)); // Down color
+				NS_BA_Radio2::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
 				NS_BA_Radio2::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
 				NS_BA_Radio2::hFont_PDefault = &hFont_Default; // Font
 				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
 				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
+			{
+				NS_BA_Radio3::CL_Background = Color(255, 58, 44, 42); // Default color
+				NS_BA_Radio3::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Radio3::CL_Background_F = Color(255, 94, 70, 68); // Down color
+				NS_BA_Radio3::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, RGB(32, 32, 32)); // Default border color
+				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
+				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio3::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Radio3::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Radio3::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Radio3::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
 
 			// ICON HANDLE
@@ -523,6 +574,11 @@ namespace mApp
 			APPLICATION_THEME = L"Dark"; // Update theme status
 			SHOW_SCROLLBAR = true;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
+
+			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH, // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+				SWP_NOZORDER);
 
 			{	// Show scrollbar if needed
 				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
@@ -604,6 +660,20 @@ namespace mApp
 				NS_BA_Radio2::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
 				NS_BA_Radio2::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
 			}
+			{
+				NS_BA_Radio3::CL_Background = Color(255, 58, 44, 42); // Default color
+				NS_BA_Radio3::CL_Background_H = Color(255, 84, 63, 61); // Hover color
+				NS_BA_Radio3::CL_Background_F = Color(255, 94, 70, 68); // Down color
+				NS_BA_Radio3::CL_Background_S = Color(255, 32, 32, 32); // Background color
+				NS_BA_Radio3::hPen_Background = CreatePen(PS_SOLID, NULL, RGB(32, 32, 32)); // Default border color
+				NS_BA_Radio3::hBrush_Background = CreateSolidBrush(RGB(58, 44, 42)); // Default color
+				NS_BA_Radio3::hBrush_Background_H = CreateSolidBrush(RGB(84, 63, 61)); // Hover color
+				NS_BA_Radio3::hBrush_Background_F = CreateSolidBrush(RGB(94, 70, 68)); // Down color
+				NS_BA_Radio3::hBrush_Background_S = CreateSolidBrush(CLR_Secondary); // Background color
+				NS_BA_Radio3::hFont_PDefault = &hFont_Default; // Font
+				NS_BA_Radio3::CLR_DefaultTextColor = RGB(255, 255, 255); // Default text color
+				NS_BA_Radio3::CLR_HighlightTextColor = RGB(255, 255, 255); // Highlight text color
+			}
 
 			// ICON HANDLE
 			hIcon_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -617,6 +687,11 @@ namespace mApp
 			SHOW_SCROLLBAR = false;
 			SetAppThemeClass(APPLICATION_THEME); // Set window theme class
 			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+
+			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2), // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+				SWP_NOZORDER);
 		}
 
 		// Redraw application window
@@ -711,15 +786,30 @@ namespace mApp
 		SetWindowSubclass(BTN_Standard, &SC_BA_Standard, NULL, NULL);
 		Vector_Subclasses.push_back(&BTN_Standard);
 
-		BTN_LRadio = CreateWindowEx(NULL, L"BUTTON", L"Left",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 130 + 10, MAINCONTENTCTR_PADDING + (34 + 10), 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_RLEFT, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_LRadio);
-		SetWindowSubclass(BTN_LRadio, &SC_BA_Radio2, NULL, NULL);
+		BTN_Radio2Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2LEFT, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Radio2Left);
+		SetWindowSubclass(BTN_Radio2Left, &SC_BA_Radio2, NULL, NULL);
 
-		BTN_RRadio = CreateWindowEx(NULL, L"BUTTON", L"Right",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 130 + 10 + 65 + 1, MAINCONTENTCTR_PADDING + (34 + 10), 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_RRIGHT, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_RRadio);
-		SetWindowSubclass(BTN_RRadio, &SC_BA_Radio2, NULL, NULL);
+		BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Radio2Right);
+		SetWindowSubclass(BTN_Radio2Right, &SC_BA_Radio2, NULL, NULL);
+
+		BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Radio3Left);
+		SetWindowSubclass(BTN_Radio3Left, &SC_BA_Radio3, NULL, NULL);
+
+		BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Radio3Middle);
+		SetWindowSubclass(BTN_Radio3Middle, &SC_BA_Radio3, NULL, NULL);
+
+		BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
+			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
+		Vector_Subclasses.push_back(&BTN_Radio3Right);
+		SetWindowSubclass(BTN_Radio3Right, &SC_BA_Radio3, NULL, NULL);
 
 		mSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // *
 
@@ -788,11 +878,18 @@ namespace mApp
 			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_F);
 			Vector_Subclasses_BAStandard_Brushes.push_back(&NS_BA_Standard::hBrush_Background_S);
 
-			// ?
+			// "Radio2 button animation subclass" objects
 			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background);
 			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background_H);
 			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background_F);
 			Vector_Subclasses_BARadio2_Brushes.push_back(&NS_BA_Radio2::hBrush_Background_S);
+
+			// "Radio3 button animation subclass" objects
+			Vector_Subclasses_BARadio3_Brushes.push_back(&NS_BA_Radio3::hBrush_Background);
+			Vector_Subclasses_BARadio3_Brushes.push_back(&NS_BA_Radio3::hBrush_Background_H);
+			Vector_Subclasses_BARadio3_Brushes.push_back(&NS_BA_Radio3::hBrush_Background_F);
+			Vector_Subclasses_BARadio3_Brushes.push_back(&NS_BA_Radio3::hBrush_Background_S);
+			Vector_Subclasses_BARadio3_Miscs.push_back(&NS_BA_Radio3::hPen_Background);
 		}
 
 		return true;

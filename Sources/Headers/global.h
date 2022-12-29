@@ -13,7 +13,8 @@ extern LPCWSTR WndClassName;
 extern int APPLICATION_WIDTH, APPLICATION_HEIGHT;
 extern bool IS_APPREADY, SHOW_SCROLLBAR;
 extern std::wstring APPLICATION_THEME;
-extern HWND CURRENT_RADIO2;
+extern HWND CURRENT_SELECTEDRADIO2;
+extern HWND CURRENT_SELECTEDRADIO3;
 
 // API OBJECTS
 extern Gdiplus::GdiplusStartupInput API_StartupInput;
@@ -24,7 +25,7 @@ extern HINSTANCE MAIN_HINSTANCE;
 extern HWND MAIN_HWND;
 extern HWND BTN_Close, BTN_Minimize, SS_Title;
 extern HWND SS_MAINCONTENTCTR, SB_MAINCONTENTCTR;
-extern HWND SS_Heading1, BTN_Standard, BTN_LRadio, BTN_RRadio;
+extern HWND SS_Heading1, BTN_Standard, BTN_Radio2Left, BTN_Radio2Right, BTN_Radio3Left, BTN_Radio3Middle, BTN_Radio3Right;
 
 // RECTS
 extern RECT RECT_Caption;
@@ -50,6 +51,8 @@ extern std::vector<HWND*> Vector_Subclasses;
 extern std::vector<HWND*> Vector_MAINCONTENTCTR;
 extern std::vector<HBRUSH*> Vector_Subclasses_BAStandard_Brushes;
 extern std::vector<HBRUSH*> Vector_Subclasses_BARadio2_Brushes;
+extern std::vector<HBRUSH*> Vector_Subclasses_BARadio3_Brushes;		
+extern std::vector<HPEN*> Vector_Subclasses_BARadio3_Miscs;
 extern std::vector<HBRUSH*> Vector_Subclasses_BACaptionBar_Brushes;
 extern std::map<std::pair<HWND*, HICON*>, std::pair<HICON*, HICON*>> HoverMap_1;
 
