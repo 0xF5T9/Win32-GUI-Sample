@@ -582,13 +582,6 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					delete[] wcaSelectedR3;
 					return (LRESULT)0;
 				}
-
-				case VK_F2:
-				{
-					// Show current app size
-					mSol::cShowSizeInfo(MAIN_HWND);
-					return (LRESULT)0;
-				}
 			}
 
 			break;

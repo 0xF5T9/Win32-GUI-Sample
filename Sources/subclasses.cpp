@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <set>
 #include <Windows.h>
 #include <Windowsx.h>
 #include <Uxtheme.h>
@@ -254,16 +255,23 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case WM_TIMER:
 		{
+			static std::set<HWND*> TimerStack;
 			switch (wParam)
 			{
 			case 1:
 			{
 				InvalidateRect(hWnd, NULL, TRUE);
+				if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
 
 				frames_Invalidated++;
 				if (frames_Invalidated == 60)
 				{
-					KillTimer(hWnd, 1);
+					for (auto& x : TimerStack)
+					{
+						KillTimer(*x, 1);
+						TimerStack.erase(x);
+					}
+					frames_Invalidated = 0;
 				}
 
 				return (LRESULT)0;
@@ -608,26 +616,34 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_TIMER:
 	{
+		static std::set<HWND*> TimerStack;
 		switch (wParam)
 		{
-			case 1:
+		case 1:
+		{
+			InvalidateRect(hWnd, NULL, TRUE);
+			if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
+
+			frames_Invalidated++;
+			if (frames_Invalidated == 60)
 			{
-				InvalidateRect(hWnd, NULL, TRUE);
-
-				frames_Invalidated++;
-				if (frames_Invalidated == 60) 
-				{ 
-					KillTimer(hWnd, 1);
+				for (auto& x : TimerStack)
+				{
+					KillTimer(*x, 1);
+					TimerStack.erase(x);
 				}
-
-				return (LRESULT)0;
+				frames_Invalidated = 0;
 			}
-			default:
-				break;
+
+			return (LRESULT)0;
+		}
+		default:
+			break;
 		}
 
 		break;
 	}
+
 	case WM_NCDESTROY:
 	{
 		RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
@@ -1123,16 +1139,23 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case WM_TIMER:
 		{
+			static std::set<HWND*> TimerStack;
 			switch (wParam)
 			{
 			case 1:
 			{
 				InvalidateRect(hWnd, NULL, TRUE);
+				if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
 
 				frames_Invalidated++;
 				if (frames_Invalidated == 60)
 				{
-					KillTimer(hWnd, 1);
+					for (auto& x : TimerStack)
+					{
+						KillTimer(*x, 1);
+						TimerStack.erase(x);
+					}
+					frames_Invalidated = 0;
 				}
 
 				return (LRESULT)0;
@@ -1626,16 +1649,23 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case WM_TIMER:
 		{
+			static std::set<HWND*> TimerStack;
 			switch (wParam)
 			{
 			case 1:
 			{
 				InvalidateRect(hWnd, NULL, TRUE);
+				if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
 
 				frames_Invalidated++;
 				if (frames_Invalidated == 60)
 				{
-					KillTimer(hWnd, 1);
+					for (auto& x : TimerStack)
+					{
+						KillTimer(*x, 1);
+						TimerStack.erase(x);
+					}
+					frames_Invalidated = 0;
 				}
 
 				return (LRESULT)0;
