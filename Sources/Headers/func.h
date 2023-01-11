@@ -17,6 +17,7 @@
 #include <gdiplus.h>		// Use GDI+ for drawings
 #include <Dwmapi.h>
 #include <comdef.h>			// Read errors from HRESULT
+#include <mmsystem.h>
 #include "./Ex_DarkMode.h"	// Reverse and access to undocumented window "Dark Mode" API
 #include "./global.h"			// Global variables distribution
 
@@ -707,6 +708,7 @@ namespace mApp
 		WM_CREATE (1/4):
 		- Init APIs (Dark mode, GDI buffered painting, GDI+)
 		- Extend frame into client area (For frame shadow effects)
+		- Set minimum resolution for periodic timers
 	*/
 	bool InitBegin(HWND hWnd)
 	{
@@ -714,7 +716,7 @@ namespace mApp
 		HRESULT hr = DwmExtendFrameIntoClientArea(hWnd, &borders);
 		_com_error err(hr);
 
-		if (mSol::InitDarkModeAPI(hWnd) && mSol::InitAPI() && SUCCEEDED(hr))
+		if (mSol::InitDarkModeAPI(hWnd) && mSol::InitAPI() && SUCCEEDED(hr) && timeBeginPeriod(15) == TIMERR_NOERROR)
 			return true;
 		else return false;
 	}
@@ -811,7 +813,7 @@ namespace mApp
 		Vector_Subclasses.push_back(&BTN_Radio3Right);
 		SetWindowSubclass(BTN_Radio3Right, &SC_BA_Radio3, NULL, NULL);
 
-		mSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // *
+		mSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS);
 
 		// Update theme class for controls
 		SetAppThemeClass(APPLICATION_THEME);
@@ -926,6 +928,7 @@ namespace mApp
 		Execute before the application is fully destroyed:
 		- Release objects
 		- Uninitialize APIs
+		- Clears previously set minimum timer resolution
 	*/
 	void OnDestroy(bool Debug = 0)
 	{
@@ -964,5 +967,6 @@ namespace mApp
 		}
 
 		mSol::UnInitAPI();
+		timeEndPeriod(15);
 	}
 }

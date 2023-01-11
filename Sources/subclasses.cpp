@@ -44,11 +44,12 @@ namespace NS_BA_CaptionBar
 		IsReleased = 1;
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState)
+	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 	{
 		nState = !cState;
-		// RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+		frames_Invalidated = 0;
 		InvalidateRect(hWnd, NULL, TRUE);
+		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
 	}
 
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
@@ -229,6 +230,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	static bool nState_LB = 1;
 	static bool isHover = 0;
 	static bool isLBDown = 0;
+	static unsigned short frames_Invalidated = 0;
 	static HWND cHWND;
 
 	switch (uMsg)
@@ -247,13 +249,39 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			return 0;
 		}
 
+		case WM_ERASEBKGND:
+			return (LRESULT)1;
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+			case 1:
+			{
+				InvalidateRect(hWnd, NULL, TRUE);
+
+				frames_Invalidated++;
+				if (frames_Invalidated == 60)
+				{
+					KillTimer(hWnd, 1);
+				}
+
+				return (LRESULT)0;
+			}
+			default:
+				break;
+			}
+
+			break;
+		}
+
 		case WM_LBUTTONDOWN:
 		{
 			nState_LB = 1;
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB);
+			NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(MAIN_HWND, WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
@@ -268,7 +296,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				cState_H = 0;
 				nState_H = 1;
 				BufferedPaintStopAllAnimations(hWnd);
-				NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB);
+				NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 				return 0;
 			}
 
@@ -283,39 +311,10 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			nState_H = 1;
 			isLBDown = 0;
 			isHover = 0;
-			NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H);
+			NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
-
-		/*case WM_MOUSEHOVER:
-		{
-			TRACKMOUSEEVENT tme;
-			tme.cbSize = sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags = TME_LEAVE;
-			tme.hwndTrack = hWnd;
-			TrackMouseEvent(&tme);
-			NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H);
-			isHover = 1;
-			return 0;
-		}
-
-		case WM_MOUSEMOVE:
-		{
-			if (!isHover)
-			{
-				cHWND = hWnd;
-				TRACKMOUSEEVENT tme;
-				tme.cbSize = sizeof(TRACKMOUSEEVENT);
-				tme.dwFlags = TME_HOVER;
-				tme.dwHoverTime = 1;
-				tme.hwndTrack = hWnd;
-				TrackMouseEvent(&tme);
-				return 0;
-			}
-
-			break;
-		}*/
 
 		case WM_MOUSEHOVER:
 			break;
@@ -330,7 +329,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H);
+				NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;
@@ -372,11 +371,12 @@ namespace NS_BA_Standard
 		IsReleased = 1;
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState)
+	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 	{
 		nState = !cState;
-		// RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+		frames_Invalidated = 0;
 		InvalidateRect(hWnd, NULL, TRUE);
+		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
 	}
 
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
@@ -509,7 +509,7 @@ namespace NS_BA_Standard
 				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
 				animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
 
-				animParams.dwDuration = (cState_H != nState_H ? 100 : 0);
+				animParams.dwDuration = (cState_H != nState_H ? 150 : 0);
 
 				RECT rc;
 				GetClientRect(hWnd, &rc);
@@ -556,7 +556,7 @@ namespace NS_BA_Standard
 				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
 				animParams.style = BPAS_LINEAR;
 
-				animParams.dwDuration = (cState_LB != nState_LB ? 300 : 0);
+				animParams.dwDuration = (cState_LB != nState_LB ? 150 : 0);
 
 				RECT rc;
 				GetClientRect(hWnd, &rc);
@@ -598,10 +598,36 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	static bool nState_LB = 1;
 	static bool isHover = 0;
 	static bool isLBDown = 0;
+	static unsigned short frames_Invalidated = 0;
 	static HWND cHWND;
 
 	switch (uMsg)
 	{
+	case WM_ERASEBKGND:
+		return (LRESULT)1;
+
+	case WM_TIMER:
+	{
+		switch (wParam)
+		{
+			case 1:
+			{
+				InvalidateRect(hWnd, NULL, TRUE);
+
+				frames_Invalidated++;
+				if (frames_Invalidated == 60) 
+				{ 
+					KillTimer(hWnd, 1);
+				}
+
+				return (LRESULT)0;
+			}
+			default:
+				break;
+		}
+
+		break;
+	}
 	case WM_NCDESTROY:
 	{
 		RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
@@ -616,10 +642,6 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return 0;
 	}
 
-	case WM_ERASEBKGND:
-	{
-		return (LRESULT)1;
-	}
 
 	case WM_LBUTTONDOWN:
 	{
@@ -627,7 +649,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		cState_LB = 1;
 		isLBDown = 1;
 		BufferedPaintStopAllAnimations(hWnd);
-		NS_BA_Standard::StartAnimation(hWnd, nState_LB, cState_LB);
+		NS_BA_Standard::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 		return 0;
@@ -642,7 +664,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			cState_H = 0;
 			nState_H = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_Standard::StartAnimation(hWnd, nState_LB, cState_LB);
+			NS_BA_Standard::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 			return 0;
 		}
 
@@ -657,7 +679,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		nState_H = 1;
 		isLBDown = 0;
 		isHover = 0;
-		NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H);
+		NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 		return 0;
 	}
@@ -704,7 +726,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			tme.dwFlags = TME_LEAVE;
 			tme.hwndTrack = hWnd;
 			TrackMouseEvent(&tme);
-			NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H);
+			NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 			isHover = 1;
 
 			return 0;
@@ -746,10 +768,12 @@ namespace NS_BA_Radio2
 		IsReleased = 1;
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState)
+	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 	{
 		nState = !cState;
+		frames_Invalidated = 0;
 		RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
 	}
 
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
@@ -1075,102 +1099,95 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	static bool nState_LB = 1;
 	static bool isHover = 0;
 	static bool isLBDown = 0;
+	static unsigned short frames_Invalidated = 0;
 	static HWND cHWND;
 
 	switch (uMsg)
 	{
-	case WM_NCDESTROY:
-	{
-		RemoveWindowSubclass(hWnd, &SC_BA_Radio2, uIdSubclass);
-		if (!NS_BA_Radio2::IsReleased) NS_BA_Radio2::ReleaseObject();
-		return 0;
-	}
-
-	case WM_PAINT:
-	{
-		if (!isLBDown) NS_BA_Radio2::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-		else NS_BA_Radio2::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
-		return 0;
-	}
-
-	case WM_ERASEBKGND:
-	{
-		return (LRESULT)1;
-	}
-
-	case WM_LBUTTONDOWN:
-	{
-		nState_H = 1; // *
-		cState_H = 0; // * Solve invalid hover state? to be tested
-		nState_LB = 1;
-		cState_LB = 1;
-		isLBDown = 1;
-		BufferedPaintStopAllAnimations(hWnd);
-		NS_BA_Radio2::StartAnimation(hWnd, nState_LB, cState_LB);
-
-		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
-		return 0;
-	}
-
-	/*case WM_LBUTTONUP:
-	{
-		if (isLBDown)
+		case WM_NCDESTROY:
 		{
-			cState_LB = 0;
+			RemoveWindowSubclass(hWnd, &SC_BA_Radio2, uIdSubclass);
+			if (!NS_BA_Radio2::IsReleased) NS_BA_Radio2::ReleaseObject();
+			return 0;
+		}
+
+		case WM_PAINT:
+		{
+			if (!isLBDown) NS_BA_Radio2::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else NS_BA_Radio2::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			return 0;
+		}
+
+		case WM_ERASEBKGND:
+			return (LRESULT)1;
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+			case 1:
+			{
+				InvalidateRect(hWnd, NULL, TRUE);
+
+				frames_Invalidated++;
+				if (frames_Invalidated == 60)
+				{
+					KillTimer(hWnd, 1);
+				}
+
+				return (LRESULT)0;
+			}
+			default:
+				break;
+			}
+
+			break;
+		}
+
+		case WM_LBUTTONDOWN:
+		{
+			nState_H = 1; // *
+			cState_H = 0; // * Solve invalid hover state? to be tested
 			nState_LB = 1;
-			cState_H = 0;
-			nState_H = 1;
+			cState_LB = 1;
+			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_Radio2::StartAnimation(hWnd, nState_LB, cState_LB);
+			NS_BA_Radio2::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+
+			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
 		}
 
-		break;
-	}*/
-
-	/*case WM_MOUSELEAVE:
-	{
-		cState_LB = 0;
-		nState_LB = 1;
-		cState_H = 0;
-		nState_H = 1;
-		isLBDown = 0;
-		isHover = 0;
-		NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H);
-
-		return 0;
-	}*/
-
-	case WM_MOUSELEAVE:
-	{
-		isLBDown = 0;
-		isHover = 0;
-		NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H);
-
-		return 0;
-	}
-
-	case WM_MOUSEHOVER:
-		break;
-
-	case WM_MOUSEMOVE:
-	{
-		if (!isHover)
+		case WM_MOUSELEAVE:
 		{
-			cHWND = hWnd;
-			TRACKMOUSEEVENT tme;
-			tme.cbSize = sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags = TME_LEAVE;
-			tme.hwndTrack = hWnd;
-			TrackMouseEvent(&tme);
-			NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H);
-			isHover = 1;
+			isLBDown = 0;
+			isHover = 0;
+			NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
 
-		break;
-	}
+		case WM_MOUSEHOVER:
+			break;
+
+		case WM_MOUSEMOVE:
+		{
+			if (!isHover)
+			{
+				cHWND = hWnd;
+				TRACKMOUSEEVENT tme;
+				tme.cbSize = sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags = TME_LEAVE;
+				tme.hwndTrack = hWnd;
+				TrackMouseEvent(&tme);
+				NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				isHover = 1;
+
+				return 0;
+			}
+
+			break;
+		}
 	}
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -1205,10 +1222,12 @@ namespace NS_BA_Radio3
 		IsReleased = 1;
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState)
+	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short frames_Invalidated)
 	{
 		nState = !cState;
+		frames_Invalidated = 0;
 		RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
 	}
 
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
@@ -1583,73 +1602,95 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	static bool nState_LB = 1;
 	static bool isHover = 0;
 	static bool isLBDown = 0;
+	static unsigned short frames_Invalidated = 0;
 	static HWND cHWND;
 
 	switch (uMsg)
 	{
-	case WM_NCDESTROY:
-	{
-		RemoveWindowSubclass(hWnd, &SC_BA_Radio3, uIdSubclass);
-		if (!NS_BA_Radio3::IsReleased) NS_BA_Radio3::ReleaseObject();
-		return 0;
-	}
-
-	case WM_PAINT:
-	{
-		if (!isLBDown) NS_BA_Radio3::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-		else NS_BA_Radio3::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
-		return 0;
-	}
-
-	case WM_ERASEBKGND:
-	{
-		return (LRESULT)1;
-	}
-
-	case WM_LBUTTONDOWN:
-	{
-		nState_H = 1; // *
-		cState_H = 0; // * Solve invalid hover state? to be tested
-		nState_LB = 1;
-		cState_LB = 1;
-		isLBDown = 1;
-		BufferedPaintStopAllAnimations(hWnd);
-		NS_BA_Radio3::StartAnimation(hWnd, nState_LB, cState_LB);
-
-		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
-		return 0;
-	}
-
-	case WM_MOUSELEAVE:
-	{
-		isLBDown = 0;
-		isHover = 0;
-		NS_BA_Radio3::StartAnimation(hWnd, nState_H, cState_H);
-
-		return 0;
-	}
-
-	case WM_MOUSEHOVER:
-		break;
-
-	case WM_MOUSEMOVE:
-	{
-		if (!isHover)
+		case WM_NCDESTROY:
 		{
-			cHWND = hWnd;
-			TRACKMOUSEEVENT tme;
-			tme.cbSize = sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags = TME_LEAVE;
-			tme.hwndTrack = hWnd;
-			TrackMouseEvent(&tme);
-			NS_BA_Radio3::StartAnimation(hWnd, nState_H, cState_H);
-			isHover = 1;
+			RemoveWindowSubclass(hWnd, &SC_BA_Radio3, uIdSubclass);
+			if (!NS_BA_Radio3::IsReleased) NS_BA_Radio3::ReleaseObject();
+			return 0;
+		}
+
+		case WM_PAINT:
+		{
+			if (!isLBDown) NS_BA_Radio3::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else NS_BA_Radio3::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			return 0;
+		}
+
+		case WM_ERASEBKGND:
+			return (LRESULT)1;
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+			case 1:
+			{
+				InvalidateRect(hWnd, NULL, TRUE);
+
+				frames_Invalidated++;
+				if (frames_Invalidated == 60)
+				{
+					KillTimer(hWnd, 1);
+				}
+
+				return (LRESULT)0;
+			}
+			default:
+				break;
+			}
+
+			break;
+		}
+
+		case WM_LBUTTONDOWN:
+		{
+			nState_H = 1;
+			cState_H = 0;
+			nState_LB = 1;
+			cState_LB = 1;
+			isLBDown = 1;
+			BufferedPaintStopAllAnimations(hWnd);
+			NS_BA_Radio3::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+
+			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL);
+			return 0;
+		}
+
+		case WM_MOUSELEAVE:
+		{
+			isLBDown = 0;
+			isHover = 0;
+			NS_BA_Radio3::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
 
-		break;
-	}
+		case WM_MOUSEHOVER:
+			break;
+
+		case WM_MOUSEMOVE:
+		{
+			if (!isHover)
+			{
+				cHWND = hWnd;
+				TRACKMOUSEEVENT tme;
+				tme.cbSize = sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags = TME_LEAVE;
+				tme.hwndTrack = hWnd;
+				TrackMouseEvent(&tme);
+				NS_BA_Radio3::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				isHover = 1;
+
+				return 0;
+			}
+
+			break;
+		}
 	}
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);

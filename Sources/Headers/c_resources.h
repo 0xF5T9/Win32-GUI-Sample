@@ -31,6 +31,7 @@
 #define CAPTIONBAR_HEIGHT 37
 #define STD_SCROLLBAR_WIDTH 20
 #define MAINCONTENTCTR_PADDING 10
+#define ANIMATION_INVALIDATE_TICK 16
 
 // Custom window style
 #define WS_MYSTYLE (    WS_POPUP          | \
