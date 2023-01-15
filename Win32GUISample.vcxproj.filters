@@ -25,6 +25,9 @@
     <Filter Include="Resource Files\Raws">
       <UniqueIdentifier>{c6968ad7-d94e-42ab-99b0-2ea40669b2bc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Object Manager">
+      <UniqueIdentifier>{64f00a49-b18f-40e2-b576-270d6dddfd88}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="Sources\Resources\MyApp.exe.manifest">
@@ -40,6 +43,9 @@
     </ClCompile>
     <ClCompile Include="Sources\subclasses.cpp">
       <Filter>Source Files\Subclasses</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\obj_manager.cpp">
+      <Filter>Source Files\Object Manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +66,12 @@
     </ClInclude>
     <ClInclude Include="Sources\Resources\resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Headers\subclasses.h">
+      <Filter>Source Files\Subclasses</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Headers\obj_manager.h">
+      <Filter>Source Files\Object Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

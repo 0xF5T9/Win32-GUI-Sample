@@ -162,6 +162,7 @@
     <ClCompile Include="Sources\global.cpp" />
     <ClCompile Include="Sources\main.cpp" />
     <ClCompile Include="Sources\subclasses.cpp" />
+    <ClCompile Include="Sources\obj_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sources\Resources\resource.h" />
@@ -170,6 +171,8 @@
     <ClInclude Include="Sources\Headers\Ex_IatHook.h" />
     <ClInclude Include="Sources\Headers\func.h" />
     <ClInclude Include="Sources\Headers\global.h" />
+    <ClInclude Include="Sources\Headers\subclasses.h" />
+    <ClInclude Include="Sources\Headers\obj_manager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sources\Resources\WindowsProject5.rc" />

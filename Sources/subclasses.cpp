@@ -9,11 +9,13 @@
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <Dwmapi.h>
+#include "./Headers./obj_manager.h"
+#include "./Headers/subclasses.h"
 #include "./Headers/global.h"
 
 using namespace Gdiplus;
 
-namespace mSol
+namespace nSol
 {
 	void GetRoundRectPath(GraphicsPath* pPath, Rect r, int dia);
 	void DrawRoundRect(Graphics* pGraphics, Rect r, Color color, int radius, int width);
@@ -21,208 +23,212 @@ namespace mSol
 	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY);
 }
 
-////////////////////////////////////////////////////////////
-
-namespace NS_BA_CaptionBar
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// * BUTTON ANIMATION CLASS DEFINITIONS (CAPTION BAR)
+void BA_CaptionBar::ClearAnimationMap()
 {
-	HBRUSH hBrush_Background; // Default color
-	HBRUSH hBrush_Background_H; // Hover color
-	HBRUSH hBrush_Background_H_Close; // Hover color (Close)
-	HBRUSH hBrush_Background_H_Minimize; // Hover color (Minimize)
-	HBRUSH hBrush_Background_F; // Down color
-	HBRUSH hBrush_Background_S; // Background color
-
-	// Release objects
-	bool IsReleased = 0;
-	void ReleaseObject()
-	{
-		DeleteObject(hBrush_Background);
-		DeleteObject(hBrush_Background_H);
-		DeleteObject(hBrush_Background_H_Close);
-		DeleteObject(hBrush_Background_H_Minimize);
-		DeleteObject(hBrush_Background_F);
-		DeleteObject(hBrush_Background_S);
-		IsReleased = 1;
+	this->AnimationMap.clear();
+}
+void BA_CaptionBar::InsertAnimationMap(HWND& hWnd, HICON& hIcon_Default, HICON& hIcon_Hover, HICON& hIcon_Inactive)
+{
+	this->AnimationMap.insert(std::make_pair(std::make_pair(&hWnd, &hIcon_Default), std::make_pair(&hIcon_Hover, &hIcon_Inactive)));
+}
+void BA_CaptionBar::UpdateObjects(COLORREF Default, COLORREF Hover, COLORREF Hover_Close, COLORREF Hover_Minimize, COLORREF LBDown, COLORREF Background)
+{
+	if (this->IsReady)
+	{	
+		// Release previously objects
+		DeleteObject(this->hBrush_ButtonColor_Default);
+		DeleteObject(this->hBrush_ButtonColor_Hover);
+		DeleteObject(this->hBrush_ButtonColor_HoverClose);
+		DeleteObject(this->hBrush_ButtonColor_HoverMinimize);
+		DeleteObject(this->hBrush_ButtonColor_LBDown);
+		DeleteObject(this->hBrush_ButtonBackgroundColor);
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+	// Create new objects
+	this->hBrush_ButtonColor_Default = CreateSolidBrush(Default);
+	this->hBrush_ButtonColor_Hover = CreateSolidBrush(Hover);
+	this->hBrush_ButtonColor_HoverClose = CreateSolidBrush(Hover_Close);
+	this->hBrush_ButtonColor_HoverMinimize = CreateSolidBrush(Hover_Minimize);
+	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(LBDown);
+	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(Background);
+
+	this->IsReady = true;
+}
+void BA_CaptionBar::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+{
+	nState = !cState;
+	frames_Invalidated = 0;
+	InvalidateRect(hWnd, NULL, TRUE);
+	SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
+}
+void BA_CaptionBar::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+
+	static HICON hIcon, hIcon_H, hIcon_NF;
+	for (const auto& x : this->AnimationMap)
 	{
-		nState = !cState;
-		frames_Invalidated = 0;
-		InvalidateRect(hWnd, NULL, TRUE);
-		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
-	}
-
-	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
-	{
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-
-		static HICON hIcon, hIcon_H, hIcon_NF;
-		for (const auto& x : HoverMap_1)
+		if (*x.first.first == hWnd)
 		{
-			if (*x.first.first == hWnd)
-			{
-				hIcon = *x.first.second;
-				hIcon_H = *x.second.first;
-				hIcon_NF = *x.second.second;
-				if (GetActiveWindow() != MAIN_HWND) hIcon = hIcon_NF;
-				break;
-			}
-		}
-		HBRUSH hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H;
-		if (hWnd == BTN_Close) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Close;
-		else if (hWnd == BTN_Minimize) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Minimize;
-
-		FillRect(hdc, &rc, NS_BA_CaptionBar::hBrush_Background_S);
-		if (state)
-		{
-			DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
-		}
-		else if (!state && hWnd == cHWND)
-		{
-			FillRect(hdc, &rc, hBrush_Hover);
-			DrawIconEx(hdc, 19, 8, hIcon_H, 20, 20, NULL, NULL, DI_NORMAL);
-		}
-		else
-		{
-			DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
+			hIcon = *x.first.second;
+			hIcon_H = *x.second.first;
+			hIcon_NF = *x.second.second;
+			if (GetActiveWindow() != MAIN_HWND) hIcon = hIcon_NF;
+			break;
 		}
 	}
+	HBRUSH hBrush_Hover = this->hBrush_ButtonColor_Hover;
+	if (hWnd == BTN_Close) hBrush_Hover = this->hBrush_ButtonColor_HoverClose;
+	else if (hWnd == BTN_Minimize) hBrush_Hover = this->hBrush_ButtonColor_HoverMinimize;
 
-	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
 	{
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-
-		static HICON hIcon, hIcon_H, hIcon_NF;
-		for (const auto& x : HoverMap_1)
-		{
-			if (*x.first.first == hWnd)
-			{
-				hIcon = *x.first.second;
-				hIcon_H = *x.second.first;
-				hIcon_NF = *x.second.second;
-				if (GetActiveWindow() != MAIN_HWND) hIcon = hIcon_NF;
-				break;
-			}
-		}
-		HBRUSH hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H;
-		if (hWnd == BTN_Close) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Close;
-		else if (hWnd == BTN_Minimize) hBrush_Hover = NS_BA_CaptionBar::hBrush_Background_H_Minimize;
-
-		FillRect(hdc, &rc, NS_BA_CaptionBar::hBrush_Background_S);
-		if (state)
-		{
-			FillRect(hdc, &rc, hBrush_Hover);
-			DrawIconEx(hdc, 19, 8, hIcon_H, 20, 20, NULL, NULL, DI_NORMAL);
-		}
-		else if (!state && hWnd == cHWND)
-		{
-			FillRect(hdc, &rc, hBrush_Hover);
-			DrawIconEx(hdc, 19, 8, hIcon_H, 20, 20, NULL, NULL, DI_NORMAL);
-		}
-		else
-		{
-			DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
-		}
+		DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
 	}
-
-	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+	else if (!state && hWnd == cHWND)
 	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
-		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_SINE; // Alternative: BPAS_NONE
-
-				animParams.dwDuration = (cState_H != nState_H ? 150 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
-					}
-					if (hdcTo)
-					{
-						Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
-					}
-
-					cState_H = nState_H;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_Hover(hWnd, cHWND, hdc, cState_H);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
-		}
+		FillRect(hdc, &rc, hBrush_Hover);
+		DrawIconEx(hdc, 19, 8, hIcon_H, 20, 20, NULL, NULL, DI_NORMAL);
 	}
-
-	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
+	else
 	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
-		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_SINE;
-
-				animParams.dwDuration = (cState_LB != nState_LB ? 150 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
-					}
-					if (hdcTo)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
-					}
-
-					cState_LB = nState_LB;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
-		}
+		DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
 	}
 }
+void BA_CaptionBar::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	RECT rc;
+	GetClientRect(hWnd, &rc);
 
+	static HICON hIcon, hIcon_H, hIcon_NF;
+	for (const auto& x : this->AnimationMap)
+	{
+		if (*x.first.first == hWnd)
+		{
+			hIcon = *x.first.second;
+			hIcon_H = *x.second.first;
+			hIcon_NF = *x.second.second;
+			if (GetActiveWindow() != MAIN_HWND) hIcon = hIcon_NF;
+			break;
+		}
+	}
+	HBRUSH hBrush_Hover = this->hBrush_ButtonColor_Hover;
+	if (hWnd == BTN_Close) hBrush_Hover = this->hBrush_ButtonColor_HoverClose;
+	else if (hWnd == BTN_Minimize) hBrush_Hover = this->hBrush_ButtonColor_HoverMinimize;
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
+	{
+		FillRect(hdc, &rc, hBrush_Hover);
+		DrawIconEx(hdc, 19, 8, hIcon_H, 20, 20, NULL, NULL, DI_NORMAL);
+	}
+	else if (!state && hWnd == cHWND)
+	{
+		FillRect(hdc, &rc, hBrush_Hover);
+		DrawIconEx(hdc, 19, 8, hIcon_H, 20, 20, NULL, NULL, DI_NORMAL);
+	}
+	else
+	{
+		DrawIconEx(hdc, 19, 8, hIcon, 20, 20, NULL, NULL, DI_NORMAL);
+	}
+}
+void BA_CaptionBar::OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_SINE; // Alternative: BPAS_NONE
+
+			animParams.dwDuration = (cState_H != nState_H ? this->HoverAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
+				}
+				if (hdcTo)
+				{
+					Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
+				}
+
+				cState_H = nState_H;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_Hover(hWnd, cHWND, hdc, cState_H);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+void BA_CaptionBar::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_SINE;
+
+			animParams.dwDuration = (cState_LB != nState_LB ? this->LBDownAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
+				}
+				if (hdcTo)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
+				}
+
+				cState_LB = nState_LB;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+// * SUBCLASS CALLBACK PROCEDURE
 LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	static bool cState_H = 1;
@@ -239,14 +245,13 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		case WM_NCDESTROY:
 		{
 			RemoveWindowSubclass(hWnd, &SC_BA_CaptionBar, uIdSubclass);
-			if (!NS_BA_CaptionBar::IsReleased) NS_BA_CaptionBar::ReleaseObject();
 			return 0;
 		}
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) NS_BA_CaptionBar::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else NS_BA_CaptionBar::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) BA_CaptionBar_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else BA_CaptionBar_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -289,7 +294,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			BA_CaptionBar_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(MAIN_HWND, WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
@@ -304,7 +309,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				cState_H = 0;
 				nState_H = 1;
 				BufferedPaintStopAllAnimations(hWnd);
-				NS_BA_CaptionBar::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+				BA_CaptionBar_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 				return 0;
 			}
 
@@ -319,7 +324,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			nState_H = 1;
 			isLBDown = 0;
 			isHover = 0;
-			NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			BA_CaptionBar_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
@@ -337,7 +342,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				NS_BA_CaptionBar::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				BA_CaptionBar_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;
@@ -349,255 +354,253 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
 
-namespace NS_BA_Standard
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// * BUTTON ANIMATION CLASS DEFINITIONS (STANDARD)
+void BA_Standard::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Background, Color BorderNonFocus, Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor)
 {
-	Color CL_Background;
-	Color CL_Background_H;
-	Color CL_Background_F;
-	Color CL_Background_S;
-	Color CL_NonFocus;
-	Color CL_Focus;
-	HBRUSH hBrush_Background;
-	HBRUSH hBrush_Background_H;
-	HBRUSH hBrush_Background_F;
-	HBRUSH hBrush_Background_S;
-	HFONT* hFont_PDefault;
-	COLORREF CLR_DefaultTextColor;
-	COLORREF CLR_HighlightTextColor;
-
-	// Release objects
-	bool IsReleased = 0;
-	void ReleaseObject()
+	if (this->IsReady)
 	{
-		DeleteObject(hBrush_Background);
-		DeleteObject(hBrush_Background_H);
-		DeleteObject(hBrush_Background_F);
-		DeleteObject(hBrush_Background_S);
-		IsReleased = 1;
+		// Release previously objects
+		DeleteObject(this->hBrush_ButtonColor_Default);
+		DeleteObject(this->hBrush_ButtonColor_Hover);
+		DeleteObject(this->hBrush_ButtonColor_LBDown);
+		DeleteObject(this->hBrush_ButtonBackgroundColor);
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+	// Create new objects
+	this->CL_ButtonColor_Default = Default;
+	this->CL_ButtonColor_Hover = Hover;
+	this->CL_ButtonColor_LBDown = LBDown;
+	this->CL_ButtonBackgroundColor = Background;
+	this->CL_ButtonBorderColor_NonFocus = BorderNonFocus;
+	this->CL_ButtonBorderColor_OnFocus = BorderOnFocus;
+	this->hBrush_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->hBrush_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
+	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
+	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
+	this->CLR_DefaultTextColor = DefaultTextColor;
+	this->CLR_HighlightTextColor = HighlightTextColor;
+	this->hFont_ButtonFont = &Font;
+
+	this->IsReady = true;
+}
+void BA_Standard::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+{
+	nState = !cState;
+	frames_Invalidated = 0;
+	InvalidateRect(hWnd, NULL, TRUE);
+	SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
+}
+void BA_Standard::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	Graphics graphics(hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	Gdiplus::Rect grc(rc.top, rc.left, rc.right, rc.bottom);
+	WCHAR TextBuffer[15];
+	GetWindowTextW(hWnd, TextBuffer, 15);
+	SetTextColor(hdc, this->CLR_DefaultTextColor);
+	SetBkMode(hdc, TRANSPARENT);
+
+	SolidBrush SB_Background = this->CL_ButtonColor_Default;
+	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
+	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
 	{
-		nState = !cState;
-		frames_Invalidated = 0;
-		InvalidateRect(hWnd, NULL, TRUE);
-		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
-	}
-
-	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
-	{
-		Graphics graphics(hdc);
-		graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
-
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		Gdiplus::Rect grc(rc.top, rc.left, rc.right, rc.bottom);
-		WCHAR TextBuffer[15];
-		GetWindowTextW(hWnd, TextBuffer, 15);
-		SetTextColor(hdc, NS_BA_Standard::CLR_DefaultTextColor);
-		SetBkMode(hdc, TRANSPARENT);
-
-		SolidBrush SB_Background = NS_BA_Standard::CL_Background;
-		SolidBrush SB_Background_H = NS_BA_Standard::CL_Background_H;
-		SelectObject(hdc, (HFONT)*NS_BA_Standard::hFont_PDefault);
-
-		FillRect(hdc, &rc, NS_BA_Standard::hBrush_Background_S);
-		if (state)
+		if (GetFocus() != hWnd)
 		{
-			if (GetFocus() != hWnd)
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Standard::CL_NonFocus, 4);
-			}
-			else
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Standard::CL_Focus, 4);
-			}
-			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-		}
-		else if (!state && hWnd == cHWND)
-		{
-			if (GetFocus() != hWnd)
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Standard::CL_NonFocus, 4);
-			}
-			else
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Standard::CL_NonFocus, 4);
-			}
-			SetTextColor(hdc, NS_BA_Standard::CLR_HighlightTextColor);
-			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonBorderColor_NonFocus, 4);
 		}
 		else
 		{
-			if (GetFocus() != hWnd)
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, Color(255, 155, 155, 155), 4);
-			}
-			else
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Standard::CL_Focus, 4);
-			}
-			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonBorderColor_OnFocus, 4);
 		}
+		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
-
-	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+	else if (!state && hWnd == cHWND)
 	{
-		Graphics graphics(hdc);
-		graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
-
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		Gdiplus::Rect grc(rc.top, rc.left, rc.right, rc.bottom);
-		WCHAR TextBuffer[15];
-		GetWindowTextW(hWnd, TextBuffer, 15);
-		SetTextColor(hdc, NS_BA_Standard::CLR_DefaultTextColor);
-		SetBkMode(hdc, TRANSPARENT);
-
-		SolidBrush SB_Background = NS_BA_Standard::CL_Background;
-		SolidBrush SB_Background_H = NS_BA_Standard::CL_Background_H;
-		SolidBrush SB_Background_F = NS_BA_Standard::CL_Background_F;
-		SelectObject(hdc, (HFONT)*NS_BA_Standard::hFont_PDefault);
-
-		FillRect(hdc, &rc, NS_BA_Standard::hBrush_Background_S);
-		if (state)
+		if (GetFocus() != hWnd)
 		{
-			if (GetFocus() != hWnd)
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Standard::CL_NonFocus, 4);
-			}
-			else
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Standard::CL_Focus, 4);
-			}
-			SetTextColor(hdc, NS_BA_Standard::CLR_HighlightTextColor);
-			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-		}
-		else if (!state && hWnd == cHWND)
-		{
-			if (GetFocus() != hWnd)
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, NS_BA_Standard::CL_NonFocus, 4);
-			}
-			else
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, NS_BA_Standard::CL_Focus, 4);
-			}
-			SetTextColor(hdc, NS_BA_Standard::CLR_HighlightTextColor);
-			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonBorderColor_NonFocus, 4);
 		}
 		else
 		{
-			if (GetFocus() != hWnd)
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Standard::CL_NonFocus, 4);
-			}
-			else
-			{
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Standard::CL_Focus, 4);
-			}
-			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonBorderColor_NonFocus, 4);
 		}
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
-
-	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+	else
 	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
+		if (GetFocus() != hWnd)
 		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
-
-				animParams.dwDuration = (cState_H != nState_H ? 150 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
-					}
-					if (hdcTo)
-					{
-						Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
-					}
-
-					cState_H = nState_H;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_Hover(hWnd, cHWND, hdc, cState_H);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, Color(255, 155, 155, 155), 4);
 		}
-	}
-
-	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
+		else
 		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_LINEAR;
-
-				animParams.dwDuration = (cState_LB != nState_LB ? 150 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
-					}
-					if (hdcTo)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
-					}
-
-					cState_LB = nState_LB;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonBorderColor_OnFocus, 4);
 		}
+		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
 }
+void BA_Standard::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	Graphics graphics(hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
 
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	Gdiplus::Rect grc(rc.top, rc.left, rc.right, rc.bottom);
+	WCHAR TextBuffer[15];
+	GetWindowTextW(hWnd, TextBuffer, 15);
+	SetTextColor(hdc, this->CLR_DefaultTextColor);
+	SetBkMode(hdc, TRANSPARENT);
+
+	SolidBrush SB_Background = this->CL_ButtonColor_Default;
+	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
+	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
+	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
+	{
+		if (GetFocus() != hWnd)
+		{
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonBorderColor_NonFocus, 4);
+		}
+		else
+		{
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonBorderColor_OnFocus, 4);
+		}
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+	else if (!state && hWnd == cHWND)
+	{
+		if (GetFocus() != hWnd)
+		{
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonBorderColor_NonFocus, 4);
+		}
+		else
+		{
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonBorderColor_OnFocus, 4);
+		}
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+	else
+	{
+		if (GetFocus() != hWnd)
+		{
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonBorderColor_NonFocus, 4);
+		}
+		else
+		{
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonBorderColor_OnFocus, 4);
+		}
+		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+}
+void BA_Standard::OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
+
+			animParams.dwDuration = (cState_H != nState_H ? this->HoverAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
+				}
+				if (hdcTo)
+				{
+					Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
+				}
+
+				cState_H = nState_H;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_Hover(hWnd, cHWND, hdc, cState_H);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+void BA_Standard::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_LINEAR;
+
+			animParams.dwDuration = (cState_LB != nState_LB ? this->LBDownAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
+				}
+				if (hdcTo)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
+				}
+
+				cState_LB = nState_LB;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+// * SUBCLASS CALLBACK PROCEDURE
 LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	static bool cState_H = 1;
@@ -647,14 +650,13 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_NCDESTROY:
 	{
 		RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
-		if (!NS_BA_Standard::IsReleased) NS_BA_Standard::ReleaseObject();
 		return 0;
 	}
 
 	case WM_PAINT:
 	{
-		if (!isLBDown) NS_BA_Standard::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-		else NS_BA_Standard::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+		if (!isLBDown) BA_Standard_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+		else BA_Standard_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 		return 0;
 	}
 
@@ -665,7 +667,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		cState_LB = 1;
 		isLBDown = 1;
 		BufferedPaintStopAllAnimations(hWnd);
-		NS_BA_Standard::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+		BA_Standard_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 		return 0;
@@ -680,7 +682,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			cState_H = 0;
 			nState_H = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_Standard::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			BA_Standard_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 			return 0;
 		}
 
@@ -695,39 +697,10 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		nState_H = 1;
 		isLBDown = 0;
 		isHover = 0;
-		NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+		BA_Standard_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 		return 0;
 	}
-
-	/*case WM_MOUSEHOVER:
-	{
-		TRACKMOUSEEVENT tme;
-		tme.cbSize = sizeof(TRACKMOUSEEVENT);
-		tme.dwFlags = TME_LEAVE;
-		tme.hwndTrack = hWnd;
-		TrackMouseEvent(&tme);
-		NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H);
-		isHover = 1;
-		return 0;
-	}
-
-	case WM_MOUSEMOVE:
-	{
-		if (!isHover)
-		{
-			cHWND = hWnd;
-			TRACKMOUSEEVENT tme;
-			tme.cbSize = sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags = TME_HOVER;
-			tme.dwHoverTime = 1;
-			tme.hwndTrack = hWnd;
-			TrackMouseEvent(&tme);
-			return 0;
-		}
-
-		break;
-	}*/
 
 	case WM_MOUSEHOVER:
 		break;
@@ -742,7 +715,7 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			tme.dwFlags = TME_LEAVE;
 			tme.hwndTrack = hWnd;
 			TrackMouseEvent(&tme);
-			NS_BA_Standard::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			BA_Standard_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 			isHover = 1;
 
 			return 0;
@@ -754,359 +727,357 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
 
-namespace NS_BA_Radio2
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// * BUTTON ANIMATION CLASS DEFINITIONS (RADIO2)
+void BA_Radio2::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Background, Color BorderNonFocus, Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor)
 {
-	Color CL_Background;
-	Color CL_Background_H;
-	Color CL_Background_F;
-	Color CL_Background_S;
-	Color CL_NonFocus;
-	Color CL_Focus;
-	HBRUSH hBrush_Background;
-	HBRUSH hBrush_Background_H;
-	HBRUSH hBrush_Background_F;
-	HBRUSH hBrush_Background_S;
-	HFONT* hFont_PDefault;
-	COLORREF CLR_DefaultTextColor;
-	COLORREF CLR_HighlightTextColor;
-
-	// Release objects
-	bool IsReleased = 0;
-	void ReleaseObject()
+	if (this->IsReady)
 	{
-		DeleteObject(hBrush_Background);
-		DeleteObject(hBrush_Background_H);
-		DeleteObject(hBrush_Background_F);
-		DeleteObject(hBrush_Background_S);
-		IsReleased = 1;
+		// Release previously objects
+		DeleteObject(this->hBrush_ButtonColor_Default);
+		DeleteObject(this->hBrush_ButtonColor_Hover);
+		DeleteObject(this->hBrush_ButtonColor_LBDown);
+		DeleteObject(this->hBrush_ButtonBackgroundColor);
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+	// Create new objects
+	this->CL_ButtonColor_Default = Default;
+	this->CL_ButtonColor_Hover = Hover;
+	this->CL_ButtonColor_LBDown = LBDown;
+	this->CL_ButtonBackgroundColor = Background;
+	this->CL_ButtonBorderColor_NonFocus = BorderNonFocus;
+	this->CL_ButtonBorderColor_OnFocus = BorderOnFocus;
+	this->hBrush_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->hBrush_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
+	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
+	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
+	this->CLR_DefaultTextColor = DefaultTextColor;
+	this->CLR_HighlightTextColor = HighlightTextColor;
+	this->hFont_ButtonFont = &Font;
+
+	this->IsReady = true;
+}
+void BA_Radio2::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+{
+	nState = !cState;
+	frames_Invalidated = 0;
+	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+	SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
+}
+void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	Graphics graphics(hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	WCHAR TextBuffer[15];
+	GetWindowTextW(hWnd, TextBuffer, 15);
+	SetTextColor(hdc, CLR_DefaultTextColor);
+	SetBkMode(hdc, TRANSPARENT);
+
+	SolidBrush SB_Background = this->CL_ButtonColor_Default;
+	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
+	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
+	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
 	{
-		nState = !cState;
-		frames_Invalidated = 0;
-		RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
-	}
-
-	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
-	{
-		Graphics graphics(hdc);
-		graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
-
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		WCHAR TextBuffer[15];
-		GetWindowTextW(hWnd, TextBuffer, 15);
-		SetTextColor(hdc, CLR_DefaultTextColor);
-		SetBkMode(hdc, TRANSPARENT);
-
-		SolidBrush SB_Background = CL_Background;
-		SolidBrush SB_Background_H = CL_Background_H;
-		SolidBrush SB_Background_F = CL_Background_F;
-		SelectObject(hdc, (HFONT)*hFont_PDefault);
-
-		FillRect(hdc, &rc, hBrush_Background_S);
-		if (state)
+		if (hWnd == BTN_Radio2Left)
 		{
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background);
-			}
-		}
-		else if (!state && hWnd == cHWND)
-		{
-			SetTextColor(hdc, CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background_H);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background_H);
-			}
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
 		else
 		{
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background);
-			}
-		}
-
-		if (hWnd == CURRENT_SELECTEDRADIO2)
-		{
-			SetTextColor(hdc, CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background_F);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background_F);
-			}
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
 	}
-
-	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+	else if (!state && hWnd == cHWND)
 	{
-		Graphics graphics(hdc);
-		graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
-
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		WCHAR TextBuffer[15];
-		GetWindowTextW(hWnd, TextBuffer, 15);
-		SetTextColor(hdc, CLR_DefaultTextColor);
-		SetBkMode(hdc, TRANSPARENT);
-
-		SolidBrush SB_Background = CL_Background;
-		SolidBrush SB_Background_H = CL_Background_H;
-		SolidBrush SB_Background_F = CL_Background_F;
-		SelectObject(hdc, (HFONT)*hFont_PDefault);
-
-		FillRect(hdc, &rc, hBrush_Background_S);
-		if (state)
+		SetTextColor(hdc, CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio2Left)
 		{
-			SetTextColor(hdc, CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background_H);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background_H);
-			}
-		}
-		else if (!state && hWnd == cHWND)
-		{
-			SetTextColor(hdc, CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background_F);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background_F);
-			}
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
 		}
 		else
 		{
-			if (hWnd == BTN_Radio2Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, hBrush_Background);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+		}
+	}
+	else
+	{
+		if (hWnd == BTN_Radio2Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, hBrush_Background);
-			}
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
 	}
 
-	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+	if (hWnd == CURRENT_SELECTEDRADIO2)
 	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
+		SetTextColor(hdc, CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio2Left)
 		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				animParams.dwDuration = (cState_H != nState_H ? 100 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
-					}
-					if (hdcTo)
-					{
-						Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
-					}
-
-					cState_H = nState_H;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_Hover(hWnd, cHWND, hdc, cState_H);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
 		}
-	}
-
-	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
+		else
 		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_LINEAR;
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				animParams.dwDuration = (cState_LB != nState_LB ? 300 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
-					}
-					if (hdcTo)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
-					}
-
-					cState_LB = nState_LB;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
 		}
 	}
 }
+void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	Graphics graphics(hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
 
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	WCHAR TextBuffer[15];
+	GetWindowTextW(hWnd, TextBuffer, 15);
+	SetTextColor(hdc, CLR_DefaultTextColor);
+	SetBkMode(hdc, TRANSPARENT);
+
+	SolidBrush SB_Background = this->CL_ButtonColor_Default;
+	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
+	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
+	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
+	{
+		SetTextColor(hdc, CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio2Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+		}
+	}
+	else if (!state && hWnd == cHWND)
+	{
+		SetTextColor(hdc, CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio2Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+		}
+	}
+	else
+	{
+		if (hWnd == BTN_Radio2Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+		}
+	}
+}
+void BA_Radio2::OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
+
+			animParams.dwDuration = (cState_H != nState_H ? this->HoverAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
+				}
+				if (hdcTo)
+				{
+					Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
+				}
+
+				cState_H = nState_H;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_Hover(hWnd, cHWND, hdc, cState_H);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+void BA_Radio2::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_LINEAR;
+
+			animParams.dwDuration = (cState_LB != nState_LB ? this->LBDownAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
+				}
+				if (hdcTo)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
+				}
+
+				cState_LB = nState_LB;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+// * SUBCLASS CALLBACK PROCEDURE
 LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	static bool cState_H = 1;
@@ -1123,14 +1094,13 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case WM_NCDESTROY:
 		{
 			RemoveWindowSubclass(hWnd, &SC_BA_Radio2, uIdSubclass);
-			if (!NS_BA_Radio2::IsReleased) NS_BA_Radio2::ReleaseObject();
 			return 0;
 		}
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) NS_BA_Radio2::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else NS_BA_Radio2::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) BA_Radio2_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else BA_Radio2_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -1175,7 +1145,7 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_Radio2::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			BA_Radio2_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
@@ -1185,7 +1155,7 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		{
 			isLBDown = 0;
 			isHover = 0;
-			NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			BA_Radio2_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
@@ -1203,7 +1173,7 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				NS_BA_Radio2::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				BA_Radio2_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;
@@ -1215,408 +1185,408 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
 
-namespace NS_BA_Radio3
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// * BUTTON ANIMATION CLASS DEFINITIONS (RADIO3)
+void BA_Radio3::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Background, Color BorderNonFocus, Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor)
 {
-	Color CL_Background;
-	Color CL_Background_H;
-	Color CL_Background_F;
-	Color CL_Background_S;
-	HPEN hPen_Background;
-	HBRUSH hBrush_Background;
-	HBRUSH hBrush_Background_H;
-	HBRUSH hBrush_Background_F;
-	HBRUSH hBrush_Background_S;
-	HFONT* hFont_PDefault;
-	COLORREF CLR_DefaultTextColor;
-	COLORREF CLR_HighlightTextColor;
-
-	// Release objects
-	bool IsReleased = 0;
-	void ReleaseObject()
+	if (this->IsReady)
 	{
-		DeleteObject(hPen_Background);
-		DeleteObject(hBrush_Background);
-		DeleteObject(hBrush_Background_H);
-		DeleteObject(hBrush_Background_F);
-		DeleteObject(hBrush_Background_S);
-		IsReleased = 1;
+		// Release previously objects
+		DeleteObject(this->hPen_ButtonColor_Default);
+		DeleteObject(this->hBrush_ButtonColor_Default);
+		DeleteObject(this->hBrush_ButtonColor_Hover);
+		DeleteObject(this->hBrush_ButtonColor_LBDown);
+		DeleteObject(this->hBrush_ButtonBackgroundColor);
 	}
 
-	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short frames_Invalidated)
+	// Create new objects
+	this->CL_ButtonColor_Default = Default;
+	this->CL_ButtonColor_Hover = Hover;
+	this->CL_ButtonColor_LBDown = LBDown;
+	this->CL_ButtonBackgroundColor = Background;
+	this->CL_ButtonBorderColor_NonFocus = BorderNonFocus;
+	this->CL_ButtonBorderColor_OnFocus = BorderOnFocus;
+	this->hPen_ButtonColor_Default = CreatePen(PS_SOLID, NULL, RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->hBrush_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->hBrush_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
+	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
+	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
+	this->CLR_DefaultTextColor = DefaultTextColor;
+	this->CLR_HighlightTextColor = HighlightTextColor;
+	this->hFont_ButtonFont = &Font;
+
+	this->IsReady = true;
+}
+void BA_Radio3::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
+{
+	nState = !cState;
+	frames_Invalidated = 0;
+	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+	SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
+}
+void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	Graphics graphics(hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	WCHAR TextBuffer[15];
+	GetWindowTextW(hWnd, TextBuffer, 15);
+	SetTextColor(hdc, this->CLR_DefaultTextColor);
+	SetBkMode(hdc, TRANSPARENT);
+
+	SolidBrush SB_Background = this->CL_ButtonColor_Default;
+	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
+	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
+	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
 	{
-		nState = !cState;
-		frames_Invalidated = 0;
-		RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-		SetTimer(hWnd, 1, ANIMATION_INVALIDATE_TICK, NULL);
-	}
-
-	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
-	{
-		Graphics graphics(hdc);
-		graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
-
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		WCHAR TextBuffer[15];
-		GetWindowTextW(hWnd, TextBuffer, 15);
-		SetTextColor(hdc, NS_BA_Radio3::CLR_DefaultTextColor);
-		SetBkMode(hdc, TRANSPARENT);
-
-		SolidBrush SB_Background = NS_BA_Radio3::CL_Background;
-		SolidBrush SB_Background_H = NS_BA_Radio3::CL_Background_H;
-		SolidBrush SB_Background_F = NS_BA_Radio3::CL_Background_F;
-		SelectObject(hdc, (HFONT)*NS_BA_Radio3::hFont_PDefault);
-
-		FillRect(hdc, &rc, NS_BA_Radio3::hBrush_Background_S);
-		if (state)
+		if (hWnd == BTN_Radio3Left)
 		{
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Radio3::CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Radio3::CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background);
-			}
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
-		else if (!state && hWnd == cHWND)
+		else if (hWnd == BTN_Radio3Middle)
 		{
-			SetTextColor(hdc, NS_BA_Radio3::CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Radio3::CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_H);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background_H);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Radio3::CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_H);
-			}
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
 		{
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Radio3::CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Radio3::CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background);
-			}
-		}
-
-		if (hWnd == CURRENT_SELECTEDRADIO3)
-		{
-			SetTextColor(hdc, NS_BA_Radio3::CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, NS_BA_Radio3::CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_F);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background_F);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, NS_BA_Radio3::CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_F);
-			}
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
 	}
-
-	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+	else if (!state && hWnd == cHWND)
 	{
-		Graphics graphics(hdc);
-		graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
-
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		WCHAR TextBuffer[15];
-		GetWindowTextW(hWnd, TextBuffer, 15);
-		SetTextColor(hdc, NS_BA_Radio3::CLR_DefaultTextColor);
-		SetBkMode(hdc, TRANSPARENT);
-
-		SolidBrush SB_Background = NS_BA_Radio3::CL_Background;
-		SolidBrush SB_Background_H = NS_BA_Radio3::CL_Background_H;
-		SolidBrush SB_Background_F = NS_BA_Radio3::CL_Background_F;
-		SelectObject(hdc, (HFONT)*NS_BA_Radio3::hFont_PDefault);
-
-		FillRect(hdc, &rc, NS_BA_Radio3::hBrush_Background_S);
-		if (state)
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio3Left)
 		{
-			SetTextColor(hdc, NS_BA_Radio3::CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Radio3::CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_H);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background_H);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_H, grc, NS_BA_Radio3::CL_Background_H, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_H);
-			}
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
 		}
-		else if (!state && hWnd == cHWND)
+		else if (hWnd == BTN_Radio3Middle)
 		{
-			SetTextColor(hdc, NS_BA_Radio3::CLR_HighlightTextColor);
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, NS_BA_Radio3::CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_F);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background_F);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background_F, grc, NS_BA_Radio3::CL_Background_F, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background_F);
-			}
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Hover);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
 		{
-			if (hWnd == BTN_Radio3Left)
-			{
-				Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Radio3::CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.left = lerc.right - 10;
-				lerc.right -= 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background);
-			}
-			else if (hWnd == BTN_Radio3Middle)
-			{
-				SelectObject(hdc, (HBRUSH)NS_BA_Radio3::hBrush_Background);
-				SelectObject(hdc, (HPEN)NS_BA_Radio3::hPen_Background);
-				RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-			}
-			else
-			{
-				Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
-				mSol::FillRoundRect(&graphics, &SB_Background, grc, NS_BA_Radio3::CL_Background, 4);
-				DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+		}
+	}
+	else
+	{
+		if (hWnd == BTN_Radio3Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				RECT lerc = rc;
-				lerc.right = lerc.left + 10;
-				lerc.left += 1;
-				FillRect(hdc, &lerc, NS_BA_Radio3::hBrush_Background);
-			}
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+		}
+		else if (hWnd == BTN_Radio3Middle)
+		{
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
 	}
 
-	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+	if (hWnd == CURRENT_SELECTEDRADIO3)
 	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio3Left)
 		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				animParams.dwDuration = (cState_H != nState_H ? 100 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
-					}
-					if (hdcTo)
-					{
-						Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
-					}
-
-					cState_H = nState_H;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_Hover(hWnd, cHWND, hdc, cState_H);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
 		}
-	}
-
-	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-
-		if (hdc)
+		else if (hWnd == BTN_Radio3Middle)
 		{
-			if (!BufferedPaintRenderAnimation(hWnd, hdc))
-			{
-				BP_ANIMATIONPARAMS animParams;
-				ZeroMemory(&animParams, sizeof(animParams));
-				animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-				animParams.style = BPAS_LINEAR;
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_LBDown);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-				animParams.dwDuration = (cState_LB != nState_LB ? 300 : 0);
-
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				HDC hdcFrom, hdcTo;
-				HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
-					BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
-
-				if (hbpAnimation)
-				{
-					if (hdcFrom)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
-					}
-					if (hdcTo)
-					{
-						Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
-					}
-
-					cState_LB = nState_LB;
-					EndBufferedAnimation(hbpAnimation, TRUE);
-				}
-				else
-				{
-					Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
-				}
-			}
-
-			EndPaint(hWnd, &ps);
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
 		}
 	}
 }
+void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
+{
+	Graphics graphics(hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
 
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	WCHAR TextBuffer[15];
+	GetWindowTextW(hWnd, TextBuffer, 15);
+	SetTextColor(hdc, this->CLR_DefaultTextColor);
+	SetBkMode(hdc, TRANSPARENT);
+
+	SolidBrush SB_Background = this->CL_ButtonColor_Default;
+	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
+	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
+	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+
+	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	if (state)
+	{
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio3Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+		}
+		else if (hWnd == BTN_Radio3Middle)
+		{
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Hover);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+		}
+	}
+	else if (!state && hWnd == cHWND)
+	{
+		SetTextColor(hdc, this->CLR_HighlightTextColor);
+		if (hWnd == BTN_Radio3Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+		}
+		else if (hWnd == BTN_Radio3Middle)
+		{
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_LBDown);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+		}
+	}
+	else
+	{
+		if (hWnd == BTN_Radio3Left)
+		{
+			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.left = lerc.right - 10;
+			lerc.right -= 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+		}
+		else if (hWnd == BTN_Radio3Middle)
+		{
+			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
+			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
+			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
+		else
+		{
+			Gdiplus::Rect grc(rc.top + 5, rc.left, rc.right - 5, rc.bottom);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
+			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			RECT lerc = rc;
+			lerc.right = lerc.left + 10;
+			lerc.left += 1;
+			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+		}
+	}
+}
+void BA_Radio3::OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
+
+			animParams.dwDuration = (cState_H != nState_H ? this->HoverAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_Hover(hWnd, cHWND, hdcFrom, cState_H);
+				}
+				if (hdcTo)
+				{
+					Paint_Hover(hWnd, cHWND, hdcTo, nState_H);
+				}
+
+				cState_H = nState_H;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_Hover(hWnd, cHWND, hdc, cState_H);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+void BA_Radio3::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	if (hdc)
+	{
+		if (!BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			BP_ANIMATIONPARAMS animParams;
+			ZeroMemory(&animParams, sizeof(animParams));
+			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+			animParams.style = BPAS_LINEAR;
+
+			animParams.dwDuration = (cState_LB != nState_LB ? this->LBDownAnimationDuration : 0);
+
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			HDC hdcFrom, hdcTo;
+			HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rc,
+				BPBF_COMPATIBLEBITMAP, NULL, &animParams, &hdcFrom, &hdcTo);
+
+			if (hbpAnimation)
+			{
+				if (hdcFrom)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcFrom, cState_LB);
+				}
+				if (hdcTo)
+				{
+					Paint_LBDown(hWnd, cHWND, hdcTo, nState_LB);
+				}
+
+				cState_LB = nState_LB;
+				EndBufferedAnimation(hbpAnimation, TRUE);
+			}
+			else
+			{
+				Paint_LBDown(hWnd, cHWND, hdc, cState_LB);
+			}
+		}
+
+		EndPaint(hWnd, &ps);
+	}
+}
+// * SUBCLASS CALLBACK PROCEDURE
 LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	static bool cState_H = 1;
@@ -1633,14 +1603,13 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case WM_NCDESTROY:
 		{
 			RemoveWindowSubclass(hWnd, &SC_BA_Radio3, uIdSubclass);
-			if (!NS_BA_Radio3::IsReleased) NS_BA_Radio3::ReleaseObject();
 			return 0;
 		}
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) NS_BA_Radio3::OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else NS_BA_Radio3::OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) BA_Radio3_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else BA_Radio3_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -1685,7 +1654,7 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			NS_BA_Radio3::StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			BA_Radio3_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL);
 			return 0;
@@ -1695,7 +1664,7 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		{
 			isLBDown = 0;
 			isHover = 0;
-			NS_BA_Radio3::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			BA_Radio3_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
@@ -1713,7 +1682,7 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				NS_BA_Radio3::StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				BA_Radio3_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;
@@ -1725,3 +1694,4 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

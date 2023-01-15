@@ -33,14 +33,14 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
-	int DesktopWidth = 0, DesktopHeight = 0; mSol::GetDesktopResolution(DesktopWidth, DesktopHeight); // Get user desktop resolution
+	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight); // Get user desktop resolution
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
 		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),	// Semi-center application on start
 		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initial application window size
 		NULL, NULL, hInstance, NULL);
 	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), NULL, LWA_COLORKEY); // Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
 
-	mApp::OnReady();	// Execute when the application's main window is created and ready to displays
+	nApp::OnReady();	// Execute when the application's main window is created and ready to displays
 
 	// Begin message loop
 	MSG msg = { 0 };
@@ -63,7 +63,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case WM_CREATE:
 		{
 			// Initialize main window
-			if (mApp::InitBegin(hWnd) && mApp::InitTheme(hWnd) && mApp::InitControl(hWnd) && mApp::InitEnd(hWnd))
+			if (nApp::InitBegin(hWnd) && nApp::InitTheme(hWnd) && nApp::InitControl(hWnd) && nApp::InitEnd(hWnd))
 				return (LRESULT)0;
 			else { MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize main window)", L"", MB_OK | MB_ICONERROR); exit(1); }
 		}
@@ -75,7 +75,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			switch (wp)
 			{
 				case BUTTON_CLOSE:
-					mApp::OnExit();
+					nApp::OnExit();
 					DestroyWindow(hWnd);
 					return (LRESULT)0;
 
@@ -110,10 +110,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			graphics.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 
 			// Begin painting to memory DC
-			FillRect(mem_hdc, &rAppClient, hBrush_Secondary);	// Main background color
-			FillRect(mem_hdc, &RECT_Caption, hBrush_Primary);	// Caption bar color
+			FillRect(mem_hdc, &rAppClient, OBJM_Main->HBR_Secondary);	// Main background color
+			FillRect(mem_hdc, &RECT_Caption, OBJM_Main->HBR_Primary);	// Caption bar color
 			static RECT rFrames_Paint; GetClientRect(hWnd, &rFrames_Paint);
-			FrameRect(mem_hdc, &rFrames_Paint, hBrush_CURBORDER);	// Border color
+			FrameRect(mem_hdc, &rFrames_Paint, *OBJM_Main->HBRP_CURRENTBORDER);	// Border color
 
 			// Draw contents from memory DC to target DC
 			BitBlt(hdc, 0, 0, rAppClient.right - rAppClient.left,
@@ -143,10 +143,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			if ((HWND)lp == SS_Title)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
-				SetBkColor((HDC)wp, CLR_Primary);
-				if (GetActiveWindow() == hWnd) SetTextColor((HDC)wp, CLR_DefaultTextColor);
-				else SetTextColor((HDC)wp, CLR_DefaultInactiveTextColor);
-				RET_CTLCOLORSTATIC = hBrush_Primary;
+				SetBkColor((HDC)wp, OBJM_Main->CLR_Primary);
+				if (GetActiveWindow() == hWnd) SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
+				else SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
+				RET_CTLCOLORSTATIC = OBJM_Main->HBR_Primary;
 			}
 			else if ((HWND)lp == SS_MAINCONTENTCTR)
 			{
@@ -154,13 +154,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				if (OnFirst)
 				{
 					SetBkMode((HDC)wp, TRANSPARENT);
-					SetBkColor((HDC)wp, CLR_Secondary);
-					SetTextColor((HDC)wp, CLR_DefaultTextColor);
+					SetBkColor((HDC)wp, OBJM_Main->CLR_Secondary);
+					SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
 					OnFirst = 0;
 				}
-				RET_CTLCOLORSTATIC = hBrush_Secondary;
+				RET_CTLCOLORSTATIC = OBJM_Main->HBR_Secondary;
 			}
-			else RET_CTLCOLORSTATIC = hBrush_DEBUG; // Apply debug color to non-handled static controls
+			else RET_CTLCOLORSTATIC = OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled static controls
 
 			return (LRESULT)RET_CTLCOLORSTATIC;
 		}
@@ -172,8 +172,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			static HBRUSH RET_CTLCOLORBTN = (HBRUSH)GetStockObject(BLACK_BRUSH);
 
 			if ((HWND)lp == BTN_Close || (HWND)lp == BTN_Minimize)
-				RET_CTLCOLORBTN = hBrush_Primary;
-			else RET_CTLCOLORBTN = hBrush_DEBUG; // Apply debug color to non-handled button controls
+				RET_CTLCOLORBTN = OBJM_Main->HBR_Primary;
+			else RET_CTLCOLORBTN = OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled button controls
 
 			return (LRESULT)RET_CTLCOLORBTN;
 		}
@@ -196,7 +196,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				case WA_CLICKACTIVE: // Catch window activate via click message
 				case WA_ACTIVE:
-					hBrush_CURBORDER = hBrush_BorderActive;
+					OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderActive;
 					InvalidateRect(hWnd, &RECT_SizeBorder_Left, FALSE);
 					InvalidateRect(hWnd, &RECT_SizeBorder_Top, FALSE);
 					InvalidateRect(hWnd, &RECT_SizeBorder_Right, FALSE);
@@ -206,7 +206,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					InvalidateRect(BTN_Minimize, NULL, FALSE);
 					break;
 				case WA_INACTIVE:
-					hBrush_CURBORDER = hBrush_BorderInactive;
+					OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderInactive;
 					InvalidateRect(hWnd, &RECT_SizeBorder_Left, FALSE);
 					InvalidateRect(hWnd, &RECT_SizeBorder_Top, FALSE);
 					InvalidateRect(hWnd, &RECT_SizeBorder_Right, FALSE);
@@ -548,12 +548,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				{
 					// Switch theme
 
-					if (APPLICATION_THEME == L"Light")
-						mApp::SetAppTheme(L"Dark");
-					else if (APPLICATION_THEME == L"Dark")
-						mApp::SetAppTheme(L"Ristretto");
-					else if (APPLICATION_THEME == L"Ristretto")
-						mApp::SetAppTheme(L"Light");
+					bool IsSuccess = 0;
+
+					if (APPLICATION_THEME == L"Light") { if (nApp::SetAppTheme(L"Dark")) IsSuccess = 1; }
+					else if (APPLICATION_THEME == L"Dark") { if (nApp::SetAppTheme(L"Ristretto")) IsSuccess = 1; }
+					else if (APPLICATION_THEME == L"Ristretto") { if (nApp::SetAppTheme(L"Light")) IsSuccess = 1; }
+					if (!IsSuccess) { MessageBoxW(hWnd, L"Error occurred!\n(Failed to set application theme)", L"", MB_OK | MB_ICONERROR); exit(1); }
 
 					return (LRESULT)0;
 				}
@@ -582,6 +582,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					delete[] wcaSelectedR3;
 					return (LRESULT)0;
 				}
+
+				case VK_F2:
+				{
+					// ...
+					return (LRESULT)0;
+				}
 			}
 
 			break;
@@ -589,14 +595,14 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_CLOSE:
 		{
-			mApp::OnExit();
+			nApp::OnExit();
 			DestroyWindow(hWnd);
 			return (LRESULT)0;
 		}
 
 		case WM_DESTROY:
 		{
-			mApp::OnDestroy();
+			nApp::OnDestroy();
 			PostQuitMessage(0);
 			return (LRESULT)0;
 		}
@@ -679,11 +685,11 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			if ((HWND)lp == SS_Heading1)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
-				SetBkColor((HDC)wp, CLR_Secondary);
-				SetTextColor((HDC)wp, CLR_DefaultTextColor);
-				RET_CTLCOLORSTATIC = hBrush_Secondary;
+				SetBkColor((HDC)wp, OBJM_Main->CLR_Secondary);
+				SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
+				RET_CTLCOLORSTATIC = OBJM_Main->HBR_Secondary;
 			}
-			else RET_CTLCOLORSTATIC = hBrush_DEBUG;
+			else RET_CTLCOLORSTATIC = OBJM_Main->HBR_DEBUG;
 			return (LRESULT)RET_CTLCOLORSTATIC;
 		}
 
@@ -692,9 +698,9 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			static HBRUSH RET_CTLCOLORBTN = (HBRUSH)GetStockObject(BLACK_BRUSH);
 			if ((HWND)lp == BTN_Standard)
 			{
-				RET_CTLCOLORBTN = hBrush_Secondary;
+				RET_CTLCOLORBTN = OBJM_Main->HBR_Secondary;
 			}
-			else RET_CTLCOLORBTN = hBrush_DEBUG;
+			else RET_CTLCOLORBTN = OBJM_Main->HBR_DEBUG;
 			return (LRESULT)RET_CTLCOLORBTN;
 		}
 	}
