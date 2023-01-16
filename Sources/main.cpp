@@ -33,12 +33,12 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
-	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight); // Get user desktop resolution
+	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight);	// Get user desktop resolution
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
 		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),	// Semi-center application on start
 		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initial application window size
 		NULL, NULL, hInstance, NULL);
-	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), NULL, LWA_COLORKEY); // Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
+	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), 255, LWA_ALPHA | LWA_COLORKEY);	// Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
 
 	nApp::OnReady();	// Execute when the application's main window is created and ready to displays
 
