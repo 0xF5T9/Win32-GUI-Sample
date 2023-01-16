@@ -221,6 +221,15 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_NCCALCSIZE:
 		{
+			// Adjust client rect to not spill over monitor edges when maximized
+			// SRC: https://github.com/melak47/BorderlessWindow/blob/master/BorderlessWindow/src/BorderlessWindow.cpp
+			if (wp == TRUE) 
+			{
+			      auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lp);
+			      nSol::cAdjustMaximizedClientRect(hWnd, params.rgrc[0]);
+			      return (LRESULT)0;
+			}
+
 			// Return zero remove standard window frame (non-client areas)
 			// * The application use custom-draw caption bar and borders, everything is draw in client-area
 			return (LRESULT)0;

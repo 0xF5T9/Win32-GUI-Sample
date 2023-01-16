@@ -98,6 +98,37 @@ namespace nSol
 		return true;
 	}
 
+	// Check if the window handle is maximized
+	auto cIsMaximized(HWND hWnd) -> bool 
+	{
+		// SRC: https://github.com/melak47/BorderlessWindow/blob/master/BorderlessWindow/src/BorderlessWindow.cpp
+		WINDOWPLACEMENT placement;
+		placement.length = sizeof(WINDOWPLACEMENT);
+		if (!::GetWindowPlacement(hWnd, &placement)) 
+			return false;
+
+		return placement.showCmd == SW_MAXIMIZE;
+	}
+
+	// Adjust maximized client rect to fit the monitor (Taskbar excluded)
+	auto cAdjustMaximizedClientRect(HWND window, RECT& rect) -> void 
+	{
+		// SRC: https://github.com/melak47/BorderlessWindow/blob/master/BorderlessWindow/src/BorderlessWindow.cpp
+		if (!cIsMaximized(window))
+			return;
+
+		auto monitor = ::MonitorFromWindow(window, MONITOR_DEFAULTTONULL);
+		if (!monitor)
+			return;
+
+		MONITORINFO monitor_info{};
+		monitor_info.cbSize = sizeof(monitor_info);
+		if (!::GetMonitorInfoW(monitor, &monitor_info))
+			return;
+
+		rect = monitor_info.rcWork;
+	}
+
 	// Get current user desktop resolution
 	void GetDesktopResolution(int& horizontal, int& vertical)
 	{
