@@ -787,7 +787,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
 	if (state)
 	{
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
@@ -813,7 +813,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	else if (!state && hWnd == cHWND)
 	{
 		SetTextColor(hdc, CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
@@ -838,7 +838,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	}
 	else
 	{
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
@@ -862,10 +862,10 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 		}
 	}
 
-	if (hWnd == CURRENT_SELECTEDRADIO2)
+	if (hWnd == *this->hWnd_CurrentSelectedButton)
 	{
 		SetTextColor(hdc, CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
@@ -910,7 +910,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	if (state)
 	{
 		SetTextColor(hdc, CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
@@ -936,7 +936,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	else if (!state && hWnd == cHWND)
 	{
 		SetTextColor(hdc, CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
@@ -961,7 +961,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	}
 	else
 	{
-		if (hWnd == BTN_Radio2Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
@@ -1247,7 +1247,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
 	if (state)
 	{
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
@@ -1258,7 +1258,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
@@ -1280,7 +1280,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	else if (!state && hWnd == cHWND)
 	{
 		SetTextColor(hdc, this->CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
@@ -1291,7 +1291,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Hover);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
@@ -1312,7 +1312,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	}
 	else
 	{
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
@@ -1323,7 +1323,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
@@ -1343,10 +1343,10 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 		}
 	}
 
-	if (hWnd == CURRENT_SELECTEDRADIO3)
+	if (hWnd == *this->hWnd_CurrentSelectedButton)
 	{
 		SetTextColor(hdc, this->CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
@@ -1357,7 +1357,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_LBDown);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
@@ -1398,7 +1398,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	if (state)
 	{
 		SetTextColor(hdc, this->CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonColor_Hover, 4);
@@ -1409,7 +1409,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Hover);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
@@ -1431,7 +1431,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	else if (!state && hWnd == cHWND)
 	{
 		SetTextColor(hdc, this->CLR_HighlightTextColor);
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background_F, grc, this->CL_ButtonColor_LBDown, 4);
@@ -1442,7 +1442,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_LBDown);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
@@ -1463,7 +1463,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	}
 	else
 	{
-		if (hWnd == BTN_Radio3Left)
+		if (hWnd == *this->hWnd_LeftButton)
 		{
 			Gdiplus::Rect grc(rc.top, rc.left, rc.right - 5, rc.bottom);
 			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonColor_Default, 4);
@@ -1474,7 +1474,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			lerc.right -= 1;
 			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
 		}
-		else if (hWnd == BTN_Radio3Middle)
+		else if (hWnd == *this->hWnd_MiddleButton)
 		{
 			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
 			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);

@@ -527,8 +527,8 @@ namespace nApp
 		BA_CaptionBar_Manager->InsertAnimationMap(BTN_Close, OBJM_Main->HICO_Close, OBJM_Main->HICO_Close_Hover, OBJM_Main->HICO_Close_Inactive);
 		BA_CaptionBar_Manager->InsertAnimationMap(BTN_Minimize, OBJM_Main->HICO_Minimize, OBJM_Main->HICO_Minimize_Hover, OBJM_Main->HICO_Minimize_Inactive);
 		BA_Standard_Manager = new BA_Standard();
-		BA_Radio2_Manager = new BA_Radio2();
-		BA_Radio3_Manager = new BA_Radio3();
+		BA_Radio2_Manager = new BA_Radio2(CURRENT_SELECTEDRADIO2, BTN_Radio2Left);
+		BA_Radio3_Manager = new BA_Radio3(CURRENT_SELECTEDRADIO3, BTN_Radio3Left, BTN_Radio3Middle);
 		if (!OBJM_Main || !BA_CaptionBar_Manager || !BA_Standard_Manager || !BA_Radio2_Manager || !BA_Radio3_Manager)
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize global objects)", L"", MB_OK | MB_ICONERROR);

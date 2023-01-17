@@ -85,23 +85,29 @@ class BA_Radio2
 {
 private:
 	bool IsReady = 0;									// Track whether the required objects is initialized
-	unsigned short HoverAnimationDuration = 100;			// Hover animation duration
-	unsigned short LBDownAnimationDuration = 300;			// Left-button down animation duration
-	Gdiplus::Color CL_ButtonColor_Default;					// Default button color
-	Gdiplus::Color CL_ButtonColor_Hover;					// Hovering button color
-	Gdiplus::Color CL_ButtonColor_LBDown;					// Left-button down button color
-	Gdiplus::Color CL_ButtonBackgroundColor;				// Button background color
-	Gdiplus::Color CL_ButtonBorderColor_NonFocus;			// Button border color (Non-Focus)
-	Gdiplus::Color CL_ButtonBorderColor_OnFocus;			// Button border color (On-Focus)
-	HBRUSH hBrush_ButtonColor_Default = nullptr;			// Default button color
+	unsigned short HoverAnimationDuration = 100;		// Hover animation duration
+	unsigned short LBDownAnimationDuration = 300;		// Left-button down animation duration
+	Gdiplus::Color CL_ButtonColor_Default;				// Default button color
+	Gdiplus::Color CL_ButtonColor_Hover;				// Hovering button color
+	Gdiplus::Color CL_ButtonColor_LBDown;				// Left-button down button color
+	Gdiplus::Color CL_ButtonBackgroundColor;			// Button background color
+	Gdiplus::Color CL_ButtonBorderColor_NonFocus;		// Button border color (Non-Focus)
+	Gdiplus::Color CL_ButtonBorderColor_OnFocus;		// Button border color (On-Focus)
+	HBRUSH hBrush_ButtonColor_Default = nullptr;		// Default button color
 	HBRUSH hBrush_ButtonColor_Hover = nullptr;			// Hovering button color
 	HBRUSH hBrush_ButtonColor_LBDown = nullptr;			// Left-button down button color
 	HBRUSH hBrush_ButtonBackgroundColor = nullptr;		// Button background color
 	HFONT* hFont_ButtonFont = nullptr;					// Button text font
-	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);			// Default button text color
-	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);			// Highlight button text color
+	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);		// Default button text color
+	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);		// Highlight button text color
+	HWND* hWnd_CurrentSelectedButton = nullptr;			// Current selected button window handle (the subclass use this variable to check which button is currently selected)
+	HWND* hWnd_LeftButton = nullptr;					// Left button window handle (the subclass use this variable to distinguish between left and right buttons)
 public:
-	BA_Radio2() {}
+	BA_Radio2(HWND& hWnd_CurrentSelectedButton, HWND& hWnd_LeftButton) 
+	{
+		this->hWnd_CurrentSelectedButton = &hWnd_CurrentSelectedButton;
+		this->hWnd_LeftButton = &hWnd_LeftButton;
+	}
 	~BA_Radio2() 
 	{
 		DeleteObject(hBrush_ButtonColor_Default);
@@ -123,24 +129,32 @@ class BA_Radio3
 {
 private:
 	bool IsReady = 0;									// Track whether the required objects is initialized
-	unsigned short HoverAnimationDuration = 100;			// Hover animation duration
-	unsigned short LBDownAnimationDuration = 300;			// Left-button down animation duration
-	Gdiplus::Color CL_ButtonColor_Default;					// Default button color
-	Gdiplus::Color CL_ButtonColor_Hover;					// Hovering button color
-	Gdiplus::Color CL_ButtonColor_LBDown;					// Left-button down button color
-	Gdiplus::Color CL_ButtonBackgroundColor;				// Button background color
-	Gdiplus::Color CL_ButtonBorderColor_NonFocus;			// Button border color (Non-Focus)
-	Gdiplus::Color CL_ButtonBorderColor_OnFocus;			// Button border color (On-Focus)
-	HPEN hPen_ButtonColor_Default = nullptr;				// Default button color
-	HBRUSH hBrush_ButtonColor_Default = nullptr;			// Default button color
+	unsigned short HoverAnimationDuration = 100;		// Hover animation duration
+	unsigned short LBDownAnimationDuration = 300;		// Left-button down animation duration
+	Gdiplus::Color CL_ButtonColor_Default;				// Default button color
+	Gdiplus::Color CL_ButtonColor_Hover;				// Hovering button color
+	Gdiplus::Color CL_ButtonColor_LBDown;				// Left-button down button color
+	Gdiplus::Color CL_ButtonBackgroundColor;			// Button background color
+	Gdiplus::Color CL_ButtonBorderColor_NonFocus;		// Button border color (Non-Focus)
+	Gdiplus::Color CL_ButtonBorderColor_OnFocus;		// Button border color (On-Focus)
+	HPEN hPen_ButtonColor_Default = nullptr;			// Default button color
+	HBRUSH hBrush_ButtonColor_Default = nullptr;		// Default button color
 	HBRUSH hBrush_ButtonColor_Hover = nullptr;			// Hovering button color
 	HBRUSH hBrush_ButtonColor_LBDown = nullptr;			// Left-button down button color
 	HBRUSH hBrush_ButtonBackgroundColor = nullptr;		// Button background color
 	HFONT* hFont_ButtonFont = nullptr;					// Button text font
-	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);			// Default button text color
-	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);			// Highlight button text color
+	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);		// Default button text color
+	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);		// Highlight button text color
+	HWND* hWnd_CurrentSelectedButton = nullptr;			// Current selected button window handle (the subclass use this variable to check which button is currently selected)
+	HWND* hWnd_LeftButton = nullptr;					// Left button window handle (the subclass use this variable to distinguish between left, middle and right buttons)
+	HWND* hWnd_MiddleButton = nullptr;					// Middle button window handle (the subclass use this variable to distinguish between left, middle and right buttons)
 public:
-	BA_Radio3() {}
+	BA_Radio3(HWND& hWnd_CurrentSelectedButton, HWND& hWnd_LeftButton, HWND& hWnd_MiddleButton) 
+	{
+		this->hWnd_CurrentSelectedButton = &hWnd_CurrentSelectedButton;
+		this->hWnd_LeftButton = &hWnd_LeftButton;
+		this->hWnd_MiddleButton = &hWnd_MiddleButton;
+	}
 	~BA_Radio3()
 	{
 		DeleteObject(hPen_ButtonColor_Default);
