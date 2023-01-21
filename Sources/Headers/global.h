@@ -1,6 +1,6 @@
 /*
 	File: global.h
-	Global variables distribution header file
+	Global variables distribution header
 */
 
 #pragma once
@@ -8,28 +8,42 @@
 #include <vector>
 #include <gdiplus.h>
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * GLOBAL PARAMETERS
+/**************************
+*    GLOBAL PARAMETERS    *
+***************************/
 
 extern LPCWSTR WndClassName;
 extern int APPLICATION_WIDTH, APPLICATION_HEIGHT;
-extern bool IS_APPREADY, IS_APPTHEMESHOWSCROLLBAR;
 extern std::wstring APPLICATION_THEME;
+
+// HWND placeholders that keep track of which button from its group is selected
 extern HWND CURRENT_SELECTEDRADIO2;
 extern HWND CURRENT_SELECTEDRADIO3;
 
+// Status bools
+extern bool IS_APPREADY,
+IS_APPTHEMESHOWSCROLLBAR;
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * API INITIALIZATION VARIABLES
 
+
+/*************************************
+*    API INITIALIZATION VARIABLES    *
+**************************************/
+
+// GDI+ initialization variables
 extern Gdiplus::GdiplusStartupInput API_StartupInput;
 extern ULONG_PTR API_Token;
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * OBJECT AND SUBCLASS MANAGERS
+
+/*************************************
+*    OBJECT AND SUBCLASS MANAGERS    *
+**************************************/
+
+// Key Toggles
+extern KeyToggle ktEnterKey;
 
 // Object managers
 extern OBJ_Manager* OBJM_Main;
@@ -42,8 +56,10 @@ extern BA_Radio3* BA_Radio3_Manager;
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * WINDOW HANDLES
+
+/***********************
+*    WINDOW HANDLES    *
+************************/
 
 // Main window handles
 extern HINSTANCE MAIN_HINSTANCE;
@@ -52,12 +68,19 @@ extern HWND BTN_Close, BTN_Minimize, SS_Title;
 
 // Container window handles (MAINCONTENTCTR)
 extern HWND SS_MAINCONTENTCTR, SB_MAINCONTENTCTR;
-extern HWND SS_Heading1, BTN_Standard, BTN_Radio2Left, BTN_Radio2Right, BTN_Radio3Left, BTN_Radio3Middle, BTN_Radio3Right;
+extern HWND SS_Heading1,
+	BTN_Standard, BTN_Radio2Left, BTN_Radio2Right, BTN_Radio3Left, BTN_Radio3Middle, BTN_Radio3Right;
+extern HWND SS_Heading2,
+	SS_TextNoteNormalEditbox, SS_ED_Normal, ED_Normal, BTN_NormalEditboxOK,
+	SS_TextNotePasswordEditbox, SS_ED_Password, ED_Password, BTN_PasswordEditboxOK,
+	SS_TextNoteMultilineEditbox, SS_ED_Multiline, ED_Multiline, BTN_MultilineEditboxOK;
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * RECTS
+
+/**************************
+*    RECTANGLES (RECT)    *
+***************************/
 
 extern RECT RECT_Caption;
 extern RECT RECT_SizeBorder_Top,
@@ -67,8 +90,10 @@ RECT_SizeBorder_Right;
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * MISCELLANEOUS
+
+/**********************
+*    MISCELLANEOUS    *
+***********************/
 
 extern std::vector<HWND*> Vector_Subclasses;
 extern std::vector<HWND*> Vector_MAINCONTENTCTR;

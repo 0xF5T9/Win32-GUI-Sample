@@ -5,46 +5,53 @@
 
 #pragma once
 
-#include "./c_resources.h"	// Contains application constants
-#include <iostream>		// C++ Essential
-#include <string>			// C++ Essential
-#include <map>			// Mapping for animation objects
-#include <vector>			// Group and manage objects
-#include <Windows.h>		// WinAPI Essential
-#include <Windowsx.h>		// WinAPI Essential
-#include <Uxtheme.h>		// WinAPI Essential
-#include <commctrl.h>		// WinAPI Essential
-#include <Dwmapi.h>		// WinAPI Essential
-#include <mmsystem.h>	// WinAPI Essential
-#include <gdiplus.h>		// Use GDI+ for drawing
-#include <comdef.h>		// Read results from HRESULT datatype
-#include "./Ex_DarkMode.h"	// Reverse and access to undocumented window "Dark Mode" API
-#include "./obj_manager.h"	// Object manager class
-#include "./subclasses.h"	// Subclasses classes
-#include "./global.h"		// Global variables distribution
+#include "./c_resources.h"    // Contains application constants
+#include <iostream>           // C++ Essential
+#include <string>             // C++ Essential
+#include <map>                // Mapping for animation objects
+#include <vector>             // Group and manage objects
+#include <Windows.h>          // WinAPI Essential
+#include <Windowsx.h>         // WinAPI Essential
+#include <Uxtheme.h>          // WinAPI Essential
+#include <commctrl.h>         // WinAPI Essential
+#include <Dwmapi.h>           // WinAPI Essential
+#include <mmsystem.h>         // WinAPI Essential
+#include <gdiplus.h>          // Use GDI+ for drawing
+#include <comdef.h>           // Read results from HRESULT datatype
+#include "./Ex_DarkMode.h"    // Reverse and access to undocumented window "Dark Mode" API
+#include "./obj_manager.h"    // Object manager class
+#include "./subclasses.h"     // Subclasses classes
+#include "./global.h"         // Global variables distribution
 
-// #pragma comment(lib, "UxTheme.lib")
-// #pragma comment(lib, "Comctl32.lib")
-// #pragma comment(lib, "Gdiplus.lib")
-// #pragma comment(lib, "Dwmapi.lib")
-// #pragma comment(lib, "Winmm.lib")
+/**
+* Uncomment to include libraries using compiler directive:
+* #pragma comment(lib, "UxTheme.lib")
+* #pragma comment(lib, "Comctl32.lib")
+* #pragma comment(lib, "Gdiplus.lib")
+* #pragma comment(lib, "Dwmapi.lib")
+* #pragma comment(lib, "Winmm.lib")
+*/
 
 using namespace Gdiplus;
 
-// CALLBACK FORWARD DECLARATIONS:
+// CALLBACK FORWARD DECLARATIONS
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK SC_EditControl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 namespace nSol
 {
-	// Init undocumented dark mode API introduced in Windows 10 1809
+	/**
+	* Init undocumented dark mode API introduced in Windows 10 1809
+	* SRC: https://github.com/ysc3839/win32-darkmode
+	*/
 	bool InitDarkModeAPI(HWND hWnd)
 	{
-		InitDarkMode(true); // Bypass winver check, may broke the application
+		InitDarkMode(true);   // Bypass window version compatibility check, may broke the application
 
 		if (!g_darkModeSupported)
 		{
@@ -57,7 +64,10 @@ namespace nSol
 		return true;
 	}
 
-	// Init GDI Animation & GDI+ APIs
+
+	/**
+	* Init GDI Animation & GDI+ APIs
+	*/
 	bool InitAPI()
 	{
 		HRESULT hr = BufferedPaintInit();
@@ -68,14 +78,20 @@ namespace nSol
 		else return false;
 	}
 
-	// Uninit GDI Animation & GDI+ APIs
+
+	/**
+	* Uninit GDI Animation & GDI+ APIs
+	*/
 	void UnInitAPI()
 	{
 		Gdiplus::GdiplusShutdown(API_Token);
 		BufferedPaintUnInit();
 	}
 
-	// Get current window client size infos
+
+	/**
+	* Get current window client size infos
+	*/
 	bool cShowSizeInfo(HWND hWnd)
 	{
 		RECT tRect;
@@ -98,7 +114,10 @@ namespace nSol
 		return true;
 	}
 
-	// Check if the window handle is maximized
+
+	/**
+	* Check if the window handle is maximized
+	*/
 	auto cIsMaximized(HWND hWnd) -> bool 
 	{
 		// SRC: https://github.com/melak47/BorderlessWindow/blob/master/BorderlessWindow/src/BorderlessWindow.cpp
@@ -110,7 +129,10 @@ namespace nSol
 		return placement.showCmd == SW_MAXIMIZE;
 	}
 
-	// Adjust maximized client rect to fit the monitor (Taskbar excluded)
+
+	/**
+	* Adjust maximized client rect to fit the monitor (Taskbar excluded)
+	*/
 	auto cAdjustMaximizedClientRect(HWND window, RECT& rect) -> void 
 	{
 		// SRC: https://github.com/melak47/BorderlessWindow/blob/master/BorderlessWindow/src/BorderlessWindow.cpp
@@ -129,7 +151,10 @@ namespace nSol
 		rect = monitor_info.rcWork;
 	}
 
-	// Get current user desktop resolution
+
+	/**
+	* Get current user desktop resolution
+	*/
 	void GetDesktopResolution(int& horizontal, int& vertical)
 	{
 		RECT desktop;
@@ -141,7 +166,10 @@ namespace nSol
 		vertical = desktop.bottom;
 	}
 
-	// Quick-create winapi font object
+
+	/**
+	* Quick-create winapi font object
+	*/
 	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
 	{
 		*hFontPtr = CreateFontW(fSize, 0, 0, 0x1,
@@ -150,14 +178,20 @@ namespace nSol
 			DEFAULT_PITCH | FF_DONTCARE, (LPCWSTR)fName.c_str());
 	}
 
-	// Set font callback function
+
+	/**
+	* Set font callback function
+	*/
 	bool CALLBACK cbSetFont(HWND child_hWnd, LPARAM hFont)
 	{
 		SendMessageW(child_hWnd, WM_SETFONT, hFont, TRUE);
 		return true;
 	}
 
-	// Remove specific window style from control
+
+	/**
+	* Remove specific window style from control
+	*/
 	void RemoveWindowStyle(HWND& hWnd, LONG Style)
 	{
 		DWORD dwStyle = ::GetClassLongW(hWnd, GCL_STYLE);
@@ -165,7 +199,10 @@ namespace nSol
 		::SetClassLongW(hWnd, GCL_STYLE, dwStyle);
 	}
 
-	// Draw GDI+ Round Rect
+
+	/**
+	* Draw GDI+ Round Rect
+	*/
 	void GetRoundRectPath(GraphicsPath* pPath, Rect r, int dia)
 	{
 		// diameter can't exceed width or height
@@ -275,7 +312,10 @@ namespace nSol
 		pGraphics->SetPageUnit((Unit)oldPageUnit);
 	}
 
-	// Quick-create winapi standalone scrollbar control
+
+	/**
+	* Quick-create winapi standalone scrollbar control
+	*/
 	HWND CreateHorizontalSB(HWND hParent, int sbHeight)
 	{
 		RECT rClient;
@@ -300,13 +340,38 @@ namespace nSol
 			sbWidth, rClient.bottom - BORDER_WIDTH - sbPosX,
 			hParent, NULL, MAIN_HINSTANCE, NULL));
 	}
+
+
+	/**
+	* Quick-create winapi semicustom-drawn edit control
+	*/
+	bool CreateEditControl(UINT x, UINT y, UINT w, UINT h,
+	 HWND& parent, HWND& static_windowhandle, HWND& edit_windowhandle,
+	  LONG static_styles = WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+	  LONG edit_styles = WS_VISIBLE | WS_CHILD | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
+	   LONG exstyles = NULL)
+	{
+		static_windowhandle = CreateWindowExW(exstyles, L"STATIC", L"",
+			static_styles,
+			x,
+			y, w, h, parent, NULL, NULL, NULL);
+
+		edit_windowhandle = CreateWindowExW(NULL, L"EDIT", L"",
+			edit_styles,
+			x + 2,
+			y + 2,
+			w - 4, h - 4, parent, NULL, NULL, NULL);
+
+		if (static_windowhandle && edit_windowhandle) return true;
+		else return false;
+	}
 }
 
 namespace nApp
 {
-	/* 
-		Set window theme class for standard controls (Non-Custom/Owner-Drawn Controls) 
-		Ex: Button, ScrollBar
+	/**
+	* Set window theme class for standard controls (Non-Custom/Owner-Drawn Controls)
+	* Ex: Button, ScrollBar
 	*/
 	void SetAppThemeClass(std::wstring Theme)
 	{
@@ -338,23 +403,26 @@ namespace nApp
 		}
 	}
 
-	/* 
-		Set or update current application theme
+
+	/**
+	* Set or update current application theme
 	*/
 	bool SetAppTheme(std::wstring Theme = L"Light", bool OnInit = 0)
 	{
 		// Update new objects
-		if (Theme == L"Light")	// Light theme
+		if (Theme == L"Light")   // Light theme
 		{	
-			// Main application objects
+			// Main application drawing objects
 			if (!OBJM_Main->UpdateColorObjects(
-				Color(255, 227, 228, 228),	// Primary color
-				Color(255, 252, 253, 253),	// Secondary color
-				Color(255, 64, 64, 64),		// Border active color
-				Color(255, 192, 192, 192),	// Border inactive color
-				Color(255, 0, 0, 0),			// Default text color
-				Color(255, 162, 162, 162),	// Inactive text color
-				Color(255, 0, 0, 255)))		// Debug color
+				Color(255, 227, 228, 228),  // Primary color
+				Color(255, 252, 253, 253),  // Secondary color
+				Color(255, 64, 64, 64),     // Border active color
+				Color(255, 192, 192, 192),  // Border inactive color
+				Color(255, 0, 0, 0),        // Default text color
+				Color(255, 162, 162, 162),  // Inactive text color
+				Color(255, 232, 234, 234),  // Editbox color
+				Color(255, 64, 64, 64),     // Editbox border color
+				Color(255, 0, 0, 255)))     // Debug color
 				return false;
 			if (!OnInit) if (!OBJM_Main->DestroyMediaObjects()) return false;
 			OBJM_Main->HICO_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON1), IMAGE_ICON, 20, 20, NULL);
@@ -368,22 +436,25 @@ namespace nApp
 			BA_CaptionBar_Manager->UpdateObjects(OBJM_Main->CLR_Primary, OBJM_Main->CLR_Primary, RGB(255, 89, 89), RGB(205, 206, 206), OBJM_Main->CLR_Primary,
 				OBJM_Main->CLR_Primary);
 			BA_Standard_Manager->UpdateObjects(Color(255, 225, 225, 225), Color(255, 229, 241, 251), Color(255, 204, 228, 247), Color(255, 252, 253, 253), Color(255, 173, 173, 173), 
-				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
+				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
 			BA_Radio2_Manager->UpdateObjects(Color(255, 225, 225, 225), Color(255, 229, 241, 251), Color(255, 204, 228, 247), Color(255, 252, 253, 253), Color(255, 173, 173, 173),
-				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
+				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
 			BA_Radio3_Manager->UpdateObjects(Color(255, 225, 225, 225), Color(255, 229, 241, 251), Color(255, 204, 228, 247), Color(255, 252, 253, 253), Color(255, 173, 173, 173),
-				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
+				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
 
+			// Update global parameters
 			APPLICATION_THEME = L"Light";
 			IS_APPTHEMESHOWSCROLLBAR = true;
+			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
+			// Update "MAINCONTENT" container position/size
 			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
-				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH,					// W
-				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),	// H
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH,                       // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
 			
-			{	// Show scrollbar if needed
+			{	// Get scrollbar info and check if the current container size need scrollbar
 				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
 				SCROLLINFO si;
 				si.cbSize = sizeof(SCROLLINFO);
@@ -404,15 +475,17 @@ namespace nApp
 		}
 		else if (Theme == L"Dark")	// Dark theme
 		{
-			// Main application objects
+			// Main application drawing objects
 			if (!OBJM_Main->UpdateColorObjects(
-				Color(255, 0, 0, 0),			// Primary color
-				Color(255, 32, 32, 32),		// Secondary color
-				Color(255, 48, 48, 48),		// Border active color
-				Color(255, 57, 57, 57),		// Border inactive color
-				Color(255, 216, 222, 233),	// Default text color
-				Color(255, 162, 162, 162),	// Inactive text color
-				Color(255, 0, 0, 255)))		// Debug color
+				Color(255, 0, 0, 0),        // Primary color
+				Color(255, 32, 32, 32),     // Secondary color
+				Color(255, 48, 48, 48),     // Border active color
+				Color(255, 57, 57, 57),     // Border inactive color
+				Color(255, 216, 222, 233),  // Default text color
+				Color(255, 162, 162, 162),  // Inactive text color
+				Color(255, 48, 48, 48),     // Editbox color
+				Color(255, 100, 100, 100),  // Editbox border color
+				Color(255, 0, 0, 255)))     // Debug color
 				return false;
 			if (!OnInit) if (!OBJM_Main->DestroyMediaObjects()) return false;
 			OBJM_Main->HICO_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -426,22 +499,25 @@ namespace nApp
 			BA_CaptionBar_Manager->UpdateObjects(OBJM_Main->CLR_Primary, OBJM_Main->CLR_Primary, RGB(232, 17, 35), RGB(57, 57, 57), OBJM_Main->CLR_Primary,
 				OBJM_Main->CLR_Primary);
 			BA_Standard_Manager->UpdateObjects(Color(255, 51, 51, 51), Color(255, 69, 69, 69), Color(255, 102, 102, 102), Color(255, 32, 32, 32), Color(255, 155, 155, 155),
-				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
+				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
 			BA_Radio2_Manager->UpdateObjects(Color(255, 51, 51, 51), Color(255, 69, 69, 69), Color(255, 102, 102, 102), Color(255, 32, 32, 32), Color(255, 155, 155, 155),
-				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
+				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
 			BA_Radio3_Manager->UpdateObjects(Color(255, 51, 51, 51), Color(255, 69, 69, 69), Color(255, 102, 102, 102), Color(255, 32, 32, 32), Color(255, 155, 155, 155),
-				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
+				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
 
+			// Update global parameters
 			APPLICATION_THEME = L"Dark";
 			IS_APPTHEMESHOWSCROLLBAR = true;
+			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
+			// Update "MAINCONTENT" container position/size
 			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
-				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH,					// W
-				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),	// H
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH,                       // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
 
-			{	// Show scrollbar if needed
+			{	// Get scrollbar info and check if the current container size need scrollbar
 				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
 				SCROLLINFO si;
 				si.cbSize = sizeof(SCROLLINFO);
@@ -462,15 +538,17 @@ namespace nApp
 		}
 		else if (Theme == L"Ristretto")
 		{
-			// Main application objects
+			// Main application drawing objects
 			if (!OBJM_Main->UpdateColorObjects(
-				Color(255, 39, 29, 28),		// Primary color
-				Color(255, 30, 24, 23),		// Secondary color
-				Color(255, 68, 50, 48),		// Border active color
-				Color(255, 76, 56, 54),		// Border inactive color
-				Color(255, 215, 218, 222),	// Default text color
-				Color(255, 129, 115, 114),		// Inactive text color
-				Color(255, 0, 0, 255)))		// Debug color
+				Color(255, 39, 29, 28),     // Primary color
+				Color(255, 30, 24, 23),     // Secondary color
+				Color(255, 68, 50, 48),     // Border active color
+				Color(255, 76, 56, 54),     // Border inactive color
+				Color(255, 215, 218, 222),  // Default text color
+				Color(255, 129, 115, 114),  // Inactive text color
+				Color(255, 37, 28, 27),     // Editbox color
+				Color(255, 68, 50, 48),     // Editbox border color
+				Color(255, 0, 0, 255)))     // Debug color
 				return false;
 			if (!OnInit) if (!OBJM_Main->DestroyMediaObjects()) return false;
 			OBJM_Main->HICO_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
@@ -490,21 +568,26 @@ namespace nApp
 			BA_Radio3_Manager->UpdateObjects(Color(255, 58, 44, 42), Color(255, 84, 63, 61), Color(255, 94, 70, 68), Color(255, 32, 32, 32), Color(255, 68, 50, 48),
 				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
 
+			// Update global parameters
 			APPLICATION_THEME = L"Ristretto"; 
 			IS_APPTHEMESHOWSCROLLBAR = false;
+			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
+
+			// This theme don't need the scrollbar to be visible
 			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
 
+			// Update "MAINCONTENT" container position/size
 			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
-				APPLICATION_WIDTH - (BORDER_WIDTH * 2),											// W
-				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),		// H
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2),                                             // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
 		}
 
 		// Redraw entire application window
 		if (!OnInit)
 		{
-			OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderActive;
+			OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderActive; // Update new border brush color
 			RedrawWindow(MAIN_HWND, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
 			SetActiveWindow(MAIN_HWND);
 		}
@@ -512,12 +595,13 @@ namespace nApp
 		return true;
 	}
 
-	/*
-		WM_CREATE (1/4):
-		- Init global class objects from pointers
-		- Init APIs (Dark mode, GDI buffered painting, GDI+)
-		- Extend frame into client area (For frame shadow effects)
-		- Set minimum resolution for periodic timers
+
+	/**
+	* WM_CREATE (1/4):
+	* - Init global class objects from pointers
+	* - Init APIs (Dark mode, GDI buffered painting, GDI+)
+	* - Extend frame into client area (For frame shadow effects)
+	* - Set minimum resolution for periodic timers
 	*/
 	bool InitBegin(HWND hWnd)
 	{
@@ -569,9 +653,10 @@ namespace nApp
 		return true;
 	}
 
-	/*
-		WM_CREATE (2/4):
-		- Set application theme
+
+	/**
+	* WM_CREATE (2/4):
+	* - Set application theme
 	*/
 	bool InitTheme(HWND hWnd)
 	{
@@ -584,9 +669,10 @@ namespace nApp
 		return true;
 	}
 
-	/*
-		WM_CREATE (3/4):
-		- Create application hwnd controls
+
+	/**
+	* WM_CREATE (3/4):
+	* - Create application hwnd controls
 	*/
 	bool InitControl(HWND hWnd)
 	{
@@ -610,7 +696,7 @@ namespace nApp
 		delete[] TextBuffer_AppTitle;
 
 		// Main content container (borders & caption areas excluded)
-		SS_MAINCONTENTCTR = CreateWindowExW(NULL, L"STATIC", L"", WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, BORDER_WIDTH + CAPTIONBAR_HEIGHT,
+		SS_MAINCONTENTCTR = CreateWindowExW(WS_EX_CONTROLPARENT, L"STATIC", L"", WS_CLIPCHILDREN | WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, BORDER_WIDTH + CAPTIONBAR_HEIGHT,
 			0, 0, hWnd, NULL, NULL, NULL);
 		SetWindowSubclass(SS_MAINCONTENTCTR, &WindowProcedure_MainContentCTR, NULL, NULL);
 		Vector_Subclasses.push_back(&SS_MAINCONTENTCTR);
@@ -623,58 +709,129 @@ namespace nApp
 			si.fMask = SIF_ALL;
 			si.nPos = 0; // Initiate scrollbar pos
 			si.nMin = 0; // Min scrollbar pos
-			si.nMax = 74 + 10 + (MAINCONTENTCTR_PADDING * 2); // Max scrollbar pos = (total content sizes + spaces between contents + paddings)
+			si.nMax = 442 + 65 + (MAINCONTENTCTR_PADDING * 2); // Max scrollbar pos = (total content sizes + spaces between contents + paddings)
 			si.nPage = 211; // Actual width|height of the container
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 			Vector_MAINCONTENTCTR.push_back(&SB_MAINCONTENTCTR);
 		}
 
 		// Main content container's childs:
-		SS_Heading1 = CreateWindowExW(NULL, L"STATIC", L"Sample buttons:",
-			WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-			0, 0, 155, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-		
-		BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
-		SetWindowSubclass(BTN_Standard, &SC_BA_Standard, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Standard);
+		{
+			SS_Heading1 = CreateWindowExW(NULL, L"STATIC", L"Sample buttons:",
+				WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+				MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, 155, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
 
-		BTN_Radio2Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2LEFT, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Radio2Left);
-		SetWindowSubclass(BTN_Radio2Left, &SC_BA_Radio2, NULL, NULL);
+			{
+				BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
+				SetWindowSubclass(BTN_Standard, &SC_BA_Standard, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_Standard);
 
-		BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Radio2Right);
-		SetWindowSubclass(BTN_Radio2Right, &SC_BA_Radio2, NULL, NULL);
+				BTN_Radio2Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2LEFT, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_Radio2Left);
+				SetWindowSubclass(BTN_Radio2Left, &SC_BA_Radio2, NULL, NULL);
 
-		BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Radio3Left);
-		SetWindowSubclass(BTN_Radio3Left, &SC_BA_Radio3, NULL, NULL);
+				BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_Radio2Right);
+				SetWindowSubclass(BTN_Radio2Right, &SC_BA_Radio2, NULL, NULL);
 
-		BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Radio3Middle);
-		SetWindowSubclass(BTN_Radio3Middle, &SC_BA_Radio3, NULL, NULL);
+				BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_Radio3Left);
+				SetWindowSubclass(BTN_Radio3Left, &SC_BA_Radio3, NULL, NULL);
 
-		BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
-			WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
-		Vector_Subclasses.push_back(&BTN_Radio3Right);
-		SetWindowSubclass(BTN_Radio3Right, &SC_BA_Radio3, NULL, NULL);
+				BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_Radio3Middle);
+				SetWindowSubclass(BTN_Radio3Middle, &SC_BA_Radio3, NULL, NULL);
 
-		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS);
+				BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_Radio3Right);
+				SetWindowSubclass(BTN_Radio3Right, &SC_BA_Radio3, NULL, NULL);
+			}
+		}
 
-		// Update theme class for controls
+		{
+			SS_Heading2 = CreateWindowExW(NULL, L"STATIC", L"Sample editboxs:",
+				WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+				MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 94, 164, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+
+			{
+				SS_TextNoteNormalEditbox = CreateWindowExW(NULL, L"STATIC", L"(Normal)",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING + 360,
+					MAINCONTENTCTR_PADDING + 138, 80, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+				if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 138, 270, 33, SS_MAINCONTENTCTR,
+					SS_ED_Normal, ED_Normal,
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL)) return false;
+				SetWindowSubclass(ED_Normal, &SC_EditControl, NULL, NULL); // Continue work
+				Vector_Subclasses.push_back(&ED_Normal);
+				BTN_NormalEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"OK",
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
+					MAINCONTENTCTR_PADDING + 280,
+					MAINCONTENTCTR_PADDING + 138, 70, 33,
+					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDNORMALOK, NULL, NULL);
+				SetWindowSubclass(BTN_NormalEditboxOK, &SC_BA_Standard, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_NormalEditboxOK);
+			}
+
+			{
+				SS_TextNotePasswordEditbox = CreateWindowExW(NULL, L"STATIC", L"(Password)",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING + 360,
+					MAINCONTENTCTR_PADDING + 181, 95, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+				if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 181, 270, 33, SS_MAINCONTENTCTR,
+					SS_ED_Password, ED_Password,
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL | ES_PASSWORD)) return false;
+				SetWindowSubclass(ED_Password, &SC_EditControl, NULL, NULL);
+				Vector_Subclasses.push_back(&ED_Password);
+				BTN_PasswordEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"OK",
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
+					MAINCONTENTCTR_PADDING + 280,
+					MAINCONTENTCTR_PADDING + 181, 70, 33,
+					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDPASSWORDOK, NULL, NULL);
+				SetWindowSubclass(BTN_PasswordEditboxOK, &SC_BA_Standard, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_PasswordEditboxOK);
+			}
+
+			{
+				SS_TextNoteMultilineEditbox = CreateWindowExW(NULL, L"STATIC", L"(Multiline)",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING,
+					MAINCONTENTCTR_PADDING + 225, 95, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+				if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 269, 478, 200, SS_MAINCONTENTCTR,
+					SS_ED_Multiline, ED_Multiline,
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN)) return false;
+				SetWindowSubclass(ED_Multiline, &SC_EditControl, NULL, NULL);
+				Vector_Subclasses.push_back(&ED_Multiline);
+				BTN_MultilineEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"Clear",
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
+					MAINCONTENTCTR_PADDING,
+					MAINCONTENTCTR_PADDING + 472, 478, 33,
+					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDMULTILINEOK, NULL, NULL);
+				SetWindowSubclass(BTN_MultilineEditboxOK, &SC_BA_Standard, NULL, NULL);
+				Vector_Subclasses.push_back(&BTN_MultilineEditboxOK);
+			}
+		}
+
+		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove "CS_DBLCLKS" (double click messages) from class style "BUTTON"
+
+		// Update class for standard controls
 		SetAppThemeClass(APPLICATION_THEME);
 
 		return true;
 	}
+	
 
-	/*
-		WM_CREATE (4/4):
-		- Apply font to window handles
+	/**
+	* WM_CREATE (4/4):
+	* - Apply font to window handles
 	*/
 	bool InitEnd(HWND hWnd)
 	{
@@ -682,28 +839,36 @@ namespace nApp
 		EnumChildWindows(hWnd, (WNDENUMPROC)nSol::cbSetFont, (LPARAM)OBJM_Main->HFO_Default);
 		SendMessageW(SS_Title, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Title, TRUE);
 		SendMessageW(SS_Heading1, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Heading, TRUE);
-
+		SendMessageW(SS_Heading2, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Heading, TRUE);
+		SendMessageW(ED_Normal, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Edit, TRUE);
+		SendMessageW(ED_Password, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Edit, TRUE);
+		SendMessageW(ED_Multiline, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Edit, TRUE);
+		SendMessageW(SS_TextNoteNormalEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
+		SendMessageW(SS_TextNotePasswordEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
+		SendMessageW(SS_TextNoteMultilineEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
 		return true;
 	}
 
-	/*
-		Execute when the application's main window is created and ready to displays
+
+	/**
+	* Execute when the application's main window is fully created and ready to displays
 	*/
 	void OnReady()
 	{
-		ShowWindow(MAIN_HWND, SW_NORMAL);			// Show main window
-		ShowWindow(BTN_Close, SW_NORMAL);			// Show close button
-		ShowWindow(BTN_Minimize, SW_NORMAL);			// Show minimize button
-		ShowWindow(SS_Title, SW_NORMAL);				// Show main window title
-		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);	// Show main content container
+		ShowWindow(MAIN_HWND, SW_NORMAL);           // Show main window
+		ShowWindow(BTN_Close, SW_NORMAL);           // Show close button
+		ShowWindow(BTN_Minimize, SW_NORMAL);        // Show minimize button
+		ShowWindow(SS_Title, SW_NORMAL);            // Show main window title
+		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);   // Show main content container
 
 		IS_APPREADY = true;
 	}
 
-	/*
-		Execute when the application about to exit:
-		- Reverse DwmExtendFrameIntoClientArea() (Disable frame shadow effects)
-		- Remove WS_EX_LAYERED ex-style from main window (Bring back close animation from visual styles)
+
+	/**
+	* Execute when the application about to exit:
+	* - Reverse DwmExtendFrameIntoClientArea() (Disable frame shadow effects)
+	* - Remove WS_EX_LAYERED ex-style from main window (Bring back close animation from visual styles)
 	*/
 	void OnExit()
 	{
@@ -713,11 +878,12 @@ namespace nApp
 		HRESULT hr = DwmExtendFrameIntoClientArea(MAIN_HWND, &borders);
 	}
 
-	/*
-		Execute before the application is fully destroyed:
-		- Destroy all objects
-		- Uninitialize APIs
-		- Clears previously set minimum timer resolution
+
+	/**
+	* Execute before the application is fully destroyed:
+	* - Destroy all objects
+	* - Uninitialize APIs
+	* - Clears previously set minimum timer resolution
 	*/
 	void OnDestroy(bool Debug = 0)
 	{
@@ -733,8 +899,8 @@ namespace nApp
 			for (auto& x : Vector_Subclasses) DestroyWindow(*x);
 		}
 
-		delete BA_Radio2_Manager;
 		delete BA_Radio3_Manager;
+		delete BA_Radio2_Manager;
 		delete BA_Standard_Manager;
 		delete BA_CaptionBar_Manager;
 		delete OBJM_Main;

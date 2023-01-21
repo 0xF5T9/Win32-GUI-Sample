@@ -1,3 +1,8 @@
+/*
+	File: subclasses.h
+	Subclasses class definitions
+*/
+
 #include "./Headers/c_resources.h"
 #include <iostream>
 #include <string>
@@ -15,6 +20,7 @@
 
 using namespace Gdiplus;
 
+// FORWARD DECLARATIONS
 namespace nSol
 {
 	void GetRoundRectPath(GraphicsPath* pPath, Rect r, int dia);
@@ -23,8 +29,9 @@ namespace nSol
 	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * BUTTON ANIMATION CLASS DEFINITIONS (CAPTION BAR)
+/*********************************************************
+*    BUTTON ANIMATION CLASS DEFINITIONS (CAPTION BAR)    *
+**********************************************************/
 void BA_CaptionBar::ClearAnimationMap()
 {
 	this->AnimationMap.clear();
@@ -354,11 +361,13 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * BUTTON ANIMATION CLASS DEFINITIONS (STANDARD)
+
+
+/******************************************************
+*    BUTTON ANIMATION CLASS DEFINITIONS (STANDARD)    *
+*******************************************************/
 void BA_Standard::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Background, Color BorderNonFocus, Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor)
 {
 	if (this->IsReady)
@@ -432,7 +441,7 @@ void BA_Standard::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 		}
 		else
 		{
-			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonBorderColor_NonFocus, 4);
+			nSol::FillRoundRect(&graphics, &SB_Background_H, grc, this->CL_ButtonBorderColor_OnFocus, 4); // *
 		}
 		SetTextColor(hdc, this->CLR_HighlightTextColor);
 		DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -441,7 +450,7 @@ void BA_Standard::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	{
 		if (GetFocus() != hWnd)
 		{
-			nSol::FillRoundRect(&graphics, &SB_Background, grc, Color(255, 155, 155, 155), 4);
+			nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ButtonBorderColor_NonFocus, 4);
 		}
 		else
 		{
@@ -469,7 +478,7 @@ void BA_Standard::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
 
 	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
-	if (state)
+	if (state && hWnd == cHWND)
 	{
 		if (GetFocus() != hWnd)
 		{
@@ -612,6 +621,15 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	static unsigned short frames_Invalidated = 0;
 	static HWND cHWND;
 
+	if (GetFocus() == hWnd && ktEnterKey)
+	{
+		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL);
+	}
+	else if (GetFocus() == hWnd && GetKeyState(VK_TAB) & 0x8000)
+	{
+		InvalidateRect(hWnd, NULL, FALSE);
+	}
+
 	switch (uMsg)
 	{
 	case WM_ERASEBKGND:
@@ -727,11 +745,13 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * BUTTON ANIMATION CLASS DEFINITIONS (RADIO2)
+
+
+/****************************************************
+*    BUTTON ANIMATION CLASS DEFINITIONS (RADIO2)    *
+*****************************************************/
 void BA_Radio2::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Background, Color BorderNonFocus, Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor)
 {
 	if (this->IsReady)
@@ -1185,11 +1205,13 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * BUTTON ANIMATION CLASS DEFINITIONS (RADIO3)
+
+
+/****************************************************
+*    BUTTON ANIMATION CLASS DEFINITIONS (RADIO3)    *
+*****************************************************/
 void BA_Radio3::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Background, Color BorderNonFocus, Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor)
 {
 	if (this->IsReady)
@@ -1694,4 +1716,71 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+/******************************************
+*    EDIT CONTROL SUBCLASS DEFINITIONS    *
+*******************************************/
+// SUBCLASS CALLBACK PROCEDURE
+LRESULT CALLBACK SC_EditControl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	// Capture enter key message of the edit control and do something with it
+	if (ktEnterKey)
+	{
+		auto cf = GetFocus();
+		if (cf == ED_Normal)
+		{
+			SendMessageW(GetParent(hWnd), WM_COMMAND, BUTTON_EDNORMALOK, NULL);
+		}
+		else if (cf == ED_Password)
+		{
+			SendMessageW(GetParent(hWnd), WM_COMMAND, BUTTON_EDPASSWORDOK, NULL);
+		}
+		/*
+		else if (cf == ED_Multiline)
+		{
+			// Do something ...
+		}
+		*/
+	}
+
+	switch (uMsg)
+	{
+		case WM_NCDESTROY:
+		{
+			RemoveWindowSubclass(hWnd, &SC_EditControl, uIdSubclass);
+			return (LRESULT)0;
+		}
+
+		case WM_ERASEBKGND:
+		{
+			return (LRESULT)1;
+		}
+
+		case WM_KEYDOWN:
+		{
+			switch (wParam)
+			{
+				case VK_TAB: // Capture VK_TAB and forward the focus to the next tab stop
+				{
+					/*
+					// Uncomment to skip processing VK_TAB message for ED_Multiline
+					if (hWnd == ED_Multiline) break;
+					*/
+					HWND NextFocus = GetNextDlgTabItem(MAIN_HWND, hWnd, (int)(GetKeyState(VK_SHIFT) & 0x8000));
+					SetFocus(NextFocus);
+					break;
+				}
+
+				default:
+					break;
+			}
+
+			break;
+		}
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}

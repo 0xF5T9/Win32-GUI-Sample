@@ -10,7 +10,8 @@ int WINAPI wWinMain(
 	_In_ LPWSTR lpCmdLine,
 	_In_ int nShowCmd)
 {
-	if (FindWindowW(WndClassName, NULL) != NULL)	// Terminate if application already running
+	// Terminate if application already running
+	if (FindWindowW(WndClassName, NULL) != NULL)
 	{
 		MessageBoxW(NULL, L"Application is already running", L"", MB_OK | MB_ICONINFORMATION);
 		return 0;
@@ -18,7 +19,7 @@ int WINAPI wWinMain(
 
 	// Create custom window class
 	WNDCLASSW wc = { 0 };
-	wc.hbrBackground = NULL;	// Manually handle "WM_ERASEBKGND" (reduce flickering)
+	wc.hbrBackground = NULL;    // Manually handle "WM_ERASEBKGND" (reduce flickering)
 	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON7));
 	wc.hInstance = hInstance;
@@ -27,20 +28,21 @@ int WINAPI wWinMain(
 
 	MAIN_HINSTANCE = hInstance;
 
-	if (!RegisterClassW(&wc))	// Register window class
+	// Register window class
+	if (!RegisterClassW(&wc))
 	{
 		MessageBoxW(NULL, L"Error occurred!\n(Failed to register window class)", L"", MB_OK | MB_ICONERROR);
 		return -1;
 	}
 
-	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight);	// Get user desktop resolution
+	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight);   // Get user desktop resolution
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
-		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),	// Semi-center application on start
-		APPLICATION_WIDTH, APPLICATION_HEIGHT, // Initial application window size
+		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),   // Semi-center application on start
+		APPLICATION_WIDTH, APPLICATION_HEIGHT,   // Initial application window size
 		NULL, NULL, hInstance, NULL);
-	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), 255, LWA_ALPHA | LWA_COLORKEY);	// Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
+	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), 255, LWA_ALPHA | LWA_COLORKEY);   // Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
 
-	nApp::OnReady();	// Execute when the application's main window is created and ready to displays
+	nApp::OnReady();   // Execute when the application's main window is created and ready to displays
 
 	// Begin message loop
 	MSG msg = { 0 };
@@ -138,7 +140,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			// Handling static control & read-only edit control messages
 
-			static HBRUSH RET_CTLCOLORSTATIC = (HBRUSH)GetStockObject(BLACK_BRUSH);
+			static HBRUSH* RET_CTLCOLORSTATIC = nullptr;
 
 			if ((HWND)lp == SS_Title)
 			{
@@ -146,7 +148,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				SetBkColor((HDC)wp, OBJM_Main->CLR_Primary);
 				if (GetActiveWindow() == hWnd) SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
 				else SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
-				RET_CTLCOLORSTATIC = OBJM_Main->HBR_Primary;
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Primary;
 			}
 			else if ((HWND)lp == SS_MAINCONTENTCTR)
 			{
@@ -158,24 +160,24 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
 					OnFirst = 0;
 				}
-				RET_CTLCOLORSTATIC = OBJM_Main->HBR_Secondary;
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
 			}
-			else RET_CTLCOLORSTATIC = OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled static controls
+			else RET_CTLCOLORSTATIC = &OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled static controls
 
-			return (LRESULT)RET_CTLCOLORSTATIC;
+			return (LRESULT)*RET_CTLCOLORSTATIC;
 		}
 
 		case WM_CTLCOLORBTN:
 		{
 			// Handling button control messages
 
-			static HBRUSH RET_CTLCOLORBTN = (HBRUSH)GetStockObject(BLACK_BRUSH);
+			static HBRUSH* RET_CTLCOLORBTN = nullptr;
 
 			if ((HWND)lp == BTN_Close || (HWND)lp == BTN_Minimize)
-				RET_CTLCOLORBTN = OBJM_Main->HBR_Primary;
-			else RET_CTLCOLORBTN = OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled button controls
+				RET_CTLCOLORBTN = &OBJM_Main->HBR_Primary;
+			else RET_CTLCOLORBTN = &OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled button controls
 
-			return (LRESULT)RET_CTLCOLORBTN;
+			return (LRESULT)*RET_CTLCOLORBTN;
 		}
 
 		case WM_SETFOCUS:
@@ -194,7 +196,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			switch (wp)
 			{
-				case WA_CLICKACTIVE: // Catch window activate via click message
+				case WA_CLICKACTIVE:   // Catch window activate via click message
 				case WA_ACTIVE:
 					OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderActive;
 					InvalidateRect(hWnd, &RECT_SizeBorder_Left, FALSE);
@@ -239,7 +241,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			// Handling caption bar and resize messages
 
-			const LRESULT result = ::DefWindowProcW(hWnd, msg, wp, lp); // Default WM_NCHITTEST response
+			const LRESULT result = ::DefWindowProcW(hWnd, msg, wp, lp);   // Default WM_NCHITTEST response
 
 			RECT lrc = RECT_Caption;
 			RECT lrc_sizeborder_top = RECT_SizeBorder_Top,
@@ -283,7 +285,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			// Handling WM_SIZE messages
 
-			BufferedPaintStopAllAnimations(hWnd); // Stop all animations during resize
+			if (wp == SIZE_MAXIMIZED)
+			{
+				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+			}
+
+			BufferedPaintStopAllAnimations(hWnd);   // Stop all animations during resize
 
 			// Caption
 			RECT_Caption.right = LOWORD(lp) - BORDER_WIDTH;
@@ -293,14 +300,14 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 					LOWORD(lp) - (BORDER_WIDTH * 2), // W
-					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),   // H
 					SWP_NOZORDER);
 			}
 			else 
 			{
 				SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 					LOWORD(lp) - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH, // W
-					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),   // H
 					SWP_NOZORDER);
 			}
 
@@ -323,8 +330,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			// Scrollbar (Size)
 			static RECT sbRect; GetClientRect(SB_MAINCONTENTCTR, &sbRect);
 			static int sbWidth = 0, sbHeight = 0;
-			sbWidth = sbRect.right - sbRect.left;	//
-			sbHeight = sbRect.bottom - sbRect.top;	// Get latest mcctr_scrollbar's width & height
+			sbWidth = sbRect.right - sbRect.left;   //
+			sbHeight = sbRect.bottom - sbRect.top;  // Get latest mcctr_scrollbar's width & height
 
 			if (HIWORD(lp) - (BORDER_WIDTH * 2) - CAPTIONBAR_HEIGHT > sbHeight || HIWORD(lp) - (BORDER_WIDTH * 2) - CAPTIONBAR_HEIGHT < sbHeight)
 				// Update new scrollbar's height to fit new container size (height resize)
@@ -346,13 +353,42 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				si.nPage = rMCCTR.bottom; // Update new page size
 
 				// Reset container's childs positions & current scroll pos
-				SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				{	// Button samples
+					SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					{	
+						SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					}
+				}
+				{	// Edit control samples
+					SetWindowPos(SS_Heading2, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 94, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					{	// Normal edit control
+						SetWindowPos(SS_TextNoteNormalEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(SS_ED_Normal, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(ED_Normal, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_NormalEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					}
+					{	// Password edit control
+						SetWindowPos(SS_TextNotePasswordEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(SS_ED_Password, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(ED_Password, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_PasswordEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					}
+					{	// Multiline edit control
+						SetWindowPos(SS_TextNoteMultilineEditbox, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 225, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(SS_ED_Multiline, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(ED_Multiline, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+						SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					}
+				}
+				// Extra invalidate before reset scroll pos
+				if (si.nPos != 0)	
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+
 				si.nPos = 0;
 
 				// Set scrollbar info
@@ -417,7 +453,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			// Handling vertical scroll messages
 
-			static short ScrollPixel = 10;
+			static short ScrollPixel = 2;
 			SCROLLINFO si;
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
@@ -444,16 +480,41 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			static int scroll_distance = 0; scroll_distance = -si.nPos;
 			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-			si.nPage = rMCCTR.bottom; // Update new page size
+			si.nPage = rMCCTR.bottom;   // Update new page size
 
 			// Update container's childs positions
-			SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+			{	// Button samples
+				SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				{
+					SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+			}
+			{	// Edit control samples
+				SetWindowPos(SS_Heading2, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 94, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				{	// Normal edit control
+					SetWindowPos(SS_TextNoteNormalEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_ED_Normal, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(ED_Normal, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_NormalEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+				{	// Password edit control
+					SetWindowPos(SS_TextNotePasswordEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_ED_Password, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(ED_Password, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_PasswordEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+				{	// Multiline edit control
+					SetWindowPos(SS_TextNoteMultilineEditbox, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 225, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_ED_Multiline, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(ED_Multiline, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+			}
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
@@ -461,7 +522,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			static bool NeedInvalidate = 1;
 			if (NeedInvalidate)
 			{
-				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
 				if (si.nPos == si.nMin || si.nPos == si.nMax - (int)si.nPage)
 					NeedInvalidate = 0;
 			}
@@ -469,7 +530,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				if (si.nPos != si.nMin && si.nPos != si.nMax - (int)si.nPage)
 				{
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
 					NeedInvalidate = 1;
 				}
 			}
@@ -481,7 +542,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			// Handling mouse wheel scroll messages
 
-			static short WheelDelta = 0, ScrollPixel = 20;
+			static short WheelDelta = 0, ScrollPixel = 10;
 
 			SCROLLINFO si;
 			si.cbSize = sizeof(SCROLLINFO);
@@ -510,13 +571,38 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			si.nPage = rMCCTR.bottom; // Update new page size
 
 			// Update container's childs positions
-			SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-			SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+			{	// Button samples
+				SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				{
+					SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+			}
+			{	// Edit control samples
+				SetWindowPos(SS_Heading2, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 94, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				{	// Normal edit control
+					SetWindowPos(SS_TextNoteNormalEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_ED_Normal, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(ED_Normal, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_NormalEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+				{	// Password edit control
+					SetWindowPos(SS_TextNotePasswordEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_ED_Password, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(ED_Password, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_PasswordEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+				{	// Multiline edit control
+					SetWindowPos(SS_TextNoteMultilineEditbox, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 225, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_ED_Multiline, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(ED_Multiline, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
+			}
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
@@ -524,7 +610,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			static bool NeedInvalidate = 1;
 			if (NeedInvalidate)
 			{
-				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
 				if (si.nPos == si.nMin || si.nPos == si.nMax - (int)si.nPage)
 					NeedInvalidate = 0;
 			}
@@ -532,7 +618,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				if (si.nPos != si.nMin && si.nPos != si.nMax - (int)si.nPage)
 				{
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_NOERASE);
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
 					NeedInvalidate = 1;
 				}
 			}
@@ -541,7 +627,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 
 		case WM_LBUTTONDOWN:
-			SetFocus(hWnd);
+			SetFocus(hWnd);   // Redirect focus to main window on background click
 			return (LRESULT)0;
 
 		case WM_KEYDOWN:
@@ -594,7 +680,17 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				case VK_F2:
 				{
-					// ...
+					SendMessageW(ED_Normal, EM_SETREADONLY, TRUE, NULL);
+					SendMessageW(ED_Password, EM_SETREADONLY, TRUE, NULL);
+					SendMessageW(ED_Multiline, EM_SETREADONLY, TRUE, NULL);
+					return (LRESULT)0;
+				}
+
+				case VK_F3:
+				{
+					SendMessageW(ED_Normal, EM_SETREADONLY, FALSE, NULL);
+					SendMessageW(ED_Password, EM_SETREADONLY, FALSE, NULL);
+					SendMessageW(ED_Multiline, EM_SETREADONLY, FALSE, NULL);
 					return (LRESULT)0;
 				}
 			}
@@ -637,8 +733,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
+	static bool bEditboxFocusInvalidateCheck = 0;
 	switch (msg)
 	{
+		case WM_ERASEBKGND:
+			return (LRESULT)1;
+
 		case WM_NCDESTROY:
 		{
 			RemoveWindowSubclass(hWnd, &WindowProcedure_MainContentCTR, uIdSubclass);
@@ -681,6 +781,58 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 					RedrawWindow(BTN_Radio3Middle, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 					return (LRESULT)0;
 
+				case BUTTON_EDNORMALOK:
+				{
+					WCHAR* TextBuffer = new WCHAR[(UINT64)GetWindowTextLengthW(ED_Normal) + (UINT64)1];
+					GetWindowTextW(ED_Normal, TextBuffer, GetWindowTextLengthW(ED_Normal) + 1);
+					std::wstring wstrTextBuffer(TextBuffer);
+					delete[] TextBuffer;
+
+					SetWindowTextW(ED_Normal, L"");
+					if (wstrTextBuffer != L"")
+						MessageBoxW(hWnd, (L"Entered:\n" + wstrTextBuffer).c_str(), L"", MB_OK | MB_ICONINFORMATION);
+					else MessageBeep(MB_ICONERROR);
+
+					
+					return (LRESULT)0;
+				}
+
+				case BUTTON_EDPASSWORDOK:
+				{
+					WCHAR* TextBuffer = new WCHAR[(UINT64)GetWindowTextLengthW(ED_Password) + (UINT64)1];
+					GetWindowTextW(ED_Password, TextBuffer, GetWindowTextLengthW(ED_Password) + 1);
+					std::wstring wstrTextBuffer(TextBuffer);
+					delete[] TextBuffer;
+
+					SetWindowTextW(ED_Password, L"");
+					if (wstrTextBuffer == L"")
+					{
+						MessageBeep(MB_ICONERROR);
+						return (LRESULT)0;
+					}
+					if (wstrTextBuffer == L"P@ssw0rdtk")
+						MessageBoxW(hWnd, L"The entered password is correct!", L"", MB_OK | MB_ICONINFORMATION);
+					else MessageBoxW(hWnd, L"The entered password is incorrect!\n(The password is: P@ssw0rdtk)", L"", MB_OK | MB_ICONWARNING);
+
+					return (LRESULT)0;
+				}
+
+				case BUTTON_EDMULTILINEOK:
+				{
+					WCHAR* TextBuffer = new WCHAR[(UINT64)GetWindowTextLengthW(ED_Multiline) + (UINT64)1];
+					GetWindowTextW(ED_Multiline, TextBuffer, GetWindowTextLengthW(ED_Multiline) + 1);
+					std::wstring wstrTextBuffer(TextBuffer);
+					delete[] TextBuffer;
+
+					if (wstrTextBuffer == L"")
+					{
+						return (LRESULT)0;
+					}
+					else { SetWindowTextW(ED_Multiline, L""); MessageBeep(MB_OK); }
+
+					return (LRESULT)0;
+				}
+
 				default:
 					break;
 			}
@@ -690,27 +842,203 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 
 		case WM_CTLCOLORSTATIC:
 		{
-			static HBRUSH RET_CTLCOLORSTATIC = (HBRUSH)GetStockObject(BLACK_BRUSH);
-			if ((HWND)lp == SS_Heading1)
+			static HBRUSH* RET_CTLCOLORSTATIC = nullptr;
+
+			if ((HWND)lp == SS_Heading1 || (HWND)lp == SS_Heading2)
 			{
 				SetBkMode((HDC)wp, TRANSPARENT);
 				SetBkColor((HDC)wp, OBJM_Main->CLR_Secondary);
 				SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
-				RET_CTLCOLORSTATIC = OBJM_Main->HBR_Secondary;
+				
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
-			else RET_CTLCOLORSTATIC = OBJM_Main->HBR_DEBUG;
-			return (LRESULT)RET_CTLCOLORSTATIC;
+			else if ((HWND)lp == SS_TextNoteNormalEditbox || (HWND)lp == SS_TextNotePasswordEditbox || (HWND)lp == SS_TextNoteMultilineEditbox)
+			{
+				SetBkMode((HDC)wp, TRANSPARENT);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_Secondary);
+				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
+				
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else if ((HWND)lp == SS_ED_Normal)
+			{
+				static RECT rc1;
+				static RECT rc2;
+				GetClientRect((HWND)lp, &rc1);
+				GetClientRect((HWND)lp, &rc2);
+
+				rc2.left += 1; rc2.right -= 1; rc2.top += 1; rc2.bottom -= 1;
+				FrameRect((HDC)wp, &rc1, OBJM_Main->HBR_Secondary);
+				FrameRect((HDC)wp, &rc2, OBJM_Main->HBR_EditBox);
+
+				Graphics graphics((HDC)wp);
+				graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+				Gdiplus::Rect grc(rc1.top, rc1.left, rc1.right, rc1.bottom);
+
+				SolidBrush SB_EditCtrl(Color(0, OBJM_Main->CL_EditBox.GetRed(), OBJM_Main->CL_EditBox.GetGreen(), OBJM_Main->CL_EditBox.GetBlue()));
+
+				nSol::FillRoundRect(&graphics, &SB_EditCtrl, grc,
+					(GetFocus() == ED_Normal
+						? Color(255, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())
+						: Color(175, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())),
+					1);
+				if (GetFocus() != ED_Normal) bEditboxFocusInvalidateCheck = 0; else bEditboxFocusInvalidateCheck = 1;
+
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORSTATIC = &temp;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else if ((HWND)lp == SS_ED_Password)
+			{
+				static RECT rc1;
+				static RECT rc2;
+				GetClientRect((HWND)lp, &rc1);
+				GetClientRect((HWND)lp, &rc2);
+
+				rc2.left += 1; rc2.right -= 1; rc2.top += 1; rc2.bottom -= 1;
+				FrameRect((HDC)wp, &rc1, OBJM_Main->HBR_Secondary);
+				FrameRect((HDC)wp, &rc2, OBJM_Main->HBR_EditBox);
+
+				Graphics graphics((HDC)wp);
+				graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+				Gdiplus::Rect grc(rc1.top, rc1.left, rc1.right, rc1.bottom);
+
+				SolidBrush SB_EditCtrl(Color(0, OBJM_Main->CL_EditBox.GetRed(), OBJM_Main->CL_EditBox.GetGreen(), OBJM_Main->CL_EditBox.GetBlue()));
+
+				nSol::FillRoundRect(&graphics, &SB_EditCtrl, grc,
+					(GetFocus() == ED_Password
+						? Color(255, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())
+						: Color(175, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())),
+					1);
+				if (GetFocus() != ED_Password) bEditboxFocusInvalidateCheck = 0; else bEditboxFocusInvalidateCheck = 1;
+
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORSTATIC = &temp;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else if ((HWND)lp == SS_ED_Multiline)
+			{
+				static RECT rc1;
+				static RECT rc2;
+				GetClientRect((HWND)lp, &rc1);
+				GetClientRect((HWND)lp, &rc2);
+
+				rc2.left += 1; rc2.right -= 1; rc2.top += 1; rc2.bottom -= 1;
+				FrameRect((HDC)wp, &rc1, OBJM_Main->HBR_Secondary);
+				FrameRect((HDC)wp, &rc2, OBJM_Main->HBR_EditBox);
+
+				Graphics graphics((HDC)wp);
+				graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+				Gdiplus::Rect grc(rc1.top, rc1.left, rc1.right, rc1.bottom);
+
+				SolidBrush SB_EditCtrl(Color(0, OBJM_Main->CL_EditBox.GetRed(), OBJM_Main->CL_EditBox.GetGreen(), OBJM_Main->CL_EditBox.GetBlue()));
+
+				nSol::FillRoundRect(&graphics, &SB_EditCtrl, grc,
+					(GetFocus() == ED_Multiline
+						? Color(255, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())
+						: Color(175, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())),
+					1);
+				if (GetFocus() != ED_Multiline) bEditboxFocusInvalidateCheck = 0; else bEditboxFocusInvalidateCheck = 1;
+
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORSTATIC = &temp;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else if ((HWND)lp == ED_Normal)
+			{
+				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
+
+				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
+				if (!bEditboxFocusInvalidateCheck)
+					RedrawWindow(SS_ED_Normal, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else if ((HWND)lp == ED_Password)
+			{
+				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
+
+				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
+				if (!bEditboxFocusInvalidateCheck)
+					RedrawWindow(SS_ED_Password, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else if ((HWND)lp == ED_Multiline)
+			{
+				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
+
+				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
+				if (!bEditboxFocusInvalidateCheck)
+					RedrawWindow(SS_ED_Multiline, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+			else 
+			{
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_DEBUG;
+				return (LRESULT)*RET_CTLCOLORSTATIC;
+			}
+
+			break;
 		}
 
 		case WM_CTLCOLORBTN:
 		{
-			static HBRUSH RET_CTLCOLORBTN = (HBRUSH)GetStockObject(BLACK_BRUSH);
-			if ((HWND)lp == BTN_Standard)
+			static HBRUSH* RET_CTLCOLORBTN = nullptr;
+			if ((HWND)lp == BTN_Standard || (HWND)lp == BTN_NormalEditboxOK || (HWND)lp == BTN_PasswordEditboxOK || (HWND)lp == BTN_MultilineEditboxOK)
 			{
-				RET_CTLCOLORBTN = OBJM_Main->HBR_Secondary;
+				RET_CTLCOLORBTN = &OBJM_Main->HBR_Secondary;
 			}
-			else RET_CTLCOLORBTN = OBJM_Main->HBR_DEBUG;
-			return (LRESULT)RET_CTLCOLORBTN;
+			else RET_CTLCOLORBTN = &OBJM_Main->HBR_DEBUG;
+
+			return (LRESULT)*RET_CTLCOLORBTN;
+		}
+
+		case WM_CTLCOLOREDIT:
+		{
+			static HBRUSH* RET_CTLCOLOREDIT = nullptr;
+
+			if ((HWND)lp == ED_Normal)
+			{
+				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
+
+				RET_CTLCOLOREDIT = &OBJM_Main->HBR_EditBox;
+				SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
+				if (!bEditboxFocusInvalidateCheck)
+					RedrawWindow(SS_ED_Normal, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+			}
+			else if ((HWND)lp == ED_Password)
+			{
+				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
+
+				RET_CTLCOLOREDIT = &OBJM_Main->HBR_EditBox;
+				SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
+				if (!bEditboxFocusInvalidateCheck)
+					RedrawWindow(SS_ED_Password, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+			}
+			else if ((HWND)lp == ED_Multiline)
+			{
+				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
+
+				RET_CTLCOLOREDIT = &OBJM_Main->HBR_EditBox;
+				SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
+				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
+				if (!bEditboxFocusInvalidateCheck)
+					RedrawWindow(SS_ED_Multiline, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+			}
+
+			return (LRESULT)*RET_CTLCOLOREDIT;
 		}
 	}
 
