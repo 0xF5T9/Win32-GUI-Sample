@@ -155,7 +155,7 @@ void BA_CaptionBar::OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& 
 			BP_ANIMATIONPARAMS animParams;
 			ZeroMemory(&animParams, sizeof(animParams));
 			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-			animParams.style = BPAS_SINE; // Alternative: BPAS_NONE
+			animParams.style = BPAS_LINEAR; // Alternative: BPAS_NONE
 
 			animParams.dwDuration = (cState_H != nState_H ? this->HoverAnimationDuration : 0);
 
@@ -201,7 +201,7 @@ void BA_CaptionBar::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool
 			BP_ANIMATIONPARAMS animParams;
 			ZeroMemory(&animParams, sizeof(animParams));
 			animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
-			animParams.style = BPAS_SINE;
+			animParams.style = BPAS_LINEAR;
 
 			animParams.dwDuration = (cState_LB != nState_LB ? this->LBDownAnimationDuration : 0);
 
