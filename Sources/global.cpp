@@ -30,7 +30,8 @@ HWND CURRENT_SELECTEDRADIO3;
 
 // Status bools (DO NOT CHANGE DEFAULT VALUES)
 bool IS_APPREADY = 0,                               // App readiness check, set to true once the application is ready to display.
-IS_APPTHEMESHOWSCROLLBAR = 0;                       // Check if current selected theme want its scrollbar visible
+IS_APPTHEMESHOWSCROLLBAR = 0,                       // Check if current selected theme want scrollbar visible
+IS_WINDOWMAXIMIZED = 0;                             // Check if the main window is maximized
 
 
 

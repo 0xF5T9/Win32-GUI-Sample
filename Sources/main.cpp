@@ -262,14 +262,14 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			MapWindowPoints(hWnd, NULL, reinterpret_cast<POINT*>(&lrc_sizeborder_left), (sizeof(RECT) / sizeof(POINT)));
 			MapWindowPoints(hWnd, NULL, reinterpret_cast<POINT*>(&lrc_sizeborder_right), (sizeof(RECT) / sizeof(POINT)));
 
-			// Handling size border events
-			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_bottom, pt)))
+			// Handling size border events (ignore if the window is maximized)
+			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_bottom, pt)) && !IS_WINDOWMAXIMIZED)
 				return HTBOTTOM;
-			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_top, pt)))
+			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_top, pt)) && !IS_WINDOWMAXIMIZED)
 				return HTTOP;
-			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_left, pt)))
+			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_left, pt)) && !IS_WINDOWMAXIMIZED)
 				return HTLEFT;
-			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_right, pt)))
+			if ((result == HTCLIENT) && (PtInRect(&lrc_sizeborder_right, pt)) && !IS_WINDOWMAXIMIZED)
 				return HTRIGHT;
 
 			// Handling caption events
@@ -288,7 +288,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			if (wp == SIZE_MAXIMIZED)
 			{
 				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+				IS_WINDOWMAXIMIZED = true;
 			}
+			else IS_WINDOWMAXIMIZED = false;
 
 			BufferedPaintStopAllAnimations(hWnd);   // Stop all animations during resize
 
