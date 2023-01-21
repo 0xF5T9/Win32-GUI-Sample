@@ -643,7 +643,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				case VK_F5:
 				{
-					// Switch theme
+					// Switch application theme
 
 					bool IsSuccess = 0;
 
@@ -664,19 +664,20 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					WCHAR* wcaSelectedR3 = new WCHAR[(UINT64)GetWindowTextLengthW(CURRENT_SELECTEDRADIO3) + (UINT64)1]; GetWindowTextW(CURRENT_SELECTEDRADIO3, wcaSelectedR3, GetWindowTextLengthW(CURRENT_SELECTEDRADIO3) + 1);
 					std::wstring wstrSelectedR2(wcaSelectedR2);
 					std::wstring wstrSelectedR3(wcaSelectedR3);
+					delete[] wcaSelectedR2;
+					delete[] wcaSelectedR3;
 
 					MessageBoxW(MAIN_HWND, (L"Window size: " + std::to_wstring(APPLICATION_WIDTH) + L"x" + std::to_wstring(APPLICATION_HEIGHT) + L"\n"
 											+ L"Caption size: " + std::to_wstring(RECT_Caption.bottom - RECT_Caption.top) + L"\n"
 											+ L"Container size (Main content): " + std::to_wstring(rMCCTR.bottom) + L"x" + std::to_wstring(rMCCTR.right) + L"\n"
 											+ L"Theme: " + APPLICATION_THEME + L" (F5)\n"
 											+ L"IsReady: " + (IS_APPREADY ? L"Yes" : L"No") + L"\n"
+											+ L"IsWindowMaximized: " + (IS_WINDOWMAXIMIZED ? L"Yes" : L"No") + L"\n"
 											+ L"IsThemeShowScrollBar: " + (IS_APPTHEMESHOWSCROLLBAR ? L"Yes" : L"No") + L"\n"
 											+ L"Selected R2: " + (wstrSelectedR2 == L"" ? L"None" : wstrSelectedR2) + L"\n"
 											+ L"Selected R3: " + (wstrSelectedR3 == L"" ? L"None" : wstrSelectedR3)
 						).c_str(), L"", MB_OK);
 
-					delete[] wcaSelectedR2;
-					delete[] wcaSelectedR3;
 					return (LRESULT)0;
 				}
 
