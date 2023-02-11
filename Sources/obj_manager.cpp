@@ -1,8 +1,8 @@
 /*
-    File: obj_manager.cpp
-    Object manager class definition
-
-    - Manage most objects used to drawing the application (GDI & GDI+ Objects)
+*  File: obj_manager.cpp
+*  Object manager class definition
+*
+*  - Manage most objects used to drawing the application (GDI & GDI+ Objects)
 */
 
 #include "./Headers/c_resources.h"

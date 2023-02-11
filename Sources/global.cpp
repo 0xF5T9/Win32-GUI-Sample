@@ -1,6 +1,6 @@
 /*
-	File: global.cpp
-	Global variables definitions
+*  File: global.cpp
+*  Global variables definitions
 */
 
 #include <iostream>
@@ -62,6 +62,7 @@ BA_CaptionBar* BA_CaptionBar_Manager;
 BA_Standard* BA_Standard_Manager;
 BA_Radio2* BA_Radio2_Manager;
 BA_Radio3* BA_Radio3_Manager;
+CBDL_CustomDraw* CBDL_CustomDraw1_Manager;
 
 
 
@@ -83,6 +84,8 @@ HWND SS_Heading2,
 	SS_TextNoteNormalEditbox,  SS_ED_Normal, ED_Normal, BTN_NormalEditboxOK,
 	SS_TextNotePasswordEditbox, SS_ED_Password, ED_Password, BTN_PasswordEditboxOK,
 	SS_TextNoteMultilineEditbox, SS_ED_Multiline, ED_Multiline, BTN_MultilineEditboxOK;
+HWND SS_Heading3,
+	SS_TextNoteCBSelectTheme, CB_SelectTheme;
 
 
 

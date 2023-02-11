@@ -1,6 +1,6 @@
 /*
-	File: subclasses.h
-	Subclasses class header
+*  File: subclasses.h
+*  Subclasses class header
 */
 
 #pragma once
@@ -13,10 +13,11 @@
 #include <Dwmapi.h>
 
 
-/**
-* An efficient GetKeyState() alternative, help capture keydown message once instead of continuously while holding the key.
-* More info: https://stackoverflow.com/questions/10790502/c-getkeystate-has-to-run-once
-*/
+/************************
+*    KEYTOGGLE CLASS    *
+*************************/
+// An efficient GetKeyState() alternative, help capture keydown message once instead of continuously while holding the key.
+// More info : https://stackoverflow.com/questions/10790502/c-getkeystate-has-to-run-once
 class KeyToggle {
 public:
 	KeyToggle(int key) :mKey(key), mActive(false) {}
@@ -37,9 +38,12 @@ private:
 };
 
 
-/**
-* Catpion bar button animation subclass, customized for Close and Minimize buttons.
-*/
+
+
+/*********************************************
+*    BUTTON ANIMATION CLASS (CAPTION BAR)    *
+**********************************************/
+// Button animation subclass, hard-customized for caption bar button controls.
 class BA_CaptionBar
 {
 private:
@@ -77,11 +81,13 @@ public:
 };
 
 
-/**
-* Standard button animation subclass, rounded rectangle button.
-* (A single object can handle multiple buttons)
-* (That means you can set this subclass for as many buttons as you want)
-*/
+
+
+/******************************************
+*    BUTTON ANIMATION CLASS (STANDARD)    *
+*******************************************/
+// Standard button animation subclass, a rounded rectangle button.
+// Each object have its own color objects and can be use for multiple button controls.
 class BA_Standard
 {
 private:
@@ -121,10 +127,13 @@ public:
 };
 
 
-/**
-* Radio button animation subclass, left and right buttons.
-* (Each object can only handle a single button pair)
-*/
+
+
+/****************************************
+*    BUTTON ANIMATION CLASS (RADIO2)    *
+*****************************************/
+// Radio button animation subclass, left and right buttons.
+// Each object have its own color objects and can only be used for a single button control set.
 class BA_Radio2
 {
 private:
@@ -170,10 +179,13 @@ public:
 };
 
 
-/**
-* Radio button animation subclass, left, middle and right buttons.
-* (Each object can only handle a single button set)
-*/
+
+
+/****************************************
+*    BUTTON ANIMATION CLASS (RADIO3)    *
+*****************************************/
+// Radio button animation subclass, left & middle and right buttons.
+// Each object have its own color objects and can only be used for a single button control set.
 class BA_Radio3
 {
 private:
@@ -220,4 +232,63 @@ public:
 	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H);
 	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB);
+};
+
+
+
+
+/*************************************************************
+*    CUSTOM DRAW COMBOBOX SUBCLASS CLASS (DROP-DOWN LIST)    *
+**************************************************************/
+// Custom draw drop-down list combobox subclass.
+// Each object have its own color objects and can be use for multiple combobox controls.
+class CBDL_CustomDraw
+{
+private:
+	bool IsReady = 0;                                           // Track whether the required objects is initialized
+public:
+	Gdiplus::Color CL_ComboboxColor_Default;                    // Default combobox color
+	Gdiplus::Color CL_ComboboxBackgroundColor;                  // Combobox background color
+	Gdiplus::Color CL_ComboboxDropdownListColor_Background;     // Combobox drop-down list background color
+	Gdiplus::Color CL_ComboboxDropdownListColor_Selected;       // Combobox drop-down list selected item background color
+	Gdiplus::Color CL_ComboboxDropdownListColor_Border;         // Combobox drop-down list border color
+
+	COLORREF CLR_ComboboxColor_Default = NULL;                  // Default combobox color                                   (COLORREF)
+	COLORREF CLR_ComboboxBackgroundColor = NULL;                // Combobox background color                                (COLORREF)
+	COLORREF CLR_ComboboxDropdownListColor_Background = NULL;   // Combobox drop-down list background color                 (COLORREF)
+	COLORREF CLR_ComboboxDropdownListColor_Selected = NULL;     // Combobox drop-down list selected item background color   (COLORREF)
+	COLORREF CLR_ComboboxDropdownListColor_Border = NULL;       // Combobox drop-down list border color                     (COLORREF)
+
+	HBRUSH HBR_ComboboxColor_Default = nullptr;                 // Default combobox color                                   (HBRUSH)
+	HBRUSH HBR_ComboboxBackgroundColor = nullptr;               // Combobox background color                                (HBRUSH)
+	HBRUSH HBR_ComboboxDropdownListColor_Background = nullptr;  // Combobox drop-down list background color                 (HBRUSH)
+	HBRUSH HBR_ComboboxDropdownListColor_Selected = nullptr;    // Combobox drop-down list selected item background color   (HBRUSH)
+	HBRUSH HBR_ComboboxDropdownListColor_Border = nullptr;      // Combobox drop-down list border color                     (HBRUSH)
+
+	HFONT* HFO_ComboboxFont = nullptr;                          // Combobox text font                                       (POINTER)
+	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);               // Default combobox text color
+	COLORREF CLR_InactiveTextColor = RGB(0, 0, 0);              // Inactive combobox text color
+public:
+	CBDL_CustomDraw() {}
+	~CBDL_CustomDraw() 
+	{
+		// Release objects
+		DeleteObject(this->HBR_ComboboxColor_Default);
+		DeleteObject(this->HBR_ComboboxBackgroundColor);
+		DeleteObject(this->HBR_ComboboxDropdownListColor_Background);
+		DeleteObject(this->HBR_ComboboxDropdownListColor_Selected);
+		DeleteObject(this->HBR_ComboboxDropdownListColor_Border);
+	}
+public:
+	void UpdateObjects(Gdiplus::Color ComboboxColor, Gdiplus::Color ComboboxBackgroundColor, Gdiplus::Color CBDL_Background, Gdiplus::Color CBDL_Selected, Gdiplus::Color CBDL_Border, HFONT& Font, COLORREF DefaultTextColor, COLORREF InactiveTextColor);
+	void SetComboboxSubclass(HWND hWnd);
+	void SetComboboxDDLSubclass(HWND hWnd);
+
+public:
+	void ComboboxCtrl_OnPaint(HWND hWnd);
+	void ComboboxCtrl_DDL_OnErase(HWND hWnd, HDC hdc);
+	void ComboboxCtrl_DDL_OnNCPaint(HWND hWnd);
+public:
+	static LRESULT CALLBACK ComboboxCtrl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+	static LRESULT CALLBACK ComboboxCtrl_DDL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 };

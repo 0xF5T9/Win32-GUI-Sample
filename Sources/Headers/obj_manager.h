@@ -1,8 +1,8 @@
 /*
-    File: obj_manager.h
-    Object manager class header
-
-    - Manage most objects used to drawing the application (GDI & GDI+ Objects)
+*  File: obj_manager.h
+*  Object manager class header
+*
+*  - Manage most objects used to drawing the application (GDI & GDI+ Objects)
 */
 
 #pragma once
@@ -19,26 +19,42 @@
 class OBJ_Manager
 {
 public:
-       // Color objects
-       Gdiplus::Color CL_DEBUG,
-              CL_Primary,
-              CL_Secondary,
-              CL_BorderActive,
-              CL_BorderInactive,
-              CL_DefaultText,
-              CL_InactiveText,
-              CL_EditBox,
-              CL_EditBoxBorder;
+       /*************************************************************************************************************
+       * COLOR OBJECTS:                                                                                             *
+       * "Gdiplus::Color" objects will be used to create other variants color object(if needed) of the same color   *
+       **************************************************************************************************************/
+       Gdiplus::Color CL_DEBUG,       // Application debug color
+              CL_Primary,             // Primary application color
+              CL_Secondary,           // Secondary application color
+              CL_BorderActive,        // Window border active color
+              CL_BorderInactive,      // Window border inactive color
+              CL_DefaultText,         // Default text color
+              CL_InactiveText,        // Inactive text color
+              CL_EditBox,             // Editbox color
+              CL_EditBoxBorder;       // Editbox border color
+
        COLORREF CLR_DEBUG = NULL, CLR_Primary = NULL, CLR_Secondary = NULL, CLR_BorderActive = NULL, CLR_BorderInactive = NULL, CLR_DefaultText = NULL, CLR_InactiveText = NULL, CLR_EditBox = NULL, CLR_EditBoxBorder = NULL;
        HBRUSH HBR_DEBUG = nullptr, HBR_Primary = nullptr, HBR_Secondary = nullptr, HBR_BorderActive = nullptr, HBR_BorderInactive = nullptr, HBR_EditBox = nullptr;
 
-       // Media objects
+
+
+       /*****************
+       * MEDIA OBJECTS: *
+       ******************/
        HICON HICO_Close = nullptr, HICO_Close_Hover = nullptr, HICO_Close_Inactive = nullptr, HICO_Minimize = nullptr, HICO_Minimize_Hover = nullptr, HICO_Minimize_Inactive = nullptr;
 
-       // Font objects
+
+
+       /***************
+       * FONT OBJECTS *
+       ****************/
        HFONT HFO_Default = nullptr, HFO_Title = nullptr, HFO_Heading = nullptr, HFO_Edit = nullptr, HFO_Note = nullptr;
 
-       // Placeholder pointers
+
+
+       /***********************
+       * PLACEHOLDER POINTERS *
+       ************************/
        HBRUSH* HBRP_CURRENTBORDER = nullptr;
 
 public:

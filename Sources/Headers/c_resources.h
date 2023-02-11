@@ -1,6 +1,6 @@
 /*
-    File: c_resource.h
-    Application constants and project resource header
+*  File: c_resource.h
+*  Application constants and project resource header
 */
 
 #include "../Resources/resource.h"

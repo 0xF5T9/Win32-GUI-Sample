@@ -1,6 +1,6 @@
 /*
-	File: global.h
-	Global variables distribution header
+*  File: global.h
+*  Global variables distribution header
 */
 
 #pragma once
@@ -54,6 +54,7 @@ extern BA_CaptionBar* BA_CaptionBar_Manager;
 extern BA_Standard* BA_Standard_Manager;
 extern BA_Radio2* BA_Radio2_Manager;
 extern BA_Radio3* BA_Radio3_Manager;
+extern CBDL_CustomDraw* CBDL_CustomDraw1_Manager;
 
 
 
@@ -75,6 +76,8 @@ extern HWND SS_Heading2,
 	SS_TextNoteNormalEditbox, SS_ED_Normal, ED_Normal, BTN_NormalEditboxOK,
 	SS_TextNotePasswordEditbox, SS_ED_Password, ED_Password, BTN_PasswordEditboxOK,
 	SS_TextNoteMultilineEditbox, SS_ED_Multiline, ED_Multiline, BTN_MultilineEditboxOK;
+extern HWND SS_Heading3,
+	SS_TextNoteCBSelectTheme, CB_SelectTheme;
 
 
 

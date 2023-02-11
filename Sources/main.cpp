@@ -1,5 +1,5 @@
 /*
-	Win32 GUI Sample
+*    Win32 GUI Sample
 */
 
 #include "./Headers/func.h"
@@ -111,7 +111,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			Graphics graphics(mem_hdc);
 			graphics.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 
-			// Begin painting to memory DC
+			// Begin painting to the memory DC
 			FillRect(mem_hdc, &rAppClient, OBJM_Main->HBR_Secondary);	// Main background color
 			FillRect(mem_hdc, &RECT_Caption, OBJM_Main->HBR_Primary);	// Caption bar color
 			static RECT rFrames_Paint; GetClientRect(hWnd, &rFrames_Paint);
@@ -172,11 +172,19 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			// Handling button control messages
 
 			static HBRUSH* RET_CTLCOLORBTN = nullptr;
+			RET_CTLCOLORBTN = nullptr;
 
 			if ((HWND)lp == BTN_Close || (HWND)lp == BTN_Minimize)
+			{
 				RET_CTLCOLORBTN = &OBJM_Main->HBR_Primary;
-			else RET_CTLCOLORBTN = &OBJM_Main->HBR_DEBUG; // Apply debug color to non-handled button controls
-
+			}
+				
+			if (!RET_CTLCOLORBTN)
+			{
+				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORBTN message in WindowProcedure)", L"", MB_OK | MB_ICONERROR);
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORBTN = &temp;
+			}
 			return (LRESULT)*RET_CTLCOLORBTN;
 		}
 
@@ -387,6 +395,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 						SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 					}
 				}
+                {   // Combobox samples
+                    SetWindowPos(SS_Heading3, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 517, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(SS_TextNoteCBSelectTheme, NULL, MAINCONTENTCTR_PADDING + 130, MAINCONTENTCTR_PADDING + 564, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+					SetWindowPos(CB_SelectTheme, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 561, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				}
 				// Extra invalidate before reset scroll pos
 				if (si.nPos != 0)	
 					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
@@ -517,6 +530,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 				}
 			}
+            {   // Combobox samples
+                SetWindowPos(SS_Heading3, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 517, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(SS_TextNoteCBSelectTheme, NULL, MAINCONTENTCTR_PADDING + 130, MAINCONTENTCTR_PADDING + scroll_distance + 564, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(CB_SelectTheme, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 561, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+            }
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
@@ -605,6 +623,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 				}
 			}
+            {   // Combobox samples
+                SetWindowPos(SS_Heading3, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 517, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(SS_TextNoteCBSelectTheme, NULL, MAINCONTENTCTR_PADDING + 130, MAINCONTENTCTR_PADDING + scroll_distance + 564, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(CB_SelectTheme, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 561, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+            }
 			// Set scroll info
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
@@ -683,17 +706,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				case VK_F2:
 				{
-					SendMessageW(ED_Normal, EM_SETREADONLY, TRUE, NULL);
-					SendMessageW(ED_Password, EM_SETREADONLY, TRUE, NULL);
-					SendMessageW(ED_Multiline, EM_SETREADONLY, TRUE, NULL);
-					return (LRESULT)0;
-				}
-
-				case VK_F3:
-				{
-					SendMessageW(ED_Normal, EM_SETREADONLY, FALSE, NULL);
-					SendMessageW(ED_Password, EM_SETREADONLY, FALSE, NULL);
-					SendMessageW(ED_Multiline, EM_SETREADONLY, FALSE, NULL);
+					// TEST MORE ABOUT SCROLLWINDOWEX()
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, -5, NULL, NULL, NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN | SW_SMOOTHSCROLL);
+					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+					
 					return (LRESULT)0;
 				}
 			}
@@ -737,6 +754,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	static bool bEditboxFocusInvalidateCheck = 0;
+
 	switch (msg)
 	{
 		case WM_ERASEBKGND:
@@ -748,8 +766,126 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			return (LRESULT)0;
 		}
 
+        case WM_MEASUREITEM:
+        {
+            // Set item metrics for comboboxes
+
+            LPMEASUREITEMSTRUCT lpMeasureItem = (LPMEASUREITEMSTRUCT)lp;
+
+            if (lpMeasureItem->CtlType == ODT_COMBOBOX)   // Only process combobox messages
+            {
+				{
+					TEXTMETRIC tm;
+					HWND cb_hWnd = CB_SelectTheme;  // Set metric for Select Theme Combobox
+					HDC  hdc = GetDC(cb_hWnd);      // Get DC
+
+					if (GetTextMetricsW(hdc, &tm))
+						// Set the item height to that of the font + 10px padding
+						lpMeasureItem->itemHeight = tm.tmInternalLeading +
+						tm.tmHeight + tm.tmExternalLeading + 10;
+
+					ReleaseDC(cb_hWnd, hdc);   // Release DC
+				}
+
+                return (LRESULT)TRUE;
+            }
+
+            break;
+        }
+
+        case WM_DRAWITEM:
+        {
+            // Handle owner-drawn control messages
+
+            LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lp;
+
+            if (lpDrawItem->hwndItem == CB_SelectTheme)   // Select Theme Combobox
+            {
+				SetBkMode(lpDrawItem->hDC, TRANSPARENT);
+				SetBkColor(lpDrawItem->hDC, CBDL_CustomDraw1_Manager->CLR_ComboboxDropdownListColor_Background);
+				SetTextColor(lpDrawItem->hDC, CBDL_CustomDraw1_Manager->CLR_InactiveTextColor);
+
+				if (lpDrawItem->itemAction & ODA_DRAWENTIRE)
+				{
+					SetBkColor(lpDrawItem->hDC, CBDL_CustomDraw1_Manager->CLR_ComboboxDropdownListColor_Background);
+					SetTextColor(lpDrawItem->hDC, CBDL_CustomDraw1_Manager->CLR_InactiveTextColor);
+				}
+				if (lpDrawItem->itemState & ODS_SELECTED)
+				{
+					SetBkColor(lpDrawItem->hDC, CBDL_CustomDraw1_Manager->CLR_ComboboxDropdownListColor_Selected);
+					SetTextColor(lpDrawItem->hDC, CBDL_CustomDraw1_Manager->CLR_DefaultTextColor);
+				}
+
+                size_t text_length = (size_t)SendMessageW(lpDrawItem->hwndItem, CB_GETLBTEXTLEN, lpDrawItem->itemID, 0);   // Get item text length
+				WCHAR* TextBuffer = new WCHAR[(int)(text_length + 1)];   // Allocate text buffer
+                SendMessageW(lpDrawItem->hwndItem, CB_GETLBTEXT, lpDrawItem->itemID, (LPARAM)TextBuffer);   // Get item text into text buffer
+
+                // Draw texts
+                ExtTextOutW(lpDrawItem->hDC,
+                    lpDrawItem->rcItem.left + 5, lpDrawItem->rcItem.top + 5,
+                    ETO_OPAQUE | ETO_CLIPPED, &lpDrawItem->rcItem,
+                    TextBuffer, (UINT)text_length, NULL);
+                delete[] TextBuffer;   // Release text buffer
+
+                // Get the dropdown hwnd to override border paintings
+                COMBOBOXINFO cbi{};
+                cbi.cbSize = sizeof(COMBOBOXINFO);
+                GetComboBoxInfo(lpDrawItem->hwndItem, &cbi);
+                HWND DDL = cbi.hwndList;
+
+                // Painting the borders
+                auto hdc = GetWindowDC(DDL);                       // The dropdown is non-client area so GetClientDC() won't work
+                static RECT rc; GetClientRect(DDL, &rc);
+                FrameRect(hdc, &rc, CBDL_CustomDraw1_Manager->HBR_ComboboxDropdownListColor_Border);  // Painting the borders
+
+                /*
+                * Get total items of the combobox to get the id of the last item
+                * (To check if the last item is selected and make the "unpainted" 2-pixels match background color)
+                */
+                int total_cbitems = (int)SendMessageW(lpDrawItem->hwndItem, CB_GETCOUNT, NULL, NULL);
+                rc.top = rc.bottom -= 1; rc.top -= 2; rc.left += 1; rc.right -= 1;
+                FillRect(hdc, &rc, (lpDrawItem->itemID == (total_cbitems - 1) ? CBDL_CustomDraw1_Manager->HBR_ComboboxDropdownListColor_Selected : CBDL_CustomDraw1_Manager->HBR_ComboboxDropdownListColor_Background));
+                ReleaseDC(DDL, hdc);
+
+				RedrawWindow(lpDrawItem->hwndItem, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+                return (LRESULT)TRUE;
+            }
+
+            break;
+        }
+
 		case WM_COMMAND:
 		{
+            // Combobox messages
+            if (HIWORD(wp) == CBN_SELCHANGE)
+            {
+                int iIndex = (int)SendMessageW((HWND)lp, CB_GETCURSEL, NULL, NULL);
+
+                if ((HWND)lp == CB_SelectTheme)
+                {
+                    switch (iIndex)
+                    {
+						case 0:
+							nApp::SetAppTheme(L"Light");
+							break;
+						case 1:
+							nApp::SetAppTheme(L"Dark");
+							break;
+						case 2:
+							nApp::SetAppTheme(L"Ristretto");
+							break;
+                    }
+
+					COMBOBOXINFO cbi{};
+					cbi.cbSize = sizeof(COMBOBOXINFO);
+					GetComboBoxInfo((HWND)lp, &cbi);
+					RedrawWindow(cbi.hwndList, NULL, NULL, RDW_INVALIDATE);  // Redraw the drop-down list to match new theme
+
+					return (LRESULT)0;
+                }
+            }
+
+			// Other messages
 			switch (wp)
 			{
 				case BUTTON_STANDARD:
@@ -796,7 +932,6 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 						MessageBoxW(hWnd, (L"Entered:\n" + wstrTextBuffer).c_str(), L"", MB_OK | MB_ICONINFORMATION);
 					else MessageBeep(MB_ICONERROR);
 
-					
 					return (LRESULT)0;
 				}
 
@@ -846,27 +981,27 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 		case WM_CTLCOLORSTATIC:
 		{
 			static HBRUSH* RET_CTLCOLORSTATIC = nullptr;
+			RET_CTLCOLORSTATIC = nullptr;
 
-			if ((HWND)lp == SS_Heading1 || (HWND)lp == SS_Heading2)
+			if ((HWND)lp == SS_Heading1 || (HWND)lp == SS_Heading2 || (HWND)lp == SS_Heading3)
 			{
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
 				SetBkMode((HDC)wp, TRANSPARENT);
 				SetBkColor((HDC)wp, OBJM_Main->CLR_Secondary);
 				SetTextColor((HDC)wp, OBJM_Main->CLR_DefaultText);
-				
-				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
-			else if ((HWND)lp == SS_TextNoteNormalEditbox || (HWND)lp == SS_TextNotePasswordEditbox || (HWND)lp == SS_TextNoteMultilineEditbox)
+			else if ((HWND)lp == SS_TextNoteNormalEditbox || (HWND)lp == SS_TextNotePasswordEditbox || (HWND)lp == SS_TextNoteMultilineEditbox || (HWND)lp == SS_TextNoteCBSelectTheme)
 			{
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
 				SetBkMode((HDC)wp, TRANSPARENT);
 				SetBkColor((HDC)wp, OBJM_Main->CLR_Secondary);
 				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
-				
-				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Secondary;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
 			else if ((HWND)lp == SS_ED_Normal)
 			{
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORSTATIC = &temp;
+
 				static RECT rc1;
 				static RECT rc2;
 				GetClientRect((HWND)lp, &rc1);
@@ -888,13 +1023,12 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 						: Color(175, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())),
 					1);
 				if (GetFocus() != ED_Normal) bEditboxFocusInvalidateCheck = 0; else bEditboxFocusInvalidateCheck = 1;
-
-				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
-				RET_CTLCOLORSTATIC = &temp;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
 			else if ((HWND)lp == SS_ED_Password)
 			{
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORSTATIC = &temp;
+
 				static RECT rc1;
 				static RECT rc2;
 				GetClientRect((HWND)lp, &rc1);
@@ -916,13 +1050,12 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 						: Color(175, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())),
 					1);
 				if (GetFocus() != ED_Password) bEditboxFocusInvalidateCheck = 0; else bEditboxFocusInvalidateCheck = 1;
-
-				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
-				RET_CTLCOLORSTATIC = &temp;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
 			else if ((HWND)lp == SS_ED_Multiline)
 			{
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORSTATIC = &temp;
+
 				static RECT rc1;
 				static RECT rc2;
 				GetClientRect((HWND)lp, &rc1);
@@ -944,71 +1077,71 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 						: Color(175, OBJM_Main->CL_EditBoxBorder.GetRed(), OBJM_Main->CL_EditBoxBorder.GetGreen(), OBJM_Main->CL_EditBoxBorder.GetBlue())),
 					1);
 				if (GetFocus() != ED_Multiline) bEditboxFocusInvalidateCheck = 0; else bEditboxFocusInvalidateCheck = 1;
-
-				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
-				RET_CTLCOLORSTATIC = &temp;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
 			else if ((HWND)lp == ED_Normal)
 			{
 				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
 
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
 				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
 				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
 				if (!bEditboxFocusInvalidateCheck)
 					RedrawWindow(SS_ED_Normal, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-
-				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
 			else if ((HWND)lp == ED_Password)
 			{
 				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
 
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
 				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
 				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
 				if (!bEditboxFocusInvalidateCheck)
 					RedrawWindow(SS_ED_Password, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-
-				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
 			else if ((HWND)lp == ED_Multiline)
 			{
 				if (GetFocus() != (HWND)lp) bEditboxFocusInvalidateCheck = 0;
 
+				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
 				SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
 				SetBkColor((HDC)wp, OBJM_Main->CLR_EditBox);
 				if (!bEditboxFocusInvalidateCheck)
 					RedrawWindow(SS_ED_Multiline, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
-
-				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_EditBox;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
 			}
-			else 
+
+			if (!RET_CTLCOLORSTATIC)
 			{
-				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_DEBUG;
-				return (LRESULT)*RET_CTLCOLORSTATIC;
+				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORSTATIC message)", L"", MB_OK | MB_ICONERROR);
+				exit(1);
 			}
-
-			break;
+			return (LRESULT)*RET_CTLCOLORSTATIC;
 		}
 
 		case WM_CTLCOLORBTN:
 		{
 			static HBRUSH* RET_CTLCOLORBTN = nullptr;
-			if ((HWND)lp == BTN_Standard || (HWND)lp == BTN_NormalEditboxOK || (HWND)lp == BTN_PasswordEditboxOK || (HWND)lp == BTN_MultilineEditboxOK)
+			RET_CTLCOLORBTN = nullptr;
+
+			if ((HWND)lp == BTN_Standard ||
+				(HWND)lp == BTN_Radio2Left || (HWND)lp == BTN_Radio2Right || (HWND)lp == BTN_Radio3Left || (HWND)lp == BTN_Radio3Middle || (HWND)lp == BTN_Radio3Right ||
+				(HWND)lp == BTN_NormalEditboxOK || (HWND)lp == BTN_PasswordEditboxOK || (HWND)lp == BTN_MultilineEditboxOK)
 			{
 				RET_CTLCOLORBTN = &OBJM_Main->HBR_Secondary;
 			}
-			else RET_CTLCOLORBTN = &OBJM_Main->HBR_DEBUG;
 
+			if (!RET_CTLCOLORBTN)
+			{
+				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORBTN message in WindowProcedure_MainContentCTR)", L"", MB_OK | MB_ICONERROR);
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORBTN = &temp;
+			}
 			return (LRESULT)*RET_CTLCOLORBTN;
 		}
 
 		case WM_CTLCOLOREDIT:
 		{
 			static HBRUSH* RET_CTLCOLOREDIT = nullptr;
+			RET_CTLCOLOREDIT = nullptr;
 
 			if ((HWND)lp == ED_Normal)
 			{
@@ -1041,7 +1174,48 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 					RedrawWindow(SS_ED_Multiline, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 			}
 
+			else if ((HWND)lp == CB_SelectTheme)
+			{
+				RET_CTLCOLOREDIT = &CBDL_CustomDraw1_Manager->HBR_ComboboxBackgroundColor;
+				SetBkMode((HDC)wp, TRANSPARENT);
+				SetBkColor((HDC)wp, CBDL_CustomDraw1_Manager->CLR_ComboboxColor_Default);
+				SetTextColor((HDC)wp, CBDL_CustomDraw1_Manager->CLR_DefaultTextColor);
+			}
+
+			if (!RET_CTLCOLOREDIT)
+			{
+				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLOREDIT message in WindowProcedure_MainContentCTR)", L"", MB_OK | MB_ICONERROR);
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLOREDIT = &temp;
+			}
 			return (LRESULT)*RET_CTLCOLOREDIT;
+		}
+
+		case WM_CTLCOLORLISTBOX:
+		{
+			static HBRUSH* RET_CTLCOLORLISTBOX = nullptr;
+			RET_CTLCOLORLISTBOX = nullptr;
+
+			COMBOBOXINFO cbi{};
+			cbi.cbSize = sizeof(COMBOBOXINFO);
+			
+			GetComboBoxInfo(CB_SelectTheme, &cbi);
+			auto CBLB_SelectTheme = cbi.hwndList;
+			if ((HWND)lp == CBLB_SelectTheme)
+			{
+				RET_CTLCOLORLISTBOX = &CBDL_CustomDraw1_Manager->HBR_ComboboxBackgroundColor;
+				SetBkMode((HDC)wp, TRANSPARENT);
+				SetBkColor((HDC)wp, CBDL_CustomDraw1_Manager->CLR_ComboboxDropdownListColor_Background);
+				SetTextColor((HDC)wp, CBDL_CustomDraw1_Manager->CLR_InactiveTextColor);
+			}
+
+			if (!RET_CTLCOLORLISTBOX)
+			{
+				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORLISTBOX message in WindowProcedure_MainContentCTR)", L"", MB_OK | MB_ICONERROR);
+				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
+				RET_CTLCOLORLISTBOX = &temp;
+			}
+			return (LRESULT)*RET_CTLCOLORLISTBOX;
 		}
 	}
 

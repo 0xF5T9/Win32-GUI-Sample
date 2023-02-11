@@ -1,6 +1,6 @@
 /*
-	File: subclasses.h
-	Subclasses class definitions
+*  File: subclasses.cpp
+*  Subclasses class definitions
 */
 
 #include "./Headers/c_resources.h"
@@ -23,6 +23,7 @@ using namespace Gdiplus;
 // FORWARD DECLARATIONS
 namespace nSol
 {
+	void RemoveWindowStyle(HWND& hWnd, LONG Style);
 	void GetRoundRectPath(GraphicsPath* pPath, Rect r, int dia);
 	void DrawRoundRect(Graphics* pGraphics, Rect r, Color color, int radius, int width);
 	void FillRoundRect(Graphics* pGraphics, Brush* pBrush, Rect r, Color border, int radius);
@@ -1720,10 +1721,279 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 
+/*************************************************************************
+*    CUSTOM DRAW COMBOBOX SUBCLASS CLASS DEFINITIONS (DROP-DOWN LIST)    *
+**************************************************************************/
+void CBDL_CustomDraw::UpdateObjects(Gdiplus::Color ComboboxColor, Gdiplus::Color ComboboxBackgroundColor, Gdiplus::Color CBDL_Background, Gdiplus::Color CBDL_Selected, Gdiplus::Color CBDL_Border, HFONT& Font, COLORREF DefaultTextColor, COLORREF InactiveTextColor)
+{
+	// Release previously objects if required
+	if (this->IsReady)
+	{
+		DeleteObject(this->HBR_ComboboxColor_Default);
+		DeleteObject(this->HBR_ComboboxBackgroundColor);
+		DeleteObject(this->HBR_ComboboxDropdownListColor_Background);
+		DeleteObject(this->HBR_ComboboxDropdownListColor_Selected);
+		DeleteObject(this->HBR_ComboboxDropdownListColor_Border);
+		this->IsReady = false;
+	}
+
+	// Create new objects
+	{
+		this->CL_ComboboxColor_Default = ComboboxColor;
+		this->CLR_ComboboxColor_Default = RGB((int)this->CL_ComboboxColor_Default.GetRed(), (int)this->CL_ComboboxColor_Default.GetGreen(), (int)this->CL_ComboboxColor_Default.GetBlue());
+		this->HBR_ComboboxColor_Default = CreateSolidBrush(this->CLR_ComboboxColor_Default);
+
+		this->CL_ComboboxBackgroundColor = ComboboxBackgroundColor;
+		this->CLR_ComboboxBackgroundColor = RGB((int)this->CL_ComboboxBackgroundColor.GetRed(), (int)this->CL_ComboboxBackgroundColor.GetGreen(), (int)this->CL_ComboboxBackgroundColor.GetBlue());
+		this->HBR_ComboboxBackgroundColor = CreateSolidBrush(this->CLR_ComboboxBackgroundColor);
+
+		this->CL_ComboboxDropdownListColor_Background = CBDL_Background;
+		this->CLR_ComboboxDropdownListColor_Background = RGB((int)this->CL_ComboboxDropdownListColor_Background.GetRed(), (int)this->CL_ComboboxDropdownListColor_Background.GetGreen(), (int)this->CL_ComboboxDropdownListColor_Background.GetBlue());
+		this->HBR_ComboboxDropdownListColor_Background = CreateSolidBrush(this->CLR_ComboboxDropdownListColor_Background);
+
+		this->CL_ComboboxDropdownListColor_Selected = CBDL_Selected;
+		this->CLR_ComboboxDropdownListColor_Selected = RGB((int)this->CL_ComboboxDropdownListColor_Selected.GetRed(), (int)this->CL_ComboboxDropdownListColor_Selected.GetGreen(), (int)this->CL_ComboboxDropdownListColor_Selected.GetBlue());
+		this->HBR_ComboboxDropdownListColor_Selected = CreateSolidBrush(this->CLR_ComboboxDropdownListColor_Selected);
+
+		this->CL_ComboboxDropdownListColor_Border = CBDL_Border;
+		this->CLR_ComboboxDropdownListColor_Border = RGB((int)this->CL_ComboboxDropdownListColor_Border.GetRed(), (int)this->CL_ComboboxDropdownListColor_Border.GetGreen(), (int)this->CL_ComboboxDropdownListColor_Border.GetBlue());
+		this->HBR_ComboboxDropdownListColor_Border = CreateSolidBrush(this->CLR_ComboboxDropdownListColor_Border);
+		
+		this->HFO_ComboboxFont = &Font;
+
+		this->CLR_DefaultTextColor = DefaultTextColor;
+		this->CLR_InactiveTextColor = InactiveTextColor;
+	}
+
+	// Check for invalid objects
+	{
+		if (!this->HBR_ComboboxColor_Default || !this->HBR_ComboboxBackgroundColor || !this->HBR_ComboboxDropdownListColor_Background ||
+			!this->HBR_ComboboxDropdownListColor_Selected || !this->HBR_ComboboxDropdownListColor_Border)
+			MessageBoxW(NULL, L"Error occurred!\n(Failed to create HBRUSH object(s))\n\nINFO: 'CBDL_CustomDraw' CLASS,'UpdateObjects()' FUNC", L"", MB_OK | MB_ICONERROR);
+
+		if (!*(this->HFO_ComboboxFont))
+			MessageBoxW(NULL, L"Error occurred!\n(Invalid font object)\n\nINFO: 'CBDL_CustomDraw' CLASS, 'UpdateObjects()' FUNC", L"", MB_OK | MB_ICONERROR);
+	}
+
+	this->IsReady = true;
+}
+void CBDL_CustomDraw::SetComboboxSubclass(HWND hWnd)
+{
+	if (!this->IsReady)
+	{
+		MessageBoxW(NULL, L"Error occurred!\n(The required objects are not initialized)\n\nINFO: 'CBDL_CustomDraw' CLASS, 'SetComboboxSubclass()' FUNC", L"", MB_OK | MB_ICONERROR);
+		exit(1);
+	}
+
+	// Pass this object pointer via 'dwRefData' while subclassing so the callback function can access non-static members using the pointer
+	// READMORE: https://stackoverflow.com/questions/66784011/c-winapi-wrapping-up-a-callback-of-subclass-in-a-class
+	SetWindowSubclass(hWnd, &ComboboxCtrl, NULL, reinterpret_cast<DWORD_PTR>(this));
+
+	// Get the drop-down list hwnd from COMBOBOXINFO struct
+	COMBOBOXINFO cbi{};
+	cbi.cbSize = sizeof(COMBOBOXINFO);
+	GetComboBoxInfo(hWnd, &cbi);
+
+	HWND DDL = cbi.hwndList;
+	if (DDL)
+	{
+		SetComboboxDDLSubclass(DDL);                                                                        // Set subclass for drop-down list hwnd
+		SetClassLongPtrW(DDL, GCLP_HBRBACKGROUND, (LONG_PTR)NULL);                                          // Set class background brush to none
+		nSol::RemoveWindowStyle(DDL, CS_DBLCLKS);                                                           // Don't want double click message
+		nSol::RemoveWindowStyle(DDL, CS_DROPSHADOW);                                                        // Don't want drop shadow effect
+		SendMessageW(DDL, WM_SETFONT, (WPARAM)*this->HFO_ComboboxFont, TRUE);  // Set font for drop-down list hwnd
+	}
+}
+void CBDL_CustomDraw::SetComboboxDDLSubclass(HWND hWnd)
+{
+	// Pass this object pointer via 'dwRefData' while subclassing so the callback function can access non-static members using the pointer
+	// READMORE: https://stackoverflow.com/questions/66784011/c-winapi-wrapping-up-a-callback-of-subclass-in-a-class
+	SetWindowSubclass(hWnd, &ComboboxCtrl_DDL, NULL, reinterpret_cast<DWORD_PTR>(this));
+}
+void CBDL_CustomDraw::ComboboxCtrl_OnPaint(HWND hWnd)
+{
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(hWnd, &ps);
+
+	// Create DCs & BMPs for double buffering (reduce flickering)
+	HDC mem_hdc = CreateCompatibleDC(hdc);
+	RECT rc; GetClientRect(hWnd, &rc);
+	HBITMAP hBitmap = CreateCompatibleBitmap(hdc,
+		rc.right - rc.left,
+		rc.bottom - rc.top);
+	HBITMAP hBitmap_Old = (HBITMAP)SelectObject(mem_hdc, hBitmap);
+
+	// Set GDI+ Smoothing Mode
+	Graphics graphics(mem_hdc);
+	graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+	Gdiplus::Rect grc(rc.top, rc.left, rc.right, rc.bottom);
+
+	// Begin painting to the memory DC
+	SelectObject(mem_hdc, (HFONT)*this->HFO_ComboboxFont);
+	SetBkColor(mem_hdc, this->CLR_ComboboxColor_Default);
+	SetTextColor(mem_hdc, this->CLR_DefaultTextColor);
+
+	FillRect(mem_hdc, &rc, this->HBR_ComboboxBackgroundColor);  // Background color
+	SolidBrush SB_Background = this->CL_ComboboxColor_Default;  // Combobox color
+	nSol::FillRoundRect(&graphics, &SB_Background, grc, this->CL_ComboboxColor_Default, 4);  // Draw round rect
+
+	// Get and paint current selected combobox item text
+	int current_index = (int)SendMessageW(hWnd, CB_GETCURSEL, NULL, NULL);
+	if (current_index >= 0)
+	{
+		size_t text_length = (size_t)SendMessageW(hWnd, CB_GETLBTEXTLEN, current_index, 0);
+		WCHAR* text_buffer = new WCHAR[text_length + 1];
+		SendMessageW(hWnd, CB_GETLBTEXT, current_index, (LPARAM)text_buffer);
+		DrawTextW(mem_hdc, text_buffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		delete[] text_buffer;
+	}
+
+	// Draw contents from memory DC to target DC
+	BitBlt(hdc, 0, 0, rc.right - rc.left,
+		rc.bottom - rc.top, mem_hdc, 0, 0, SRCCOPY);
+
+	// Release DCs
+	SelectObject(mem_hdc, hBitmap_Old);
+	DeleteObject(hBitmap);
+	DeleteDC(mem_hdc);
+
+	EndPaint(hWnd, &ps);
+}
+void CBDL_CustomDraw::ComboboxCtrl_DDL_OnErase(HWND hWnd, HDC hdc)
+{
+	// Get total items of the combobox to get the id of the last item ('last item id' = 'total items' - 1)
+	// (To check if the last item is selected and make the "unpainted" 2-pixels match background color)
+	COMBOBOXINFO cbi;
+	cbi.cbSize = sizeof(COMBOBOXINFO);
+	GetComboBoxInfo(hWnd, &cbi);
+	int total_cbitems = (int)SendMessageW(cbi.hwndCombo, CB_GETCOUNT, NULL, NULL);
+	int curselected_cbitem = (int)SendMessageW(cbi.hwndCombo, CB_GETCURSEL, NULL, NULL);
+
+	RECT rc; GetClientRect(hWnd, &rc);
+	FillRect(hdc, &rc, (curselected_cbitem == (total_cbitems - 1) ? this->HBR_ComboboxDropdownListColor_Selected : this->HBR_ComboboxDropdownListColor_Background));
+}
+void CBDL_CustomDraw::ComboboxCtrl_DDL_OnNCPaint(HWND hWnd)
+{
+	auto hdc = GetWindowDC(hWnd);                                     // The dropdown is non-client area
+	RECT rc; GetClientRect(hWnd, &rc);
+	FrameRect(hdc, &rc, this->HBR_ComboboxDropdownListColor_Border);  // Paint the borders
+
+	
+	// Get total items of the combobox to get the id of the last item ('last item id' = 'total items' - 1)
+	// (To check if the last item is selected and make the "unpainted" 2-pixels match background color)
+	COMBOBOXINFO cbi;
+	cbi.cbSize = sizeof(COMBOBOXINFO);
+	GetComboBoxInfo(hWnd, &cbi);
+
+	int total_cbitems = (int)SendMessageW(cbi.hwndCombo, CB_GETCOUNT, NULL, NULL);
+	int curselected_cbitem = (int)SendMessageW(cbi.hwndCombo, CB_GETCURSEL, NULL, NULL);
+	rc.top = rc.bottom -= 1; rc.top -= 2; rc.left += 1; rc.right -= 1;
+	FillRect(hdc, &rc, (curselected_cbitem == (total_cbitems - 1) ? this->HBR_ComboboxDropdownListColor_Selected : this->HBR_ComboboxDropdownListColor_Background));
+
+	ReleaseDC(hWnd, hdc);  // Release DC
+}
+// * SUBCLASS CALLBACK PROCEDURE
+LRESULT CALLBACK CBDL_CustomDraw::ComboboxCtrl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	CBDL_CustomDraw* pThis = reinterpret_cast<CBDL_CustomDraw*>(dwRefData); // Extract the poiner from dwRefData and use it to access non-static members
+
+	static bool IsDDLInvalidated = 0;
+
+    switch (uMsg)
+    {
+        case WM_NCDESTROY:
+        {
+            RemoveWindowSubclass(hWnd, &ComboboxCtrl, uIdSubclass);
+            return (LRESULT)0;
+        }
+
+        case WM_ERASEBKGND:
+        {
+            return (LRESULT)1;
+        }
+
+		// Override combobox paint messages
+		case WM_PAINT:
+		{
+			DWORD style = (DWORD)GetWindowLongPtrW(hWnd, GWL_STYLE);
+			if (!(style & CBS_DROPDOWNLIST))  // The combobox must have CBS_DROPDOWNLIST style
+				break;
+
+			pThis->ComboboxCtrl_OnPaint(hWnd);
+
+			return (LRESULT)0;
+		}
+
+		case WM_NCPAINT:
+		{
+			return (LRESULT)0; // Always return zero to prevent unwanted non-client paints
+		}
+
+		// Extra invalidate upon opening the drop-down list
+		case WM_MOUSEMOVE:
+		{
+			if (wParam == MK_LBUTTON && !IsDDLInvalidated)
+			{
+				COMBOBOXINFO cbi;
+				cbi.cbSize = sizeof(COMBOBOXINFO);
+				GetComboBoxInfo(hWnd, &cbi);
+				InvalidateRect(cbi.hwndList, NULL, FALSE);
+
+				IsDDLInvalidated = 1;
+			}
+
+			return (LRESULT)0;
+		}
+
+		case WM_MOUSELEAVE:
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+			IsDDLInvalidated = 0;
+			break;
+    }
+
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+LRESULT CALLBACK CBDL_CustomDraw::ComboboxCtrl_DDL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	CBDL_CustomDraw* pThis = reinterpret_cast<CBDL_CustomDraw*>(dwRefData);
+
+    switch (uMsg)
+    {
+		case WM_NCDESTROY:
+		{
+			RemoveWindowSubclass(hWnd, &ComboboxCtrl_DDL, uIdSubclass);
+			return (LRESULT)0;
+		}
+
+		case WM_ERASEBKGND:
+		{
+			pThis->ComboboxCtrl_DDL_OnErase(hWnd, (HDC)wParam);
+			return (LRESULT)1;
+		}
+		
+		case WM_NCPAINT:
+		{
+			pThis->ComboboxCtrl_DDL_OnNCPaint(hWnd);
+			return (LRESULT)0;
+		}
+		
+		case WM_NCCALCSIZE:
+		{
+			return (LRESULT)0;  // Return zero to kill standard frames
+		}
+    }
+
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+
+
+
 /******************************************
 *    EDIT CONTROL SUBCLASS DEFINITIONS    *
 *******************************************/
-// SUBCLASS CALLBACK PROCEDURE
+// * SUBCLASS CALLBACK PROCEDURE
 LRESULT CALLBACK SC_EditControl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	// Capture enter key message of the edit control and do something with it
@@ -1748,38 +2018,38 @@ LRESULT CALLBACK SC_EditControl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	switch (uMsg)
 	{
-		case WM_NCDESTROY:
+	case WM_NCDESTROY:
+	{
+		RemoveWindowSubclass(hWnd, &SC_EditControl, uIdSubclass);
+		return (LRESULT)0;
+	}
+
+	case WM_ERASEBKGND:
+	{
+		return (LRESULT)1;
+	}
+
+	case WM_KEYDOWN:
+	{
+		switch (wParam)
 		{
-			RemoveWindowSubclass(hWnd, &SC_EditControl, uIdSubclass);
-			return (LRESULT)0;
-		}
-
-		case WM_ERASEBKGND:
+		case VK_TAB: // Capture VK_TAB and forward the focus to the next tab stop
 		{
-			return (LRESULT)1;
-		}
-
-		case WM_KEYDOWN:
-		{
-			switch (wParam)
-			{
-				case VK_TAB: // Capture VK_TAB and forward the focus to the next tab stop
-				{
-					/*
-					// Uncomment to skip processing VK_TAB message for ED_Multiline
-					if (hWnd == ED_Multiline) break;
-					*/
-					HWND NextFocus = GetNextDlgTabItem(MAIN_HWND, hWnd, (int)(GetKeyState(VK_SHIFT) & 0x8000));
-					SetFocus(NextFocus);
-					break;
-				}
-
-				default:
-					break;
-			}
-
+			/*
+			// Uncomment to skip processing VK_TAB message for ED_Multiline
+			if (hWnd == ED_Multiline) break;
+			*/
+			HWND NextFocus = GetNextDlgTabItem(MAIN_HWND, hWnd, (int)(GetKeyState(VK_SHIFT) & 0x8000));
+			SetFocus(NextFocus);
 			break;
 		}
+
+		default:
+			break;
+		}
+
+		break;
+	}
 	}
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);

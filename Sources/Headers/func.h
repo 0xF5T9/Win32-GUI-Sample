@@ -1,4 +1,4 @@
-/*
+﻿/*
 	File: func.h
 	Include libraries and contains most application function definitions
 */
@@ -441,6 +441,8 @@ namespace nApp
 				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
 			BA_Radio3_Manager->UpdateObjects(Color(255, 225, 225, 225), Color(255, 229, 241, 251), Color(255, 204, 228, 247), Color(255, 252, 253, 253), Color(255, 173, 173, 173),
 				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(0, 0, 0));
+			CBDL_CustomDraw1_Manager->UpdateObjects(Color(255, 225, 225, 225), Color(255, 252, 253, 253), Color(255, 252, 253, 253), Color(255, 227, 228, 228), Color(255, 64, 64, 64),
+			OBJM_Main->HFO_Default, RGB(0, 0, 0), RGB(162, 162, 162));
 
 			// Update global parameters
 			APPLICATION_THEME = L"Light";
@@ -504,6 +506,8 @@ namespace nApp
 				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
 			BA_Radio3_Manager->UpdateObjects(Color(255, 51, 51, 51), Color(255, 69, 69, 69), Color(255, 102, 102, 102), Color(255, 32, 32, 32), Color(255, 155, 155, 155),
 				Color(255, 0, 162, 237), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
+			CBDL_CustomDraw1_Manager->UpdateObjects(Color(255, 51, 51, 51), Color(255, 32, 32, 32), Color(255, 32, 32, 32), Color(255, 44, 44, 44), Color(255, 100, 100, 100),
+			OBJM_Main->HFO_Default, RGB(216, 222, 233), RGB(162, 162, 162));
 
 			// Update global parameters
 			APPLICATION_THEME = L"Dark";
@@ -536,7 +540,7 @@ namespace nApp
 				}
 			}
 		}
-		else if (Theme == L"Ristretto")
+		else if (Theme == L"Ristretto")  // Ristretto theme
 		{
 			// Main application drawing objects
 			if (!OBJM_Main->UpdateColorObjects(
@@ -561,12 +565,14 @@ namespace nApp
 			// Subclass objects
 			BA_CaptionBar_Manager->UpdateObjects(OBJM_Main->CLR_Primary, OBJM_Main->CLR_Primary, RGB(232, 17, 35), RGB(76, 56, 54), OBJM_Main->CLR_Primary,
 				OBJM_Main->CLR_Primary);
-			BA_Standard_Manager->UpdateObjects(Color(255, 94, 70, 68), Color(255, 84, 63, 61), Color(255, 89, 67, 65), Color(255, 32, 32, 32), Color(255, 68, 50, 48),
+			BA_Standard_Manager->UpdateObjects(Color(255, 94, 70, 68), Color(255, 84, 63, 61), Color(255, 89, 67, 65), Color(255, 30, 24, 23), Color(255, 68, 50, 48),
 				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
-			BA_Radio2_Manager->UpdateObjects(Color(255, 58, 44, 42), Color(255, 84, 63, 61), Color(255, 94, 70, 68), Color(255, 32, 32, 32), Color(255, 68, 50, 48),
+			BA_Radio2_Manager->UpdateObjects(Color(255, 58, 44, 42), Color(255, 84, 63, 61), Color(255, 94, 70, 68), Color(255, 30, 24, 23), Color(255, 68, 50, 48),
 				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
-			BA_Radio3_Manager->UpdateObjects(Color(255, 58, 44, 42), Color(255, 84, 63, 61), Color(255, 94, 70, 68), Color(255, 32, 32, 32), Color(255, 68, 50, 48),
+			BA_Radio3_Manager->UpdateObjects(Color(255, 58, 44, 42), Color(255, 84, 63, 61), Color(255, 94, 70, 68), Color(255, 30, 24, 23), Color(255, 68, 50, 48),
 				Color(255, 181, 180, 185), OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(255, 255, 255));
+			CBDL_CustomDraw1_Manager->UpdateObjects(Color(255, 58, 44, 42), Color(255, 30, 24, 23), Color(255, 39, 29, 28), Color(255, 30, 24, 23), Color(255, 68, 50, 48),
+			OBJM_Main->HFO_Default, RGB(215, 218, 222), RGB(129, 115, 114));
 
 			// Update global parameters
 			APPLICATION_THEME = L"Ristretto"; 
@@ -613,7 +619,8 @@ namespace nApp
 		BA_Standard_Manager = new BA_Standard();
 		BA_Radio2_Manager = new BA_Radio2(CURRENT_SELECTEDRADIO2, BTN_Radio2Left);
 		BA_Radio3_Manager = new BA_Radio3(CURRENT_SELECTEDRADIO3, BTN_Radio3Left, BTN_Radio3Middle);
-		if (!OBJM_Main || !BA_CaptionBar_Manager || !BA_Standard_Manager || !BA_Radio2_Manager || !BA_Radio3_Manager)
+		CBDL_CustomDraw1_Manager = new CBDL_CustomDraw();
+		if (!OBJM_Main || !BA_CaptionBar_Manager || !BA_Standard_Manager || !BA_Radio2_Manager || !BA_Radio3_Manager || !CBDL_CustomDraw1_Manager)
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize global objects)", L"", MB_OK | MB_ICONERROR);
 			return false;
@@ -709,7 +716,7 @@ namespace nApp
 			si.fMask = SIF_ALL;
 			si.nPos = 0; // Initiate scrollbar pos
 			si.nMin = 0; // Min scrollbar pos
-			si.nMax = 442 + 65 + (MAINCONTENTCTR_PADDING * 2); // Max scrollbar pos = (total content sizes + spaces between contents + paddings)
+			si.nMax = 516 + 85 + (MAINCONTENTCTR_PADDING * 2); // Max scrollbar pos = (total content sizes + spaces between contents + paddings)
 			si.nPage = 211; // Actual width|height of the container
 			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 			Vector_MAINCONTENTCTR.push_back(&SB_MAINCONTENTCTR);
@@ -723,7 +730,7 @@ namespace nApp
 
 			{
 				BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 0, 0, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
+					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 44, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
 				SetWindowSubclass(BTN_Standard, &SC_BA_Standard, NULL, NULL);
 				Vector_Subclasses.push_back(&BTN_Standard);
 
@@ -820,7 +827,41 @@ namespace nApp
 			}
 		}
 
-		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove "CS_DBLCLKS" (double click messages) from class style "BUTTON"
+        {
+            SS_Heading3 = CreateWindowExW(NULL, L"STATIC", L"Sample comboboxs:",
+                WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 517, 190, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+			SS_TextNoteCBSelectTheme = CreateWindowExW(NULL, L"STATIC", L"(Select theme)",
+				WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+				MAINCONTENTCTR_PADDING + 130,
+				MAINCONTENTCTR_PADDING + 564, 127, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+            CB_SelectTheme = CreateWindowExW(NULL, L"COMBOBOX", L"",
+                WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED,
+                MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 561, 120, NULL/*(Determinated by WM_MEASUREITEM)*/, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+			CBDL_CustomDraw1_Manager->SetComboboxSubclass(CB_SelectTheme);
+            Vector_Subclasses.push_back(&CB_SelectTheme);
+
+            // Initialize combobox items
+			const UINT total_items = 3;
+			const UINT longest_item_textlength = 10;  // Including null string
+            WCHAR item_array[total_items][longest_item_textlength] =
+            {
+                TEXT("Light"), TEXT("Dark"), TEXT("Ristretto")
+            };
+            WCHAR text_buffer[longest_item_textlength];
+            memset(&text_buffer, 0, sizeof(text_buffer)); // Memset to ensure the buffer is clean
+            for (int i = 0; i < total_items; i++)         // Load items to the combobox
+            {
+                wcscpy_s(text_buffer, sizeof(text_buffer) / sizeof(WCHAR), (WCHAR*)item_array[i]);
+                SendMessageW(CB_SelectTheme, CB_ADDSTRING, 0, (LPARAM)text_buffer);
+            }
+			// Set default item based on 'x' condition
+            SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);                                              
+            if (APPLICATION_THEME == L"Dark") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
+            else if (APPLICATION_THEME == L"Ristretto") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
+        }
+
+		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove style "CS_DBLCLKS" (double click messages) from class style "BUTTON"
 
 		// Update class for standard controls
 		SetAppThemeClass(APPLICATION_THEME);
@@ -838,14 +879,20 @@ namespace nApp
 		// Apply font to window handles
 		EnumChildWindows(hWnd, (WNDENUMPROC)nSol::cbSetFont, (LPARAM)OBJM_Main->HFO_Default);
 		SendMessageW(SS_Title, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Title, TRUE);
+
+        // Static Texts (Heading)
 		SendMessageW(SS_Heading1, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Heading, TRUE);
 		SendMessageW(SS_Heading2, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Heading, TRUE);
+        SendMessageW(SS_Heading3, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Heading, TRUE);
+        // Editboxs
 		SendMessageW(ED_Normal, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Edit, TRUE);
 		SendMessageW(ED_Password, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Edit, TRUE);
 		SendMessageW(ED_Multiline, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Edit, TRUE);
+        // Static Texts (Notes)
 		SendMessageW(SS_TextNoteNormalEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
 		SendMessageW(SS_TextNotePasswordEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
 		SendMessageW(SS_TextNoteMultilineEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
+		SendMessageW(SS_TextNoteCBSelectTheme, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
 		return true;
 	}
 
@@ -899,6 +946,7 @@ namespace nApp
 			for (auto& x : Vector_Subclasses) DestroyWindow(*x);
 		}
 
+		delete CBDL_CustomDraw1_Manager;
 		delete BA_Radio3_Manager;
 		delete BA_Radio2_Manager;
 		delete BA_Standard_Manager;
