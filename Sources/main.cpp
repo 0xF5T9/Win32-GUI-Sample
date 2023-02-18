@@ -362,48 +362,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 				si.nPage = rMCCTR.bottom; // Update new page size
 
-				// Reset container's childs positions & current scroll pos
-				{	// Button samples
-					SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					{	
-						SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					}
-				}
-				{	// Edit control samples
-					SetWindowPos(SS_Heading2, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 94, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					{	// Normal edit control
-						SetWindowPos(SS_TextNoteNormalEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(SS_ED_Normal, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(ED_Normal, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_NormalEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					}
-					{	// Password edit control
-						SetWindowPos(SS_TextNotePasswordEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(SS_ED_Password, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(ED_Password, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_PasswordEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					}
-					{	// Multiline edit control
-						SetWindowPos(SS_TextNoteMultilineEditbox, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 225, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(SS_ED_Multiline, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(ED_Multiline, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-						SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					}
-				}
-                {   // Combobox samples
-                    SetWindowPos(SS_Heading3, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 517, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_TextNoteCBSelectTheme, NULL, MAINCONTENTCTR_PADDING + 130, MAINCONTENTCTR_PADDING + 564, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(CB_SelectTheme, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 561, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-				// Extra invalidate before reset scroll pos
-				if (si.nPos != 0)	
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
-
+				// Scroll the container back to the zero pos and reset scroll pos
+				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, si.nPos, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 				si.nPos = 0;
 
 				// Set scrollbar info
@@ -466,187 +426,137 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		case WM_VSCROLL:
 		{
-			// Handling vertical scroll messages
+			// Handling vertical scrolling info (Scroll bar control)
 
-			static short ScrollPixel = 2;
+			// Get scroll info
 			SCROLLINFO si;
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
-
 			if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 				MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 
+			// Process scroll message
+			static short ScrollPixel = NULL;       // Total pixel per scroll
+			static bool ScrollingDown = NULL;      // Check if scrolling up or down
+			static bool IsThumbTrackScroll = NULL; // Check if using thumb track to scroll
+			static auto PreviousPos = NULL;        // Previous scroll pos
+			ScrollPixel = 10;                      // Default scroll pixel
+			PreviousPos = si.nPos;                 // Update new previous pos
 			switch ((int)LOWORD(wp))
 			{
 				case SB_LINEUP:
+					IsThumbTrackScroll = 0;
+					ScrollingDown = 0;
 					si.nPos -= ScrollPixel;
 					break;
 
 				case SB_LINEDOWN:
+					IsThumbTrackScroll = 0;
+					ScrollingDown = 1;
 					si.nPos += ScrollPixel;
 					break;
 
 				case SB_THUMBTRACK:
+					IsThumbTrackScroll = 1;
 					si.nPos = HIWORD(wp);
+					if (si.nPos < PreviousPos) ScrollingDown = 0;
+					else ScrollingDown = 1;
 					break;
 			}
-			if (si.nPos < si.nMin) si.nPos = si.nMin;
-			else if (si.nPos > si.nMax - (int)si.nPage) si.nPos = si.nMax - (int)si.nPage;
 
-			static int scroll_distance = 0; scroll_distance = -si.nPos;
-			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-			si.nPage = rMCCTR.bottom;   // Update new page size
+			// If scroll pos is the same, no scrolling needed
+			if (PreviousPos == si.nPos) return (LRESULT)0;
 
-			// Update container's childs positions
-			{	// Button samples
-				SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				{
-					SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-			}
-			{	// Edit control samples
-				SetWindowPos(SS_Heading2, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 94, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				{	// Normal edit control
-					SetWindowPos(SS_TextNoteNormalEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_ED_Normal, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(ED_Normal, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_NormalEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-				{	// Password edit control
-					SetWindowPos(SS_TextNotePasswordEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_ED_Password, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(ED_Password, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_PasswordEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-				{	// Multiline edit control
-					SetWindowPos(SS_TextNoteMultilineEditbox, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 225, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_ED_Multiline, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(ED_Multiline, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-			}
-            {   // Combobox samples
-                SetWindowPos(SS_Heading3, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 517, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(SS_TextNoteCBSelectTheme, NULL, MAINCONTENTCTR_PADDING + 130, MAINCONTENTCTR_PADDING + scroll_distance + 564, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(CB_SelectTheme, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 561, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-            }
-			// Set scroll info
-			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
-
-			// Extra invalidates
-			static bool NeedInvalidate = 1;
-			if (NeedInvalidate)
+			if (!IsThumbTrackScroll)
 			{
-				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
-				if (si.nPos == si.nMin || si.nPos == si.nMax - (int)si.nPage)
-					NeedInvalidate = 0;
+				if (si.nPos < si.nMin)
+				{
+					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, ScrollPixel - (-(si.nPos)), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+					si.nPos = si.nMin;
+				}
+				else if (si.nPos > si.nMax - (int)si.nPage)
+				{
+					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, -ScrollPixel + -((si.nMax - (int)si.nPage) - si.nPos), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+					si.nPos = si.nMax - (int)si.nPage;
+				}
+				else
+				{
+					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, (ScrollingDown ? -ScrollPixel : ScrollPixel), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				}
 			}
 			else
 			{
-				if (si.nPos != si.nMin && si.nPos != si.nMax - (int)si.nPage)
-				{
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
-					NeedInvalidate = 1;
-				}
+				if (si.nPos < si.nMin) si.nPos = si.nMin;
+				else if (si.nPos > si.nMax - (int)si.nPage) si.nPos = si.nMax - (int)si.nPage;
+				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, (PreviousPos - si.nPos),
+					NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 			}
+
+			// Update new page size
+			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+			si.nPage = rMCCTR.bottom;   
+
+			// Set scroll info
+			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 			return (LRESULT)0;
 		}
 
 		case WM_MOUSEWHEEL:
 		{
-			// Handling mouse wheel scroll messages
+			// Handling vertical scrolling info (Mouse Wheel)
 
-			static short WheelDelta = 0, ScrollPixel = 10;
-
+			static bool ScrollingDown = NULL;  // Check if scrolling up or down
+			static short WheelDelta   = NULL,  // Wheel Delta
+			ScrollPixel               = NULL;  // Total pixel per scroll
+			
+			// Get scroll info
 			SCROLLINFO si;
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
-
 			if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 				MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 
-			if ((int)si.nPage > si.nMax) return 0; // Scrolling not needed
+			// No scrolling needed if the current container size is already big enough to show all the contents.
+			if ((int)si.nPage > si.nMax) return (LRESULT)0;
 
-			WheelDelta = GET_WHEEL_DELTA_WPARAM(wp);
+			// Process scroll message
+			WheelDelta = GET_WHEEL_DELTA_WPARAM(wp);  // Get wheel data
+			ScrollPixel = 10;                         // Default scroll pixel (Alternative: ScrollPixel = (si.nMax - (int)si.nPage) / 5;) <- this will take 5 scroll to scroll from begin to end
 			switch (WheelDelta)
 			{
-			case 120:
-				si.nPos -= ScrollPixel;
-				break;
-			case -120:
-				si.nPos += ScrollPixel;
-				break;
-			}
-			if (si.nPos < si.nMin) si.nPos = si.nMin;
-			else if (si.nPos > si.nMax - (int)si.nPage) si.nPos = si.nMax - (int)si.nPage;
+				case 120:
+					ScrollingDown = 0;
+					si.nPos -= ScrollPixel;
+					break;
 
-			static int scroll_distance = 0; scroll_distance = -si.nPos;
-			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-			si.nPage = rMCCTR.bottom; // Update new page size
-
-			// Update container's childs positions
-			{	// Button samples
-				SetWindowPos(SS_Heading1, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				{
-					SetWindowPos(BTN_Standard, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio2Left, NULL, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio2Right, NULL, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio3Left, NULL, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio3Middle, NULL, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_Radio3Right, NULL, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + scroll_distance + 44, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
+				case -120:
+					ScrollingDown = 1;
+					si.nPos += ScrollPixel;
+					break;
 			}
-			{	// Edit control samples
-				SetWindowPos(SS_Heading2, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 94, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				{	// Normal edit control
-					SetWindowPos(SS_TextNoteNormalEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_ED_Normal, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(ED_Normal, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_NormalEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 138, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-				{	// Password edit control
-					SetWindowPos(SS_TextNotePasswordEditbox, NULL, MAINCONTENTCTR_PADDING + 360, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_ED_Password, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(ED_Password, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_PasswordEditboxOK, NULL, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + scroll_distance + 181, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-				{	// Multiline edit control
-					SetWindowPos(SS_TextNoteMultilineEditbox, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 225, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(SS_ED_Multiline, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(ED_Multiline, NULL, MAINCONTENTCTR_PADDING + 2, MAINCONTENTCTR_PADDING + 2 + scroll_distance + 269, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-					SetWindowPos(BTN_MultilineEditboxOK, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 474, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				}
-			}
-            {   // Combobox samples
-                SetWindowPos(SS_Heading3, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 517, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(SS_TextNoteCBSelectTheme, NULL, MAINCONTENTCTR_PADDING + 130, MAINCONTENTCTR_PADDING + scroll_distance + 564, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-				SetWindowPos(CB_SelectTheme, NULL, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + scroll_distance + 561, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-            }
-			// Set scroll info
-			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
-			// Extra invalidates
-			static bool NeedInvalidate = 1;
-			if (NeedInvalidate)
+			if (si.nPos < si.nMin)
 			{
-				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
-				if (si.nPos == si.nMin || si.nPos == si.nMax - (int)si.nPage)
-					NeedInvalidate = 0;
+				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, ScrollPixel - (-(si.nPos)), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				si.nPos = si.nMin;
+			}
+			else if (si.nPos > si.nMax - (int)si.nPage)
+			{
+				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, -ScrollPixel + -((si.nMax - (int)si.nPage) - si.nPos), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				si.nPos = si.nMax - (int)si.nPage;
 			}
 			else
 			{
-				if (si.nPos != si.nMin && si.nPos != si.nMax - (int)si.nPage)
-				{
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_NOERASE);
-					NeedInvalidate = 1;
-				}
+				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, (ScrollingDown ? -ScrollPixel : ScrollPixel), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 			}
+
+			// Update new page size
+			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+			si.nPage = rMCCTR.bottom; 
+
+			// Set scroll info
+			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 			return (LRESULT)0;
 		}
@@ -706,11 +616,6 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				case VK_F2:
 				{
-					// TEST MORE ABOUT SCROLLWINDOWEX()
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
-					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, -5, NULL, NULL, NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN | SW_SMOOTHSCROLL);
-					RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
-					
 					return (LRESULT)0;
 				}
 			}
