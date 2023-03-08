@@ -72,12 +72,15 @@ public:
 	void ClearAnimationMap();
 	void InsertAnimationMap(HWND& hWnd, HICON& hIcon_Default, HICON& hIcon_Hover, HICON& hIcon_Inactive);
 	void UpdateObjects(COLORREF Default, COLORREF Hover, COLORREF Hover_Close, COLORREF Hover_Minimize, COLORREF LBDown, COLORREF Background);
+	void SetSubclass(HWND hWnd);
 public:
 	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated);
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H);
 	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB);
+	public:
+	static LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 };
 
 
@@ -118,12 +121,15 @@ public:
 	}
 public:
 	void UpdateObjects(Gdiplus::Color Default, Gdiplus::Color Hover, Gdiplus::Color LBDown, Gdiplus::Color Background, Gdiplus::Color BorderNonFocus, Gdiplus::Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor);
+	void SetSubclass(HWND hWnd);
 public:
 	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated);
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H);
 	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB);
+public:
+	static LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 };
 
 
@@ -170,12 +176,15 @@ public:
 	}
 public:
 	void UpdateObjects(Gdiplus::Color Default, Gdiplus::Color Hover, Gdiplus::Color LBDown, Gdiplus::Color Background, Gdiplus::Color BorderNonFocus, Gdiplus::Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor);
+	void SetSubclass(HWND hWnd);
 public:
 	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated);
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H);
 	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB);
+public:
+	static LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 };
 
 
@@ -226,12 +235,15 @@ public:
 	}
 public:
 	void UpdateObjects(Gdiplus::Color Default, Gdiplus::Color Hover, Gdiplus::Color LBDown, Gdiplus::Color Background, Gdiplus::Color BorderNonFocus, Gdiplus::Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor);
+	void SetSubclass(HWND hWnd);
 public:
 	void StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated);
 	void Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state);
 	void OnPaint_Hover(HWND hWnd, HWND& cHWND, bool& nState_H, bool& cState_H);
 	void OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cState_LB);
+public:
+	static LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 };
 
 

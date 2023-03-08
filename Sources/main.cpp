@@ -618,6 +618,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				{
 					return (LRESULT)0;
 				}
+
+				case VK_F3:
+				{
+					return (LRESULT)0;
+				}
 			}
 
 			break;

@@ -18,7 +18,8 @@
 #include "./Headers/subclasses.h"
 #include "./Headers/global.h"
 
-using namespace Gdiplus;
+using Gdiplus::Graphics, Gdiplus::GraphicsPath, Gdiplus::Rect, Gdiplus::Color, Gdiplus::Brush, Gdiplus::SolidBrush, Gdiplus::SmoothingMode,
+Gdiplus::Pen, Gdiplus::PenAlignmentCenter, Gdiplus::Unit, Gdiplus::UnitPixel;
 
 // FORWARD DECLARATIONS
 namespace nSol
@@ -27,7 +28,7 @@ namespace nSol
 	void GetRoundRectPath(GraphicsPath* pPath, Rect r, int dia);
 	void DrawRoundRect(Graphics* pGraphics, Rect r, Color color, int radius, int width);
 	void FillRoundRect(Graphics* pGraphics, Brush* pBrush, Rect r, Color border, int radius);
-	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY);
+	void cCreateFont(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY);
 }
 
 /*********************************************************
@@ -63,6 +64,18 @@ void BA_CaptionBar::UpdateObjects(COLORREF Default, COLORREF Hover, COLORREF Hov
 	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(Background);
 
 	this->IsReady = true;
+}
+void BA_CaptionBar::SetSubclass(HWND hWnd)
+{
+	if (!this->IsReady)
+	{
+		MessageBoxW(NULL, L"Error occurred!\n(The required objects are not initialized)\n\nINFO: 'BA_CaptionBar' CLASS, 'SetSubclass()' FUNC", L"", MB_OK | MB_ICONERROR);
+		exit(1);
+	}
+
+	// Pass this object pointer via 'dwRefData' while subclassing so the callback function can access non-static members using the pointer
+	// READMORE: https://stackoverflow.com/questions/66784011/c-winapi-wrapping-up-a-callback-of-subclass-in-a-class
+	SetWindowSubclass(hWnd, &SC_BA_CaptionBar, NULL, reinterpret_cast<DWORD_PTR>(this));
 }
 void BA_CaptionBar::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 {
@@ -237,8 +250,10 @@ void BA_CaptionBar::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool
 	}
 }
 // * SUBCLASS CALLBACK PROCEDURE
-LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK BA_CaptionBar::SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
+	BA_CaptionBar* pThis = reinterpret_cast<BA_CaptionBar*>(dwRefData); // Extract the poiner from dwRefData and use it to access non-static members
+
 	static bool cState_H = 1;
 	static bool nState_H = 1;
 	static bool cState_LB = 1;
@@ -258,8 +273,8 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) BA_CaptionBar_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else BA_CaptionBar_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -302,7 +317,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			BA_CaptionBar_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(MAIN_HWND, WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
@@ -317,7 +332,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				cState_H = 0;
 				nState_H = 1;
 				BufferedPaintStopAllAnimations(hWnd);
-				BA_CaptionBar_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+				pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 				return 0;
 			}
 
@@ -332,7 +347,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			nState_H = 1;
 			isLBDown = 0;
 			isHover = 0;
-			BA_CaptionBar_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
@@ -350,7 +365,7 @@ LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				BA_CaptionBar_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;
@@ -396,6 +411,18 @@ void BA_Standard::UpdateObjects(Color Default, Color Hover, Color LBDown, Color 
 	this->hFont_ButtonFont = &Font;
 
 	this->IsReady = true;
+}
+void BA_Standard::SetSubclass(HWND hWnd)
+{
+	if (!this->IsReady)
+	{
+		MessageBoxW(NULL, L"Error occurred!\n(The required objects are not initialized)\n\nINFO: 'BA_Standard' CLASS, 'SetSubclass()' FUNC", L"", MB_OK | MB_ICONERROR);
+		exit(1);
+	}
+
+	// Pass this object pointer via 'dwRefData' while subclassing so the callback function can access non-static members using the pointer
+	// READMORE: https://stackoverflow.com/questions/66784011/c-winapi-wrapping-up-a-callback-of-subclass-in-a-class
+	SetWindowSubclass(hWnd, &SC_BA_Standard, NULL, reinterpret_cast<DWORD_PTR>(this));
 }
 void BA_Standard::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 {
@@ -611,8 +638,10 @@ void BA_Standard::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& 
 	}
 }
 // * SUBCLASS CALLBACK PROCEDURE
-LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK BA_Standard::SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
+	BA_Standard* pThis = reinterpret_cast<BA_Standard*>(dwRefData); // Extract the poiner from dwRefData and use it to access non-static members
+
 	static bool cState_H = 1;
 	static bool nState_H = 1;
 	static bool cState_LB = 1;
@@ -633,115 +662,114 @@ LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	switch (uMsg)
 	{
-	case WM_ERASEBKGND:
-		return (LRESULT)1;
-
-	case WM_TIMER:
-	{
-		static std::set<HWND*> TimerStack;
-		switch (wParam)
+		case WM_NCDESTROY:
 		{
-		case 1:
-		{
-			InvalidateRect(hWnd, NULL, TRUE);
-			if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
-
-			frames_Invalidated++;
-			if (frames_Invalidated == 60)
-			{
-				for (auto& x : TimerStack)
-				{
-					KillTimer(*x, 1);
-					TimerStack.erase(x);
-				}
-				frames_Invalidated = 0;
-			}
-
+			RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
 			return (LRESULT)0;
 		}
-		default:
+
+		case WM_ERASEBKGND:
+			return (LRESULT)1;
+
+		case WM_TIMER:
+		{
+			static std::set<HWND*> TimerStack;
+			switch (wParam)
+			{
+			case 1:
+			{
+				InvalidateRect(hWnd, NULL, TRUE);
+				if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
+
+				frames_Invalidated++;
+				if (frames_Invalidated == 60)
+				{
+					for (auto& x : TimerStack)
+					{
+						KillTimer(*x, 1);
+						TimerStack.erase(x);
+					}
+					frames_Invalidated = 0;
+				}
+
+				return (LRESULT)0;
+			}
+			default:
+				break;
+			}
+
 			break;
 		}
 
-		break;
-	}
+		case WM_PAINT:
+		{
+			if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			return (LRESULT)0;
+		}
 
-	case WM_NCDESTROY:
-	{
-		RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
-		return 0;
-	}
+		case WM_LBUTTONDOWN:
+		{
+			nState_LB = 1;
+			cState_LB = 1;
+			isLBDown = 1;
+			BufferedPaintStopAllAnimations(hWnd);
+			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
-	case WM_PAINT:
-	{
-		if (!isLBDown) BA_Standard_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-		else BA_Standard_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
-		return 0;
-	}
+			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
+			return (LRESULT)0;
+		}
 
+		case WM_LBUTTONUP:
+		{
+			if (isLBDown)
+			{
+				cState_LB = 0;
+				nState_LB = 1;
+				cState_H = 0;
+				nState_H = 1;
+				BufferedPaintStopAllAnimations(hWnd);
+				pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+				return (LRESULT)0;
+			}
 
-	case WM_LBUTTONDOWN:
-	{
-		nState_LB = 1;
-		cState_LB = 1;
-		isLBDown = 1;
-		BufferedPaintStopAllAnimations(hWnd);
-		BA_Standard_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			break;
+		}
 
-		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
-		return 0;
-	}
-
-	case WM_LBUTTONUP:
-	{
-		if (isLBDown)
+		case WM_MOUSELEAVE:
 		{
 			cState_LB = 0;
 			nState_LB = 1;
 			cState_H = 0;
 			nState_H = 1;
-			BufferedPaintStopAllAnimations(hWnd);
-			BA_Standard_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
-			return 0;
+			isLBDown = 0;
+			isHover = 0;
+			pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+
+			return (LRESULT)0;
 		}
 
-		break;
-	}
+		case WM_MOUSEHOVER:
+			break;
 
-	case WM_MOUSELEAVE:
-	{
-		cState_LB = 0;
-		nState_LB = 1;
-		cState_H = 0;
-		nState_H = 1;
-		isLBDown = 0;
-		isHover = 0;
-		BA_Standard_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
-
-		return 0;
-	}
-
-	case WM_MOUSEHOVER:
-		break;
-
-	case WM_MOUSEMOVE:
-	{
-		if (!isHover)
+		case WM_MOUSEMOVE:
 		{
-			cHWND = hWnd;
-			TRACKMOUSEEVENT tme;
-			tme.cbSize = sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags = TME_LEAVE;
-			tme.hwndTrack = hWnd;
-			TrackMouseEvent(&tme);
-			BA_Standard_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
-			isHover = 1;
+			if (!isHover)
+			{
+				cHWND = hWnd;
+				TRACKMOUSEEVENT tme;
+				tme.cbSize = sizeof(TRACKMOUSEEVENT);
+				tme.dwFlags = TME_LEAVE;
+				tme.hwndTrack = hWnd;
+				TrackMouseEvent(&tme);
+				pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				isHover = 1;
 
-			return 0;
+				return (LRESULT)0;
+			}
+
+			break;
 		}
-
-		break;
-	}
 	}
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -780,6 +808,18 @@ void BA_Radio2::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Ba
 	this->hFont_ButtonFont = &Font;
 
 	this->IsReady = true;
+}
+void BA_Radio2::SetSubclass(HWND hWnd)
+{
+	if (!this->IsReady)
+	{
+		MessageBoxW(NULL, L"Error occurred!\n(The required objects are not initialized)\n\nINFO: 'BA_Radio2' CLASS, 'SetSubclass()' FUNC", L"", MB_OK | MB_ICONERROR);
+		exit(1);
+	}
+
+	// Pass this object pointer via 'dwRefData' while subclassing so the callback function can access non-static members using the pointer
+	// READMORE: https://stackoverflow.com/questions/66784011/c-winapi-wrapping-up-a-callback-of-subclass-in-a-class
+	SetWindowSubclass(hWnd, &SC_BA_Radio2, NULL, reinterpret_cast<DWORD_PTR>(this));
 }
 void BA_Radio2::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 {
@@ -1099,8 +1139,10 @@ void BA_Radio2::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cS
 	}
 }
 // * SUBCLASS CALLBACK PROCEDURE
-LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK BA_Radio2::SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
+	BA_Radio2* pThis = reinterpret_cast<BA_Radio2*>(dwRefData); // Extract the poiner from dwRefData and use it to access non-static members
+
 	static bool cState_H = 1;
 	static bool nState_H = 1;
 	static bool cState_LB = 1;
@@ -1120,8 +1162,8 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) BA_Radio2_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else BA_Radio2_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -1166,7 +1208,7 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			BA_Radio2_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
 			return 0;
@@ -1176,7 +1218,7 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		{
 			isLBDown = 0;
 			isHover = 0;
-			BA_Radio2_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
@@ -1194,7 +1236,7 @@ LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				BA_Radio2_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;
@@ -1242,6 +1284,18 @@ void BA_Radio3::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Ba
 	this->hFont_ButtonFont = &Font;
 
 	this->IsReady = true;
+}
+void BA_Radio3::SetSubclass(HWND hWnd)
+{
+	if (!this->IsReady)
+	{
+		MessageBoxW(NULL, L"Error occurred!\n(The required objects are not initialized)\n\nINFO: 'BA_Radio3' CLASS, 'SetSubclass()' FUNC", L"", MB_OK | MB_ICONERROR);
+		exit(1);
+	}
+
+	// Pass this object pointer via 'dwRefData' while subclassing so the callback function can access non-static members using the pointer
+	// READMORE: https://stackoverflow.com/questions/66784011/c-winapi-wrapping-up-a-callback-of-subclass-in-a-class
+	SetWindowSubclass(hWnd, &SC_BA_Radio3, NULL, reinterpret_cast<DWORD_PTR>(this));
 }
 void BA_Radio3::StartAnimation(HWND hWnd, bool& nState, bool& cState, unsigned short& frames_Invalidated)
 {
@@ -1610,8 +1664,10 @@ void BA_Radio3::OnPaint_LBDown(HWND hWnd, HWND& cHWND, bool& nState_LB, bool& cS
 	}
 }
 // * SUBCLASS CALLBACK PROCEDURE
-LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK BA_Radio3::SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
+	BA_Radio3* pThis = reinterpret_cast<BA_Radio3*>(dwRefData); // Extract the poiner from dwRefData and use it to access non-static members
+
 	static bool cState_H = 1;
 	static bool nState_H = 1;
 	static bool cState_LB = 1;
@@ -1631,8 +1687,8 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case WM_PAINT:
 		{
-			if (!isLBDown) BA_Radio3_Manager->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else BA_Radio3_Manager->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+			if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+			else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
 			return 0;
 		}
 
@@ -1677,7 +1733,7 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			cState_LB = 1;
 			isLBDown = 1;
 			BufferedPaintStopAllAnimations(hWnd);
-			BA_Radio3_Manager->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
 			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL);
 			return 0;
@@ -1687,7 +1743,7 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		{
 			isLBDown = 0;
 			isHover = 0;
-			BA_Radio3_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 
 			return 0;
 		}
@@ -1705,7 +1761,7 @@ LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				tme.dwFlags = TME_LEAVE;
 				tme.hwndTrack = hWnd;
 				TrackMouseEvent(&tme);
-				BA_Radio3_Manager->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+				pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
 				isHover = 1;
 
 				return 0;

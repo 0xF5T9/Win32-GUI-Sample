@@ -19,12 +19,13 @@
 #include "./Headers/subclasses.h"
 #include "./Headers/global.h"
 
-using namespace Gdiplus;
+using Gdiplus::Graphics, Gdiplus::GraphicsPath, Gdiplus::Rect, Gdiplus::Color, Gdiplus::Brush, Gdiplus::SolidBrush, Gdiplus::SmoothingMode,
+Gdiplus::Pen, Gdiplus::PenAlignmentCenter, Gdiplus::Unit, Gdiplus::UnitPixel;
 
 // FORWARD DECLARATIONS
 namespace nSol
 {
-       void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY);
+       void cCreateFont(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY);
 }
 
 // Destroy current color objects
@@ -125,11 +126,11 @@ bool OBJ_Manager::UpdateFontObjects()
               if (!DestroyFontObjects())
                      return false;
 
-       nSol::CreateHFONT(&this->HFO_Default, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
-       nSol::CreateHFONT(&this->HFO_Title, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
-       nSol::CreateHFONT(&this->HFO_Heading, L"Segoe UI", 28, FW_BOLD, CLEARTYPE_QUALITY);
-       nSol::CreateHFONT(&this->HFO_Edit, L"Segoe UI", 28, FW_LIGHT, CLEARTYPE_QUALITY);
-       nSol::CreateHFONT(&this->HFO_Note, L"Segoe UI", 28, FW_LIGHT, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Default, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Title, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Heading, L"Segoe UI", 28, FW_BOLD, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Edit, L"Segoe UI", 28, FW_LIGHT, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Note, L"Segoe UI", 28, FW_LIGHT, CLEARTYPE_QUALITY);
 
        IsInitialized = true;
 

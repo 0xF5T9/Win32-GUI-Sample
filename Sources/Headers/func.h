@@ -32,15 +32,12 @@
 * #pragma comment(lib, "Winmm.lib")
 */
 
-using namespace Gdiplus;
+using Gdiplus::Graphics, Gdiplus::GraphicsPath, Gdiplus::Rect, Gdiplus::Color, Gdiplus::Brush, Gdiplus::SolidBrush, Gdiplus::SmoothingMode,
+Gdiplus::Pen, Gdiplus::PenAlignmentCenter, Gdiplus::Unit, Gdiplus::UnitPixel;
 
 // CALLBACK FORWARD DECLARATIONS
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK SC_BA_CaptionBar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK SC_BA_Radio2(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_EditControl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 namespace nSol
@@ -170,7 +167,7 @@ namespace nSol
 	/**
 	* Quick-create winapi font object
 	*/
-	void CreateHFONT(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
+	void cCreateFont(HFONT* hFontPtr, std::wstring fName, int fSize, int fWeight = FW_DONTCARE, int fQuality = DEFAULT_QUALITY)
 	{
 		*hFontPtr = CreateFontW(fSize, 0, 0, 0x1,
 			fWeight, FALSE, FALSE, FALSE, ANSI_CHARSET,
@@ -686,13 +683,13 @@ namespace nApp
 		// Close button
 		BTN_Close = CreateWindowExW(NULL, L"BUTTON", L"",
 			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
-		SetWindowSubclass(BTN_Close, &SC_BA_CaptionBar, NULL, NULL);
+		BA_CaptionBar_Manager->SetSubclass(BTN_Close);
 		Vector_Subclasses.push_back(&BTN_Close);
 
 		// Minimize button
 		BTN_Minimize = CreateWindowExW(NULL, L"BUTTON", L"",
 			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
-		SetWindowSubclass(BTN_Minimize, &SC_BA_CaptionBar, NULL, NULL);
+		BA_CaptionBar_Manager->SetSubclass(BTN_Minimize);
 		Vector_Subclasses.push_back(&BTN_Minimize);
 
 		// Window title
@@ -731,33 +728,33 @@ namespace nApp
 			{
 				BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
 					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 44, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
-				SetWindowSubclass(BTN_Standard, &SC_BA_Standard, NULL, NULL);
+				BA_Standard_Manager->SetSubclass(BTN_Standard);
 				Vector_Subclasses.push_back(&BTN_Standard);
 
 				BTN_Radio2Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
 					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2LEFT, NULL, NULL);
 				Vector_Subclasses.push_back(&BTN_Radio2Left);
-				SetWindowSubclass(BTN_Radio2Left, &SC_BA_Radio2, NULL, NULL);
+				BA_Radio2_Manager->SetSubclass(BTN_Radio2Left);
 
 				BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
 					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
 				Vector_Subclasses.push_back(&BTN_Radio2Right);
-				SetWindowSubclass(BTN_Radio2Right, &SC_BA_Radio2, NULL, NULL);
+				BA_Radio2_Manager->SetSubclass(BTN_Radio2Right);
 
 				BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
 					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
+				BA_Radio3_Manager->SetSubclass(BTN_Radio3Left);
 				Vector_Subclasses.push_back(&BTN_Radio3Left);
-				SetWindowSubclass(BTN_Radio3Left, &SC_BA_Radio3, NULL, NULL);
 
 				BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
 					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
+				BA_Radio3_Manager->SetSubclass(BTN_Radio3Middle);
 				Vector_Subclasses.push_back(&BTN_Radio3Middle);
-				SetWindowSubclass(BTN_Radio3Middle, &SC_BA_Radio3, NULL, NULL);
 
 				BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
 					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
+				BA_Radio3_Manager->SetSubclass(BTN_Radio3Right);
 				Vector_Subclasses.push_back(&BTN_Radio3Right);
-				SetWindowSubclass(BTN_Radio3Right, &SC_BA_Radio3, NULL, NULL);
 			}
 		}
 
@@ -782,7 +779,7 @@ namespace nApp
 					MAINCONTENTCTR_PADDING + 280,
 					MAINCONTENTCTR_PADDING + 138, 70, 33,
 					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDNORMALOK, NULL, NULL);
-				SetWindowSubclass(BTN_NormalEditboxOK, &SC_BA_Standard, NULL, NULL);
+				BA_Standard_Manager->SetSubclass(BTN_NormalEditboxOK);
 				Vector_Subclasses.push_back(&BTN_NormalEditboxOK);
 			}
 
@@ -802,7 +799,7 @@ namespace nApp
 					MAINCONTENTCTR_PADDING + 280,
 					MAINCONTENTCTR_PADDING + 181, 70, 33,
 					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDPASSWORDOK, NULL, NULL);
-				SetWindowSubclass(BTN_PasswordEditboxOK, &SC_BA_Standard, NULL, NULL);
+				BA_Standard_Manager->SetSubclass(BTN_PasswordEditboxOK);
 				Vector_Subclasses.push_back(&BTN_PasswordEditboxOK);
 			}
 
@@ -822,7 +819,7 @@ namespace nApp
 					MAINCONTENTCTR_PADDING,
 					MAINCONTENTCTR_PADDING + 472, 478, 33,
 					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDMULTILINEOK, NULL, NULL);
-				SetWindowSubclass(BTN_MultilineEditboxOK, &SC_BA_Standard, NULL, NULL);
+				BA_Standard_Manager->SetSubclass(BTN_MultilineEditboxOK);
 				Vector_Subclasses.push_back(&BTN_MultilineEditboxOK);
 			}
 		}
