@@ -35,6 +35,7 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
+	// Create main window using registered window class
 	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight);   // Get user desktop resolution
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
 		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),   // Semi-center application on start
@@ -42,7 +43,8 @@ int WINAPI wWinMain(
 		NULL, NULL, hInstance, NULL);
 	SetLayeredWindowAttributes(MAIN_HWND, RGB(141, 172, 160), 255, LWA_ALPHA | LWA_COLORKEY);   // Set transparency color (Make MAIN_HWND compability with WS_MYSTYLE, otherwise MAIN_HWND won't be visible)
 
-	nApp::OnReady();   // Execute when the application's main window is created and ready to displays
+	// Execute when the application's main window is fully initialized and ready to displays
+	nApp::OnReady();
 
 	// Begin message loop
 	MSG msg = { 0 };
@@ -65,6 +67,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case WM_CREATE:
 		{
 			// Initialize main window
+			
 			if (nApp::InitBegin(hWnd) && nApp::InitTheme(hWnd) && nApp::InitControl(hWnd) && nApp::InitEnd(hWnd))
 				return (LRESULT)0;
 			else { MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize main window)", L"", MB_OK | MB_ICONERROR); exit(1); }

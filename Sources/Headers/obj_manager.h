@@ -38,9 +38,9 @@ public:
 
 
 
-       /*****************
-       * MEDIA OBJECTS: *
-       ******************/
+       /******************
+       *  MEDIA OBJECTS  *
+       *******************/
        HICON HICO_Close = nullptr, HICO_Close_Hover = nullptr, HICO_Close_Inactive = nullptr, HICO_Minimize = nullptr, HICO_Minimize_Hover = nullptr, HICO_Minimize_Inactive = nullptr;
 
 
