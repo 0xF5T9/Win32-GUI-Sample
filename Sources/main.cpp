@@ -585,7 +585,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 					if (APPLICATION_THEME == L"Light") { if (nApp::SetAppTheme(L"Dark")) IsSuccess = 1; }
 					else if (APPLICATION_THEME == L"Dark") { if (nApp::SetAppTheme(L"Ristretto")) IsSuccess = 1; }
-					else if (APPLICATION_THEME == L"Ristretto") { if (nApp::SetAppTheme(L"Light")) IsSuccess = 1; }
+					else if (APPLICATION_THEME == L"Ristretto") { if (nApp::SetAppTheme(L"Obisidan")) IsSuccess = 1; }
+					else if (APPLICATION_THEME == L"Obisidan") { if (nApp::SetAppTheme(L"Light")) IsSuccess = 1; }
 					if (!IsSuccess) { MessageBoxW(hWnd, L"Error occurred!\n(Failed to set application theme)", L"", MB_OK | MB_ICONERROR); exit(1); }
 
 					return (LRESULT)0;
@@ -786,6 +787,9 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 							break;
 						case 2:
 							nApp::SetAppTheme(L"Ristretto");
+							break;
+						case 3:
+							nApp::SetAppTheme(L"Obisidan");
 							break;
                     }
 

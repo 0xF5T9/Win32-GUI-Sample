@@ -18,7 +18,8 @@
 *************************/
 // An efficient GetKeyState() alternative, help capture keydown message once instead of continuously while holding the key.
 // More info : https://stackoverflow.com/questions/10790502/c-getkeystate-has-to-run-once
-class KeyToggle {
+class KeyToggle 
+{
 public:
 	KeyToggle(int key) :mKey(key), mActive(false) {}
 	operator bool() {
@@ -103,21 +104,21 @@ private:
 	Gdiplus::Color CL_ButtonBackgroundColor;              // Button background color
 	Gdiplus::Color CL_ButtonBorderColor_NonFocus;         // Button border color (Non-Focus)
 	Gdiplus::Color CL_ButtonBorderColor_OnFocus;          // Button border color (On-Focus)
-	HBRUSH hBrush_ButtonColor_Default = nullptr;          // Default button color
-	HBRUSH hBrush_ButtonColor_Hover = nullptr;            // Hovering button color
-	HBRUSH hBrush_ButtonColor_LBDown = nullptr;           // Left-button down button color
-	HBRUSH hBrush_ButtonBackgroundColor = nullptr;        // Button background color
-	HFONT* hFont_ButtonFont = nullptr;                    // Button text font
+	HBRUSH HBR_ButtonColor_Default = nullptr;             // Default button color
+	HBRUSH HBR_ButtonColor_Hover = nullptr;               // Hovering button color
+	HBRUSH HBR_ButtonColor_LBDown = nullptr;              // Left-button down button color
+	HBRUSH HBR_ButtonBackgroundColor = nullptr;           // Button background color
+	HFONT* HFO_ButtonFont = nullptr;                      // Button text font
 	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);         // Default button text color
-	COLORREF CLR_HighlightTextColor = RGB (0, 0, 0);      // Highlight button text color
+	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);       // Highlight button text color
 public:
 	BA_Standard() {}
-	~BA_Standard() 
+	~BA_Standard()
 	{
-		DeleteObject(hBrush_ButtonColor_Default);
-		DeleteObject(hBrush_ButtonColor_Hover);
-		DeleteObject(hBrush_ButtonColor_LBDown);
-		DeleteObject(hBrush_ButtonBackgroundColor);
+		DeleteObject(HBR_ButtonColor_Default);
+		DeleteObject(HBR_ButtonColor_Hover);
+		DeleteObject(HBR_ButtonColor_LBDown);
+		DeleteObject(HBR_ButtonBackgroundColor);
 	}
 public:
 	void UpdateObjects(Gdiplus::Color Default, Gdiplus::Color Hover, Gdiplus::Color LBDown, Gdiplus::Color Background, Gdiplus::Color BorderNonFocus, Gdiplus::Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor);
@@ -152,11 +153,11 @@ private:
 	Gdiplus::Color CL_ButtonBackgroundColor;              // Button background color
 	Gdiplus::Color CL_ButtonBorderColor_NonFocus;         // Button border color (Non-Focus)
 	Gdiplus::Color CL_ButtonBorderColor_OnFocus;          // Button border color (On-Focus)
-	HBRUSH hBrush_ButtonColor_Default = nullptr;          // Default button color
-	HBRUSH hBrush_ButtonColor_Hover = nullptr;            // Hovering button color
-	HBRUSH hBrush_ButtonColor_LBDown = nullptr;           // Left-button down button color
-	HBRUSH hBrush_ButtonBackgroundColor = nullptr;        // Button background color
-	HFONT* hFont_ButtonFont = nullptr;                    // Button text font
+	HBRUSH HBR_ButtonColor_Default = nullptr;             // Default button color
+	HBRUSH HBR_ButtonColor_Hover = nullptr;               // Hovering button color
+	HBRUSH HBR_ButtonColor_LBDown = nullptr;              // Left-button down button color
+	HBRUSH HBR_ButtonBackgroundColor = nullptr;           // Button background color
+	HFONT* HFO_ButtonFont = nullptr;                      // Button text font
 	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);         // Default button text color
 	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);       // Highlight button text color
 	HWND* hWnd_CurrentSelectedButton = nullptr;           // Current selected button window handle (the subclass use this variable to check which button is currently selected)
@@ -169,10 +170,10 @@ public:
 	}
 	~BA_Radio2() 
 	{
-		DeleteObject(hBrush_ButtonColor_Default);
-		DeleteObject(hBrush_ButtonColor_Hover);
-		DeleteObject(hBrush_ButtonColor_LBDown);
-		DeleteObject(hBrush_ButtonBackgroundColor);
+		DeleteObject(HBR_ButtonColor_Default);
+		DeleteObject(HBR_ButtonColor_Hover);
+		DeleteObject(HBR_ButtonColor_LBDown);
+		DeleteObject(HBR_ButtonBackgroundColor);
 	}
 public:
 	void UpdateObjects(Gdiplus::Color Default, Gdiplus::Color Hover, Gdiplus::Color LBDown, Gdiplus::Color Background, Gdiplus::Color BorderNonFocus, Gdiplus::Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor);
@@ -207,12 +208,12 @@ private:
 	Gdiplus::Color CL_ButtonBackgroundColor;              // Button background color
 	Gdiplus::Color CL_ButtonBorderColor_NonFocus;         // Button border color (Non-Focus)
 	Gdiplus::Color CL_ButtonBorderColor_OnFocus;          // Button border color (On-Focus)
-	HPEN hPen_ButtonColor_Default = nullptr;              // Default button color
-	HBRUSH hBrush_ButtonColor_Default = nullptr;          // Default button color
-	HBRUSH hBrush_ButtonColor_Hover = nullptr;            // Hovering button color
-	HBRUSH hBrush_ButtonColor_LBDown = nullptr;           // Left-button down button color
-	HBRUSH hBrush_ButtonBackgroundColor = nullptr;        // Button background color
-	HFONT* hFont_ButtonFont = nullptr;                    // Button text font
+	HPEN HPEN_ButtonColor_Default = nullptr;              // Default button color
+	HBRUSH HBR_ButtonColor_Default = nullptr;             // Default button color
+	HBRUSH HBR_ButtonColor_Hover = nullptr;               // Hovering button color
+	HBRUSH HBR_ButtonColor_LBDown = nullptr;              // Left-button down button color
+	HBRUSH HBR_ButtonBackgroundColor = nullptr;           // Button background color
+	HFONT* HFO_ButtonFont = nullptr;                      // Button text font
 	COLORREF CLR_DefaultTextColor = RGB(0, 0, 0);         // Default button text color
 	COLORREF CLR_HighlightTextColor = RGB(0, 0, 0);       // Highlight button text color
 	HWND* hWnd_CurrentSelectedButton = nullptr;           // Current selected button window handle (the subclass use this variable to check which button is currently selected)
@@ -227,11 +228,11 @@ public:
 	}
 	~BA_Radio3()
 	{
-		DeleteObject(hPen_ButtonColor_Default);
-		DeleteObject(hBrush_ButtonColor_Default);
-		DeleteObject(hBrush_ButtonColor_Hover);
-		DeleteObject(hBrush_ButtonColor_LBDown);
-		DeleteObject(hBrush_ButtonBackgroundColor);
+		DeleteObject(HPEN_ButtonColor_Default);
+		DeleteObject(HBR_ButtonColor_Default);
+		DeleteObject(HBR_ButtonColor_Hover);
+		DeleteObject(HBR_ButtonColor_LBDown);
+		DeleteObject(HBR_ButtonBackgroundColor);
 	}
 public:
 	void UpdateObjects(Gdiplus::Color Default, Gdiplus::Color Hover, Gdiplus::Color LBDown, Gdiplus::Color Background, Gdiplus::Color BorderNonFocus, Gdiplus::Color BorderOnFocus, HFONT& Font, COLORREF DefaultTextColor, COLORREF HighlightTextColor);

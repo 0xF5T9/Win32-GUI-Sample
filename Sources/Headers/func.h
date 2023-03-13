@@ -385,7 +385,7 @@ namespace nApp
 					SetWindowTheme(*x, L"Explorer", L"Button");
 			}
 		}
-		else if (Theme == L"Dark" || Theme == L"Ristretto")
+		else if (Theme == L"Dark" || Theme == L"Ristretto" || Theme == L"Obisidan")
 		{
 			WCHAR TextBuffer[256];
 			for (auto& x : Vector_MAINCONTENTCTR)
@@ -586,6 +586,55 @@ namespace nApp
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
 		}
+		else if (Theme == L"Obisidan")  // Steam theme
+		{
+			// Main application drawing objects
+			if (!OBJM_Main->UpdateColorObjects(
+				Color(255, 7, 10, 14),      // Primary color
+				Color(255, 14, 20, 27),     // Secondary color
+				Color(255, 14, 20, 27),     // Border active color
+				Color(255, 22, 31, 40),     // Border inactive color
+				Color(255, 247, 251, 254),  // Default text color
+				Color(255, 200, 207, 209),  // Inactive text color
+				Color(255, 29, 33, 40),     // Editbox color
+				Color(255, 49, 54, 62),     // Editbox border color
+				Color(255, 0, 0, 255)))     // Debug color
+				return false;
+			if (!OnInit) if (!OBJM_Main->DestroyMediaObjects()) return false;
+			OBJM_Main->HICO_Close = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
+			OBJM_Main->HICO_Close_Hover = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON3), IMAGE_ICON, 20, 20, NULL);
+			OBJM_Main->HICO_Close_Inactive = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON2), IMAGE_ICON, 20, 20, NULL);
+			OBJM_Main->HICO_Minimize = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON6), IMAGE_ICON, 20, 20, NULL);
+			OBJM_Main->HICO_Minimize_Hover = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON6), IMAGE_ICON, 20, 20, NULL);
+			OBJM_Main->HICO_Minimize_Inactive = (HICON)LoadImageW(MAIN_HINSTANCE, MAKEINTRESOURCEW(IDI_ICON5), IMAGE_ICON, 20, 20, NULL);
+
+			// Subclass objects
+			BA_CaptionBar_Manager->UpdateObjects(OBJM_Main->CLR_Primary, OBJM_Main->CLR_Primary, RGB(232, 17, 35), RGB(26, 36, 47), OBJM_Main->CLR_Primary,
+				OBJM_Main->CLR_Primary);
+			BA_Standard_Manager->UpdateObjects(Color(255, 35, 38, 46), Color(255, 50, 53, 62), Color(255, 58, 62, 71), Color(255, 14, 20, 27), Color(255, 35, 38, 46),
+				Color(255, 225, 225, 225), OBJM_Main->HFO_Default, RGB(247, 251, 254), RGB(247, 251, 254));
+			BA_Radio2_Manager->UpdateObjects(Color(255, 35, 38, 46), Color(255, 50, 53, 62), Color(255, 58, 62, 71), Color(255, 14, 20, 27), Color(255, 35, 38, 46),
+				Color(255, 225, 225, 225), OBJM_Main->HFO_Default, RGB(247, 251, 254), RGB(247, 251, 254));
+			BA_Radio3_Manager->UpdateObjects(Color(255, 35, 38, 46), Color(255, 50, 53, 62), Color(255, 58, 62, 71), Color(255, 14, 20, 27), Color(255, 35, 38, 46),
+				Color(255, 225, 225, 225), OBJM_Main->HFO_Default, RGB(247, 251, 254), RGB(247, 251, 254));
+			CBDL_CustomDraw1_Manager->UpdateObjects(Color(255, 35, 38, 46), Color(255, 14, 20, 27), Color(255, 35, 38, 46), Color(255, 61, 68, 80), Color(255, 49, 54, 62),
+				OBJM_Main->HFO_Default, RGB(255, 255, 255), RGB(184, 188, 191));
+
+			// Update global parameters
+			APPLICATION_THEME = L"Obisidan";
+			IS_APPTHEMESHOWSCROLLBAR = false;
+			// Update class for standard controls
+			SetAppThemeClass(APPLICATION_THEME);
+
+			// This theme don't need the scrollbar to be visible
+			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+
+			// Update "MAINCONTENT" container position/size
+			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+				APPLICATION_WIDTH - (BORDER_WIDTH * 2),                                             // W
+				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
+				SWP_NOZORDER);
+		}
 
 		// Redraw entire application window
 		if (!OnInit)
@@ -737,22 +786,22 @@ namespace nApp
 				BA_Radio2_Manager->SetSubclass(BTN_Radio2Left);
 
 				BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 206, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 205, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
 				Vector_Subclasses.push_back(&BTN_Radio2Right);
 				BA_Radio2_Manager->SetSubclass(BTN_Radio2Right);
 
 				BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 281, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
 				BA_Radio3_Manager->SetSubclass(BTN_Radio3Left);
 				Vector_Subclasses.push_back(&BTN_Radio3Left);
 
 				BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 347, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 345, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
 				BA_Radio3_Manager->SetSubclass(BTN_Radio3Middle);
 				Vector_Subclasses.push_back(&BTN_Radio3Middle);
 
 				BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 413, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
+					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 410, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
 				BA_Radio3_Manager->SetSubclass(BTN_Radio3Right);
 				Vector_Subclasses.push_back(&BTN_Radio3Right);
 			}
@@ -839,11 +888,11 @@ namespace nApp
             Vector_Subclasses.push_back(&CB_SelectTheme);
 
             // Initialize combobox items
-			const UINT total_items = 3;
+			const UINT total_items = 4;
 			const UINT longest_item_textlength = 10;  // Including null string
             WCHAR item_array[total_items][longest_item_textlength] =
             {
-                TEXT("Light"), TEXT("Dark"), TEXT("Ristretto")
+                TEXT("Light"), TEXT("Dark"), TEXT("Ristretto"), TEXT("Obisidan")
             };
             WCHAR text_buffer[longest_item_textlength];
             memset(&text_buffer, 0, sizeof(text_buffer)); // Memset to ensure the buffer is clean
@@ -856,6 +905,7 @@ namespace nApp
             SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);                                              
             if (APPLICATION_THEME == L"Dark") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
             else if (APPLICATION_THEME == L"Ristretto") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
+			else if (APPLICATION_THEME == L"Obisidan") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
         }
 
 		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove style "CS_DBLCLKS" (double click messages) from class style "BUTTON"

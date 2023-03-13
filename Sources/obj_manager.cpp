@@ -126,11 +126,11 @@ bool OBJ_Manager::UpdateFontObjects()
               if (!DestroyFontObjects())
                      return false;
 
-       nSol::cCreateFont(&this->HFO_Default, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
-       nSol::cCreateFont(&this->HFO_Title, L"Segoe UI", 24, FW_LIGHT, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Default, L"Segoe UI", 24, FW_NORMAL, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Title, L"Segoe UI", 24, FW_NORMAL, CLEARTYPE_QUALITY);
        nSol::cCreateFont(&this->HFO_Heading, L"Segoe UI", 28, FW_BOLD, CLEARTYPE_QUALITY);
-       nSol::cCreateFont(&this->HFO_Edit, L"Segoe UI", 28, FW_LIGHT, CLEARTYPE_QUALITY);
-       nSol::cCreateFont(&this->HFO_Note, L"Segoe UI", 28, FW_LIGHT, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Edit, L"Segoe UI", 28, FW_NORMAL, CLEARTYPE_QUALITY);
+       nSol::cCreateFont(&this->HFO_Note, L"Segoe UI", 28, FW_NORMAL, CLEARTYPE_QUALITY);
 
        IsInitialized = true;
 

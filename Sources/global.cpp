@@ -22,7 +22,7 @@ using std::wstring, std::map, std::vector, Gdiplus::GdiplusStartupInput;
 
 LPCWSTR WndClassName = L"Win32GUISample";                   // Main window's class name
 int APPLICATION_WIDTH = 519, APPLICATION_HEIGHT = 566;      // Default main window's size
-wstring APPLICATION_THEME = L"Ristretto";                   // Default theme
+wstring APPLICATION_THEME = L"Obisidan";                    // Default theme
 
 // HWND placeholders that keep track of which button from its group is selected
 HWND CURRENT_SELECTEDRADIO2;

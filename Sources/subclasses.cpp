@@ -389,10 +389,10 @@ void BA_Standard::UpdateObjects(Color Default, Color Hover, Color LBDown, Color 
 	if (this->IsReady)
 	{
 		// Release previously objects
-		DeleteObject(this->hBrush_ButtonColor_Default);
-		DeleteObject(this->hBrush_ButtonColor_Hover);
-		DeleteObject(this->hBrush_ButtonColor_LBDown);
-		DeleteObject(this->hBrush_ButtonBackgroundColor);
+		DeleteObject(this->HBR_ButtonColor_Default);
+		DeleteObject(this->HBR_ButtonColor_Hover);
+		DeleteObject(this->HBR_ButtonColor_LBDown);
+		DeleteObject(this->HBR_ButtonBackgroundColor);
 	}
 
 	// Create new objects
@@ -402,13 +402,13 @@ void BA_Standard::UpdateObjects(Color Default, Color Hover, Color LBDown, Color 
 	this->CL_ButtonBackgroundColor = Background;
 	this->CL_ButtonBorderColor_NonFocus = BorderNonFocus;
 	this->CL_ButtonBorderColor_OnFocus = BorderOnFocus;
-	this->hBrush_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
-	this->hBrush_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
-	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
-	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
+	this->HBR_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->HBR_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
+	this->HBR_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
+	this->HBR_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
 	this->CLR_DefaultTextColor = DefaultTextColor;
 	this->CLR_HighlightTextColor = HighlightTextColor;
-	this->hFont_ButtonFont = &Font;
+	this->HFO_ButtonFont = &Font;
 
 	this->IsReady = true;
 }
@@ -446,9 +446,9 @@ void BA_Standard::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 
 	SolidBrush SB_Background = this->CL_ButtonColor_Default;
 	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
-	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+	SelectObject(hdc, (HFONT)*this->HFO_ButtonFont);
 
-	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	FillRect(hdc, &rc, this->HBR_ButtonBackgroundColor);
 	if (state)
 	{
 		if (GetFocus() != hWnd)
@@ -503,9 +503,9 @@ void BA_Standard::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	SolidBrush SB_Background = this->CL_ButtonColor_Default;
 	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
 	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
-	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+	SelectObject(hdc, (HFONT)*this->HFO_ButtonFont);
 
-	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	FillRect(hdc, &rc, this->HBR_ButtonBackgroundColor);
 	if (state && hWnd == cHWND)
 	{
 		if (GetFocus() != hWnd)
@@ -662,114 +662,114 @@ LRESULT CALLBACK BA_Standard::SC_BA_Standard(HWND hWnd, UINT uMsg, WPARAM wParam
 
 	switch (uMsg)
 	{
-		case WM_NCDESTROY:
+	case WM_NCDESTROY:
+	{
+		RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
+		return (LRESULT)0;
+	}
+
+	case WM_ERASEBKGND:
+		return (LRESULT)1;
+
+	case WM_TIMER:
+	{
+		static std::set<HWND*> TimerStack;
+		switch (wParam)
 		{
-			RemoveWindowSubclass(hWnd, &SC_BA_Standard, uIdSubclass);
-			return (LRESULT)0;
-		}
-
-		case WM_ERASEBKGND:
-			return (LRESULT)1;
-
-		case WM_TIMER:
+		case 1:
 		{
-			static std::set<HWND*> TimerStack;
-			switch (wParam)
-			{
-			case 1:
-			{
-				InvalidateRect(hWnd, NULL, TRUE);
-				if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
+			InvalidateRect(hWnd, NULL, TRUE);
+			if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
 
-				frames_Invalidated++;
-				if (frames_Invalidated == 60)
+			frames_Invalidated++;
+			if (frames_Invalidated == 60)
+			{
+				for (auto& x : TimerStack)
 				{
-					for (auto& x : TimerStack)
-					{
-						KillTimer(*x, 1);
-						TimerStack.erase(x);
-					}
-					frames_Invalidated = 0;
+					KillTimer(*x, 1);
+					TimerStack.erase(x);
 				}
-
-				return (LRESULT)0;
-			}
-			default:
-				break;
+				frames_Invalidated = 0;
 			}
 
+			return (LRESULT)0;
+		}
+		default:
 			break;
 		}
 
-		case WM_PAINT:
-		{
-			if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
-			return (LRESULT)0;
-		}
+		break;
+	}
 
-		case WM_LBUTTONDOWN:
-		{
-			nState_LB = 1;
-			cState_LB = 1;
-			isLBDown = 1;
-			BufferedPaintStopAllAnimations(hWnd);
-			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+	case WM_PAINT:
+	{
+		if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+		else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+		return (LRESULT)0;
+	}
 
-			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
-			return (LRESULT)0;
-		}
+	case WM_LBUTTONDOWN:
+	{
+		nState_LB = 1;
+		cState_LB = 1;
+		isLBDown = 1;
+		BufferedPaintStopAllAnimations(hWnd);
+		pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
-		case WM_LBUTTONUP:
-		{
-			if (isLBDown)
-			{
-				cState_LB = 0;
-				nState_LB = 1;
-				cState_H = 0;
-				nState_H = 1;
-				BufferedPaintStopAllAnimations(hWnd);
-				pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
-				return (LRESULT)0;
-			}
+		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL); // Forward WM_COMMAND messages to main window procedure
+		return (LRESULT)0;
+	}
 
-			break;
-		}
-
-		case WM_MOUSELEAVE:
+	case WM_LBUTTONUP:
+	{
+		if (isLBDown)
 		{
 			cState_LB = 0;
 			nState_LB = 1;
 			cState_H = 0;
 			nState_H = 1;
-			isLBDown = 0;
-			isHover = 0;
+			BufferedPaintStopAllAnimations(hWnd);
+			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+			return (LRESULT)0;
+		}
+
+		break;
+	}
+
+	case WM_MOUSELEAVE:
+	{
+		cState_LB = 0;
+		nState_LB = 1;
+		cState_H = 0;
+		nState_H = 1;
+		isLBDown = 0;
+		isHover = 0;
+		pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+
+		return (LRESULT)0;
+	}
+
+	case WM_MOUSEHOVER:
+		break;
+
+	case WM_MOUSEMOVE:
+	{
+		if (!isHover)
+		{
+			cHWND = hWnd;
+			TRACKMOUSEEVENT tme;
+			tme.cbSize = sizeof(TRACKMOUSEEVENT);
+			tme.dwFlags = TME_LEAVE;
+			tme.hwndTrack = hWnd;
+			TrackMouseEvent(&tme);
 			pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			isHover = 1;
 
 			return (LRESULT)0;
 		}
 
-		case WM_MOUSEHOVER:
-			break;
-
-		case WM_MOUSEMOVE:
-		{
-			if (!isHover)
-			{
-				cHWND = hWnd;
-				TRACKMOUSEEVENT tme;
-				tme.cbSize = sizeof(TRACKMOUSEEVENT);
-				tme.dwFlags = TME_LEAVE;
-				tme.hwndTrack = hWnd;
-				TrackMouseEvent(&tme);
-				pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
-				isHover = 1;
-
-				return (LRESULT)0;
-			}
-
-			break;
-		}
+		break;
+	}
 	}
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -786,10 +786,10 @@ void BA_Radio2::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Ba
 	if (this->IsReady)
 	{
 		// Release previously objects
-		DeleteObject(this->hBrush_ButtonColor_Default);
-		DeleteObject(this->hBrush_ButtonColor_Hover);
-		DeleteObject(this->hBrush_ButtonColor_LBDown);
-		DeleteObject(this->hBrush_ButtonBackgroundColor);
+		DeleteObject(this->HBR_ButtonColor_Default);
+		DeleteObject(this->HBR_ButtonColor_Hover);
+		DeleteObject(this->HBR_ButtonColor_LBDown);
+		DeleteObject(this->HBR_ButtonBackgroundColor);
 	}
 
 	// Create new objects
@@ -799,13 +799,13 @@ void BA_Radio2::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Ba
 	this->CL_ButtonBackgroundColor = Background;
 	this->CL_ButtonBorderColor_NonFocus = BorderNonFocus;
 	this->CL_ButtonBorderColor_OnFocus = BorderOnFocus;
-	this->hBrush_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
-	this->hBrush_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
-	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
-	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
+	this->HBR_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->HBR_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
+	this->HBR_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
+	this->HBR_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
 	this->CLR_DefaultTextColor = DefaultTextColor;
 	this->CLR_HighlightTextColor = HighlightTextColor;
-	this->hFont_ButtonFont = &Font;
+	this->HFO_ButtonFont = &Font;
 
 	this->IsReady = true;
 }
@@ -843,9 +843,9 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	SolidBrush SB_Background = this->CL_ButtonColor_Default;
 	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
 	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
-	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+	SelectObject(hdc, (HFONT)*this->HFO_ButtonFont);
 
-	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	FillRect(hdc, &rc, this->HBR_ButtonBackgroundColor);
 	if (state)
 	{
 		if (hWnd == *this->hWnd_LeftButton)
@@ -857,7 +857,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 		else
 		{
@@ -868,7 +868,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 	}
 	else if (!state && hWnd == cHWND)
@@ -883,7 +883,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 		else
 		{
@@ -894,7 +894,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 	}
 	else
@@ -908,7 +908,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 		else
 		{
@@ -919,7 +919,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 	}
 
@@ -935,7 +935,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 		else
 		{
@@ -946,7 +946,7 @@ void BA_Radio2::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 	}
 }
@@ -965,9 +965,9 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	SolidBrush SB_Background = this->CL_ButtonColor_Default;
 	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
 	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
-	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+	SelectObject(hdc, (HFONT)*this->HFO_ButtonFont);
 
-	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	FillRect(hdc, &rc, this->HBR_ButtonBackgroundColor);
 	if (state)
 	{
 		SetTextColor(hdc, CLR_HighlightTextColor);
@@ -980,7 +980,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 		else
 		{
@@ -991,7 +991,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 	}
 	else if (!state && hWnd == cHWND)
@@ -1006,7 +1006,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 		else
 		{
@@ -1017,7 +1017,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 	}
 	else
@@ -1031,7 +1031,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 		else
 		{
@@ -1042,7 +1042,7 @@ void BA_Radio2::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 	}
 }
@@ -1260,11 +1260,11 @@ void BA_Radio3::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Ba
 	if (this->IsReady)
 	{
 		// Release previously objects
-		DeleteObject(this->hPen_ButtonColor_Default);
-		DeleteObject(this->hBrush_ButtonColor_Default);
-		DeleteObject(this->hBrush_ButtonColor_Hover);
-		DeleteObject(this->hBrush_ButtonColor_LBDown);
-		DeleteObject(this->hBrush_ButtonBackgroundColor);
+		DeleteObject(this->HPEN_ButtonColor_Default);
+		DeleteObject(this->HBR_ButtonColor_Default);
+		DeleteObject(this->HBR_ButtonColor_Hover);
+		DeleteObject(this->HBR_ButtonColor_LBDown);
+		DeleteObject(this->HBR_ButtonBackgroundColor);
 	}
 
 	// Create new objects
@@ -1274,14 +1274,14 @@ void BA_Radio3::UpdateObjects(Color Default, Color Hover, Color LBDown, Color Ba
 	this->CL_ButtonBackgroundColor = Background;
 	this->CL_ButtonBorderColor_NonFocus = BorderNonFocus;
 	this->CL_ButtonBorderColor_OnFocus = BorderOnFocus;
-	this->hPen_ButtonColor_Default = CreatePen(PS_SOLID, NULL, RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
-	this->hBrush_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
-	this->hBrush_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
-	this->hBrush_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
-	this->hBrush_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
+	this->HPEN_ButtonColor_Default = CreatePen(PS_NULL, NULL, RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->HBR_ButtonColor_Default = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Default.GetRed(), (int)this->CL_ButtonColor_Default.GetGreen(), (int)this->CL_ButtonColor_Default.GetBlue()));
+	this->HBR_ButtonColor_Hover = CreateSolidBrush(RGB((int)this->CL_ButtonColor_Hover.GetRed(), (int)this->CL_ButtonColor_Hover.GetGreen(), (int)this->CL_ButtonColor_Hover.GetBlue()));
+	this->HBR_ButtonColor_LBDown = CreateSolidBrush(RGB((int)this->CL_ButtonColor_LBDown.GetRed(), (int)this->CL_ButtonColor_LBDown.GetGreen(), (int)this->CL_ButtonColor_LBDown.GetBlue()));
+	this->HBR_ButtonBackgroundColor = CreateSolidBrush(RGB((int)this->CL_ButtonBackgroundColor.GetRed(), (int)this->CL_ButtonBackgroundColor.GetGreen(), (int)this->CL_ButtonBackgroundColor.GetBlue()));
 	this->CLR_DefaultTextColor = DefaultTextColor;
 	this->CLR_HighlightTextColor = HighlightTextColor;
-	this->hFont_ButtonFont = &Font;
+	this->HFO_ButtonFont = &Font;
 
 	this->IsReady = true;
 }
@@ -1319,9 +1319,9 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	SolidBrush SB_Background = this->CL_ButtonColor_Default;
 	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
 	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
-	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+	SelectObject(hdc, (HFONT)*this->HFO_ButtonFont);
 
-	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	FillRect(hdc, &rc, this->HBR_ButtonBackgroundColor);
 	if (state)
 	{
 		if (hWnd == *this->hWnd_LeftButton)
@@ -1333,13 +1333,13 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_Default);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1351,7 +1351,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 	}
 	else if (!state && hWnd == cHWND)
@@ -1366,13 +1366,13 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Hover);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_Hover);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1384,7 +1384,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 	}
 	else
@@ -1398,13 +1398,13 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_Default);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1416,7 +1416,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 	}
 
@@ -1432,13 +1432,13 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_LBDown);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_LBDown);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1450,7 +1450,7 @@ void BA_Radio3::Paint_Hover(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 	}
 }
@@ -1469,9 +1469,9 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 	SolidBrush SB_Background = this->CL_ButtonColor_Default;
 	SolidBrush SB_Background_H = this->CL_ButtonColor_Hover;
 	SolidBrush SB_Background_F = this->CL_ButtonColor_LBDown;
-	SelectObject(hdc, (HFONT)*this->hFont_ButtonFont);
+	SelectObject(hdc, (HFONT)*this->HFO_ButtonFont);
 
-	FillRect(hdc, &rc, this->hBrush_ButtonBackgroundColor);
+	FillRect(hdc, &rc, this->HBR_ButtonBackgroundColor);
 	if (state)
 	{
 		SetTextColor(hdc, this->CLR_HighlightTextColor);
@@ -1484,13 +1484,13 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Hover);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_Hover);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1502,7 +1502,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Hover);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Hover);
 		}
 	}
 	else if (!state && hWnd == cHWND)
@@ -1517,13 +1517,13 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_LBDown);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_LBDown);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1535,7 +1535,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_LBDown);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_LBDown);
 		}
 	}
 	else
@@ -1549,13 +1549,13 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.left = lerc.right - 10;
 			lerc.right -= 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 		else if (hWnd == *this->hWnd_MiddleButton)
 		{
-			SelectObject(hdc, (HBRUSH)this->hBrush_ButtonColor_Default);
-			SelectObject(hdc, (HPEN)this->hPen_ButtonColor_Default);
-			RoundRect(hdc, rc.left, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
+			SelectObject(hdc, (HBRUSH)this->HBR_ButtonColor_Default);
+			SelectObject(hdc, (HPEN)this->HPEN_ButtonColor_Default);
+			RoundRect(hdc, rc.left + 1, rc.top - 1, rc.right, rc.bottom + 1, 0, 0);
 			DrawTextW(hdc, TextBuffer, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		}
 		else
@@ -1567,7 +1567,7 @@ void BA_Radio3::Paint_LBDown(HWND& hWnd, HWND& cHWND, HDC hdc, bool state)
 			RECT lerc = rc;
 			lerc.right = lerc.left + 10;
 			lerc.left += 1;
-			FillRect(hdc, &lerc, this->hBrush_ButtonColor_Default);
+			FillRect(hdc, &lerc, this->HBR_ButtonColor_Default);
 		}
 	}
 }
@@ -1679,96 +1679,96 @@ LRESULT CALLBACK BA_Radio3::SC_BA_Radio3(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 
 	switch (uMsg)
 	{
-		case WM_NCDESTROY:
-		{
-			RemoveWindowSubclass(hWnd, &SC_BA_Radio3, uIdSubclass);
-			return 0;
-		}
+	case WM_NCDESTROY:
+	{
+		RemoveWindowSubclass(hWnd, &SC_BA_Radio3, uIdSubclass);
+		return 0;
+	}
 
-		case WM_PAINT:
-		{
-			if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
-			else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
-			return 0;
-		}
+	case WM_PAINT:
+	{
+		if (!isLBDown) pThis->OnPaint_Hover(hWnd, cHWND, nState_H, cState_H);
+		else pThis->OnPaint_LBDown(hWnd, cHWND, nState_LB, cState_LB);
+		return 0;
+	}
 
-		case WM_ERASEBKGND:
-			return (LRESULT)1;
+	case WM_ERASEBKGND:
+		return (LRESULT)1;
 
-		case WM_TIMER:
+	case WM_TIMER:
+	{
+		static std::set<HWND*> TimerStack;
+		switch (wParam)
 		{
-			static std::set<HWND*> TimerStack;
-			switch (wParam)
+		case 1:
+		{
+			InvalidateRect(hWnd, NULL, TRUE);
+			if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
+
+			frames_Invalidated++;
+			if (frames_Invalidated == 60)
 			{
-			case 1:
-			{
-				InvalidateRect(hWnd, NULL, TRUE);
-				if (frames_Invalidated == 0) TimerStack.insert(&hWnd);
-
-				frames_Invalidated++;
-				if (frames_Invalidated == 60)
+				for (auto& x : TimerStack)
 				{
-					for (auto& x : TimerStack)
-					{
-						KillTimer(*x, 1);
-						TimerStack.erase(x);
-					}
-					frames_Invalidated = 0;
+					KillTimer(*x, 1);
+					TimerStack.erase(x);
 				}
-
-				return (LRESULT)0;
-			}
-			default:
-				break;
+				frames_Invalidated = 0;
 			}
 
+			return (LRESULT)0;
+		}
+		default:
 			break;
 		}
 
-		case WM_LBUTTONDOWN:
-		{
-			nState_H = 1;
-			cState_H = 0;
-			nState_LB = 1;
-			cState_LB = 1;
-			isLBDown = 1;
-			BufferedPaintStopAllAnimations(hWnd);
-			pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
+		break;
+	}
 
-			SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL);
-			return 0;
-		}
+	case WM_LBUTTONDOWN:
+	{
+		nState_H = 1;
+		cState_H = 0;
+		nState_LB = 1;
+		cState_LB = 1;
+		isLBDown = 1;
+		BufferedPaintStopAllAnimations(hWnd);
+		pThis->StartAnimation(hWnd, nState_LB, cState_LB, frames_Invalidated);
 
-		case WM_MOUSELEAVE:
+		SendMessageW(GetParent(hWnd), WM_COMMAND, (WPARAM)GetDlgCtrlID(hWnd), NULL);
+		return 0;
+	}
+
+	case WM_MOUSELEAVE:
+	{
+		isLBDown = 0;
+		isHover = 0;
+		pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+
+		return 0;
+	}
+
+	case WM_MOUSEHOVER:
+		break;
+
+	case WM_MOUSEMOVE:
+	{
+		if (!isHover)
 		{
-			isLBDown = 0;
-			isHover = 0;
+			cHWND = hWnd;
+			TRACKMOUSEEVENT tme;
+			tme.cbSize = sizeof(TRACKMOUSEEVENT);
+			tme.dwFlags = TME_LEAVE;
+			tme.hwndTrack = hWnd;
+			TrackMouseEvent(&tme);
 			pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
+			isHover = 1;
 
 			return 0;
 		}
 
-		case WM_MOUSEHOVER:
-			break;
-
-		case WM_MOUSEMOVE:
-		{
-			if (!isHover)
-			{
-				cHWND = hWnd;
-				TRACKMOUSEEVENT tme;
-				tme.cbSize = sizeof(TRACKMOUSEEVENT);
-				tme.dwFlags = TME_LEAVE;
-				tme.hwndTrack = hWnd;
-				TrackMouseEvent(&tme);
-				pThis->StartAnimation(hWnd, nState_H, cState_H, frames_Invalidated);
-				isHover = 1;
-
-				return 0;
-			}
-
-			break;
-		}
+		break;
+	}
 	}
 
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
