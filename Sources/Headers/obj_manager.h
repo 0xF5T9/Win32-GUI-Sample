@@ -9,6 +9,10 @@
 
 #include <iostream>
 #include <string>
+#include <locale>
+#include <fstream>
+#include <filesystem>
+#include <codecvt>
 #include <Windows.h>
 #include <Windowsx.h>
 #include <Uxtheme.h>

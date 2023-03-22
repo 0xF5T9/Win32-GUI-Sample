@@ -35,8 +35,15 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
+	// Load application directory path
+	WCHAR TextBuffer[MAX_PATH];
+	APPLICATION_PATH = _wgetcwd(TextBuffer, MAX_PATH);
+	std::wstring WSTR_TextBuffer(TextBuffer);
+	nSol::cWriteLog(L"Loaded application path: ", (L"\"" + WSTR_TextBuffer + L"\"").c_str());
+
 	// Create main window using registered window class
 	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight);   // Get user desktop resolution
+	nSol::cWriteLog(L"Current desktop resolution: ", (std::to_wstring(DesktopWidth) + L"x" + std::to_wstring(DesktopHeight)).c_str());
 	MAIN_HWND = CreateWindowExW(WS_EX_LAYERED, WndClassName, L"Win32 GUI Sample", WS_MYSTYLE,
 		(DesktopWidth / 2) - (int)((double)APPLICATION_WIDTH / 1.4), (DesktopHeight / 2) - (int)((double)APPLICATION_HEIGHT / 1.4),   // Semi-center application on start
 		APPLICATION_WIDTH, APPLICATION_HEIGHT,   // Initial application window size
@@ -57,6 +64,8 @@ int WINAPI wWinMain(
 		}
 	}
 
+	nSol::cWriteLog(L"", L"", L"", 1, 1);
+
 	return 0;
 }
 
@@ -70,7 +79,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			
 			if (nApp::InitBegin(hWnd) && nApp::InitTheme(hWnd) && nApp::InitControl(hWnd) && nApp::InitEnd(hWnd))
 				return (LRESULT)0;
-			else { MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize main window)", L"", MB_OK | MB_ICONERROR); exit(1); }
+			else 
+			{ 
+				MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize main window)", L"", MB_OK | MB_ICONERROR);
+				nSol::cWriteLog(L"Failed to initialize main window.", L"", L"ERROR");
+				exit(1); 
+			}
 		}
 
 		case WM_COMMAND:
@@ -185,6 +199,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			if (!RET_CTLCOLORBTN)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORBTN message in WindowProcedure)", L"", MB_OK | MB_ICONERROR);
+				nSol::cWriteLog(L"Unresolved WM_CTLCOLORBTN message in WindowProcedure.", L"", L"ERROR");
 				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
 				RET_CTLCOLORBTN = &temp;
 			}
@@ -362,7 +377,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				// Get current scroll info
 				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+				{
 					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+					nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+				}
 				si.nPage = rMCCTR.bottom; // Update new page size
 
 				// Scroll the container back to the zero pos and reset scroll pos
@@ -436,7 +454,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
 			if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+			{
 				MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+				nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+			}
 
 			// Process scroll message
 			static short ScrollPixel = NULL;       // Total pixel per scroll
@@ -518,7 +539,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
 			if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+			{
 				MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+				nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+			}
 
 			// No scrolling needed if the current container size is already big enough to show all the contents.
 			if ((int)si.nPage > si.nMax) return (LRESULT)0;
@@ -587,7 +611,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 					else if (APPLICATION_THEME == L"Dark") { if (nApp::SetAppTheme(L"Ristretto")) IsSuccess = 1; }
 					else if (APPLICATION_THEME == L"Ristretto") { if (nApp::SetAppTheme(L"Obisidan")) IsSuccess = 1; }
 					else if (APPLICATION_THEME == L"Obisidan") { if (nApp::SetAppTheme(L"Light")) IsSuccess = 1; }
-					if (!IsSuccess) { MessageBoxW(hWnd, L"Error occurred!\n(Failed to set application theme)", L"", MB_OK | MB_ICONERROR); exit(1); }
+					if (!IsSuccess) 
+					{ 
+						MessageBoxW(hWnd, L"Error occurred!\n(Failed to set application theme)", L"", MB_OK | MB_ICONERROR); 
+						nSol::cWriteLog(L"Failed to set application theme.", L"", L"ERROR");
+						exit(1); 
+					}
 
 					return (LRESULT)0;
 				}
@@ -620,6 +649,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				case VK_F2:
 				{
+					std::wstring WSTR_TextBuffer(APPLICATION_PATH);
+
+					nSol::cWriteLog(L"Message description: ", L"result", L"ERROR_LEVEL");
+
 					return (LRESULT)0;
 				}
 
@@ -1029,6 +1062,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			if (!RET_CTLCOLORSTATIC)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORSTATIC message)", L"", MB_OK | MB_ICONERROR);
+				nSol::cWriteLog(L"Unresolved WM_CTLCOLORSTATIC message.", L"", L"ERROR");
 				exit(1);
 			}
 			return (LRESULT)*RET_CTLCOLORSTATIC;
@@ -1049,6 +1083,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			if (!RET_CTLCOLORBTN)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORBTN message in WindowProcedure_MainContentCTR)", L"", MB_OK | MB_ICONERROR);
+				nSol::cWriteLog(L"Unresolved WM_CTLCOLORBTN message in WindowProcedure_MainContentCTR.", L"", L"ERROR");
 				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
 				RET_CTLCOLORBTN = &temp;
 			}
@@ -1102,6 +1137,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			if (!RET_CTLCOLOREDIT)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLOREDIT message in WindowProcedure_MainContentCTR)", L"", MB_OK | MB_ICONERROR);
+				nSol::cWriteLog(L"Unresolved WM_CTLCOLOREDIT message in WindowProcedure_MainContentCTR.", L"", L"ERROR");
 				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
 				RET_CTLCOLOREDIT = &temp;
 			}
@@ -1129,6 +1165,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 			if (!RET_CTLCOLORLISTBOX)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Unresolved WM_CTLCOLORLISTBOX message in WindowProcedure_MainContentCTR)", L"", MB_OK | MB_ICONERROR);
+				nSol::cWriteLog(L"Unresolved WM_CTLCOLORLISTBOX message in WindowProcedure_MainContentCTR.", L"", L"ERROR");
 				auto temp = (HBRUSH)GetStockObject(NULL_BRUSH);
 				RET_CTLCOLORLISTBOX = &temp;
 			}

@@ -8,6 +8,10 @@
 #include "./Headers/c_resources.h"
 #include <iostream>
 #include <string>
+#include <locale>
+#include <fstream>
+#include <filesystem>
+#include <codecvt>
 #include <map>
 #include <Windows.h>
 #include <Windowsx.h>

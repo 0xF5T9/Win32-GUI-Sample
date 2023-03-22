@@ -6,6 +6,10 @@
 #include "./Headers/c_resources.h"
 #include <iostream>
 #include <string>
+#include <locale>
+#include <fstream>
+#include <filesystem>
+#include <codecvt>
 #include <map>
 #include <set>
 #include <Windows.h>

@@ -8,6 +8,10 @@
 #include "./c_resources.h"    // Contains application constants
 #include <iostream>           // C++ Essential
 #include <string>             // C++ Essential
+#include <locale>             // C++ Essential
+#include <fstream>            // Read/write files
+#include <filesystem>         // Get paths
+#include <codecvt>            // String conversions
 #include <map>                // Mapping for animation objects
 #include <vector>             // Group and manage objects
 #include <Windows.h>          // WinAPI Essential
@@ -52,7 +56,6 @@ namespace nSol
 
 		if (!g_darkModeSupported)
 		{
-			MessageBoxW(NULL, L"Error occurred!\n(Failed to init dark mode)", L"", MB_OK | MB_ICONERROR);
 			return false;
 		}
 		_AllowDarkModeForWindow(hWnd, true);
@@ -65,7 +68,7 @@ namespace nSol
 	/**
 	* Init GDI Animation & GDI+ APIs
 	*/
-	bool InitAPI()
+	bool cInitAPI()
 	{
 		HRESULT hr = BufferedPaintInit();
 		_com_error err(hr);
@@ -79,10 +82,14 @@ namespace nSol
 	/**
 	* Uninit GDI Animation & GDI+ APIs
 	*/
-	void UnInitAPI()
+	bool cUnInitAPI()
 	{
 		Gdiplus::GdiplusShutdown(API_Token);
-		BufferedPaintUnInit();
+		HRESULT hr = BufferedPaintUnInit();
+
+		if (!SUCCEEDED(hr))
+			return false;
+		else return true;
 	}
 
 
@@ -182,6 +189,68 @@ namespace nSol
 	bool CALLBACK cbSetFont(HWND child_hWnd, LPARAM hFont)
 	{
 		SendMessageW(child_hWnd, WM_SETFONT, hFont, TRUE);
+		return true;
+	}
+
+	
+	/**
+	* Get current date time
+	*/
+	std::wstring GetCurrentDateTime() 
+	{
+		time_t     now = time(0);
+		struct tm  tstruct;
+		wchar_t       buf[80];
+		localtime_s(&tstruct, &now);
+		// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+		// for more information about date/time format
+		wcsftime(buf, 79, L"%Y-%m-%d.%X", &tstruct);
+
+		return buf;
+	}
+
+
+	bool cWriteLog(std::wstring desc, LPCTSTR result = L"", std::wstring log_type = L"INFO", int log_level = 2, bool EndSession = 0)
+	{
+		static std::wofstream oFile;
+		static std::filesystem::path aPath(APPLICATION_PATH);
+
+		if (!EndSession && DEBUG_LEVEL >= log_level)
+		{
+			oFile.open(((std::wstring)aPath + (std::wstring)L"\\log.txt").c_str(), std::ios_base::app);
+			if (oFile.is_open())
+			{
+				std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
+				oFile.imbue(utf8_loc);
+				oFile << L"[" << GetCurrentDateTime() << L"] (" << log_type << L") " << desc << result << std::endl;
+				oFile.close();
+			}
+			else
+			{
+				MessageBoxW(MAIN_HWND, L"Error occurred!\n(Failed to write desc file)", L"", MB_OK | MB_ICONERROR);
+				return false;
+			}
+		}
+		else
+		{
+			if (EndSession && DEBUG_LEVEL >= 1)
+			{
+				oFile.open(((std::wstring)aPath + (std::wstring)L"\\log.txt").c_str(), std::ios_base::app);
+				if (oFile.is_open())
+				{
+					std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
+					oFile.imbue(utf8_loc);
+					oFile << L"[" << GetCurrentDateTime() << L"] Finished exiting." << std::endl;
+					oFile.close();
+				}
+				else
+				{
+					MessageBoxW(MAIN_HWND, L"Error occurred!\n(Failed to write desc file)", L"", MB_OK | MB_ICONERROR);
+					return false;
+				}
+			}
+		}
+
 		return true;
 	}
 
@@ -460,7 +529,10 @@ namespace nApp
 				si.fMask = SIF_ALL;
 
 				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+				{
 					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+					nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+				}
 
 				if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
 				{
@@ -471,6 +543,8 @@ namespace nApp
 					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
 				}
 			}
+
+			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 		}
 		else if (Theme == L"Dark")	// Dark theme
 		{
@@ -525,7 +599,10 @@ namespace nApp
 				si.fMask = SIF_ALL;
 
 				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+				{
 					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+					nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+				}
 
 				if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
 				{
@@ -536,6 +613,8 @@ namespace nApp
 					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
 				}
 			}
+
+			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
 		}
 		else if (Theme == L"Ristretto")  // Ristretto theme
 		{
@@ -585,6 +664,8 @@ namespace nApp
 				APPLICATION_WIDTH - (BORDER_WIDTH * 2),                                             // W
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
+
+			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
 		}
 		else if (Theme == L"Obisidan")  // Steam theme
 		{
@@ -634,6 +715,8 @@ namespace nApp
 				APPLICATION_WIDTH - (BORDER_WIDTH * 2),                                             // W
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
+
+			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
 		}
 
 		// Redraw entire application window
@@ -644,6 +727,8 @@ namespace nApp
 			SetActiveWindow(MAIN_HWND);
 		}
 		
+		if (!OnInit) nSol::cWriteLog(L"Theme changed: ", Theme.c_str(), L"INFO", 1);
+
 		return true;
 	}
 
@@ -658,6 +743,7 @@ namespace nApp
 	bool InitBegin(HWND hWnd)
 	{
 		// Initialize global objects
+		nSol::cWriteLog(L"Initializing global objects ...");
 		OBJM_Main = new OBJ_Manager();
 		BA_CaptionBar_Manager = new BA_CaptionBar();
 		BA_CaptionBar_Manager->InsertAnimationMap(BTN_Close, OBJM_Main->HICO_Close, OBJM_Main->HICO_Close_Hover, OBJM_Main->HICO_Close_Inactive);
@@ -669,22 +755,30 @@ namespace nApp
 		if (!OBJM_Main || !BA_CaptionBar_Manager || !BA_Standard_Manager || !BA_Radio2_Manager || !BA_Radio3_Manager || !CBDL_CustomDraw1_Manager)
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize global objects)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to initialize global objects.", L"", L"ERROR");
 			return false;
 		}
+		else nSol::cWriteLog(L"Global objects initialized.");
 
 		// Initialize DarkMode API
+		nSol::cWriteLog(L"Initializing DarkMode API ...");
 		if (!nSol::InitDarkModeAPI(hWnd))
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize DarkMode API)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to initialize DarkMode API.", L"", L"ERROR");
 			return false;
 		}
+		else nSol::cWriteLog(L"DarkMode API initialized.");
 
 		// Initialize GDI Animation & GDI+ APIs
-		if (!nSol::InitAPI())
+		nSol::cWriteLog(L"Initializing GDI Animation & GDI+ APIs.");
+		if (!nSol::cInitAPI())
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize GDI Animation & GDI+ APIs)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to initialize GDI Animation & GDI+ APIs.", L"", L"ERROR");
 			return false;
 		}
+		else nSol::cWriteLog(L"GDI Animation & GDI+ APIs initialized.");
 
 		// Extend frame into client area
 		MARGINS borders = { 1,1,1,1 };
@@ -693,15 +787,19 @@ namespace nApp
 		if (!SUCCEEDED(hr))
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to execute DwmExtendFrameIntoClientArea)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to execute \"DwmExtendFrameIntoClientArea\".", L"", L"ERROR");
 			return false;
 		}
+		else nSol::cWriteLog(L"Extended frame into client area (MARGINS: 1,1,1,1).");
 
 		// Set minimum resolution for periodic timers
 		if (timeBeginPeriod(15) != TIMERR_NOERROR)
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to set minimum resolution for periodic timers)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to set minimum resolution for periodic timers.", L"", L"ERROR");
 			return false;
 		}
+		else nSol::cWriteLog(L"Minimum resolution for periodic timers sets (15).");
 
 		return true;
 	}
@@ -716,6 +814,7 @@ namespace nApp
 		if (!SetAppTheme(APPLICATION_THEME, true))
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to set application theme)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to set application theme.", L"", L"ERROR");
 			return false;
 		}
 
@@ -956,6 +1055,7 @@ namespace nApp
 		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);   // Show main content container
 
 		IS_APPREADY = true;
+		nSol::cWriteLog(L"Application is ready.");
 	}
 
 
@@ -966,10 +1066,19 @@ namespace nApp
 	*/
 	void OnExit()
 	{
+		nSol::cWriteLog(L"Exiting the application ...");
+
 		DWORD exStyles = GetWindowLongW(MAIN_HWND, GWL_EXSTYLE);
 		SetWindowLongW(MAIN_HWND, GWL_EXSTYLE, exStyles & ~WS_EX_LAYERED);
+		nSol::cWriteLog(L"Removes extended window style (WS_EX_LAYERED).");
 		MARGINS borders = { 0,0,0,0 };
 		HRESULT hr = DwmExtendFrameIntoClientArea(MAIN_HWND, &borders);
+		if (!SUCCEEDED(hr))
+		{
+			MessageBoxW(NULL, L"Error occurred!\n(Failed to execute DwmExtendFrameIntoClientArea)", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Failed to execute \"DwmExtendFrameIntoClientArea\".", L"", L"ERROR");
+		}
+		else nSol::cWriteLog(L"Extended frame into client area (MARGINS: 0,0,0,0).");
 	}
 
 
@@ -979,19 +1088,11 @@ namespace nApp
 	* - Uninitialize APIs
 	* - Clears previously set minimum timer resolution
 	*/
-	void OnDestroy(bool Debug = 0)
+	void OnDestroy()
 	{
-		if (Debug)
-		{
-			unsigned short c = 0;
-
-			for (auto& x : Vector_Subclasses) if (DestroyWindow(*x)) c++;
-			MessageBoxW(NULL, (L"Destroyed " + std::to_wstring(c) + L" subclasses").c_str(), L"DEBUG", MB_OK | MB_ICONINFORMATION); c = 0;
-		}
-		else
-		{
-			for (auto& x : Vector_Subclasses) DestroyWindow(*x);
-		}
+		unsigned short c = 0;
+		for (auto& x : Vector_Subclasses) if (DestroyWindow(*x)) c++;
+		nSol::cWriteLog(L"Destroyed ", (std::to_wstring(c) + L" subclasses.").c_str());
 
 		delete CBDL_CustomDraw1_Manager;
 		delete BA_Radio3_Manager;
@@ -999,7 +1100,9 @@ namespace nApp
 		delete BA_Standard_Manager;
 		delete BA_CaptionBar_Manager;
 		delete OBJM_Main;
-		nSol::UnInitAPI();
-		timeEndPeriod(15);
+		nSol::cWriteLog(L"Global objects deleted.");
+		if (nSol::cUnInitAPI()) nSol::cWriteLog(L"GDI Animation & GDI+ APIs uninitialized.");
+		else nSol::cWriteLog(L"Failed to uninitialize GDI Animation & GDI+ APIs.", L"", L"ERROR");
+		if (timeEndPeriod(15) == TIMERR_NOERROR) nSol::cWriteLog(L"Previously set minimum timer resolution cleared.");
 	}
 }

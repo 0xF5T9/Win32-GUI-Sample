@@ -15,6 +15,8 @@
 extern LPCWSTR WndClassName;
 extern int APPLICATION_WIDTH, APPLICATION_HEIGHT;
 extern std::wstring APPLICATION_THEME;
+extern WCHAR* APPLICATION_PATH;
+extern int DEBUG_LEVEL;
 
 // HWND placeholders that keep track of which button from its group is selected
 extern HWND CURRENT_SELECTEDRADIO2;
