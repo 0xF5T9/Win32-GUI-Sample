@@ -28,7 +28,7 @@ LPCWSTR WndClassName = L"Win32GUISample";                   // Main window's cla
 int APPLICATION_WIDTH = 519, APPLICATION_HEIGHT = 566;      // Default main window's size
 wstring APPLICATION_THEME = L"Obisidan";                    // Default theme
 WCHAR* APPLICATION_PATH;                                    // Application directory path (ptr)
-int DEBUG_LEVEL = 2;                                        // Debug level
+int DEBUG_LEVEL = 1;                                        // Debug level
 
 // HWND placeholders that keep track of which button from its group is selected
 HWND CURRENT_SELECTEDRADIO2;

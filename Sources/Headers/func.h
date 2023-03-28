@@ -583,6 +583,7 @@ namespace nApp
 			// Update global parameters
 			APPLICATION_THEME = L"Dark";
 			IS_APPTHEMESHOWSCROLLBAR = true;
+
 			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
@@ -653,6 +654,7 @@ namespace nApp
 			// Update global parameters
 			APPLICATION_THEME = L"Ristretto"; 
 			IS_APPTHEMESHOWSCROLLBAR = false;
+
 			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
@@ -667,7 +669,7 @@ namespace nApp
 
 			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
 		}
-		else if (Theme == L"Obisidan")  // Steam theme
+		else if (Theme == L"Obisidan")  // Obisidan theme
 		{
 			// Main application drawing objects
 			if (!OBJM_Main->UpdateColorObjects(
@@ -704,6 +706,7 @@ namespace nApp
 			// Update global parameters
 			APPLICATION_THEME = L"Obisidan";
 			IS_APPTHEMESHOWSCROLLBAR = false;
+
 			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
@@ -722,7 +725,7 @@ namespace nApp
 		// Redraw entire application window
 		if (!OnInit)
 		{
-			OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderActive; // Update new border brush color
+			OBJM_Main->HBRP_CURRENTBORDER = &OBJM_Main->HBR_BorderActive; // Update border brush to active
 			RedrawWindow(MAIN_HWND, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
 			SetActiveWindow(MAIN_HWND);
 		}
@@ -771,7 +774,7 @@ namespace nApp
 		else nSol::cWriteLog(L"DarkMode API initialized.");
 
 		// Initialize GDI Animation & GDI+ APIs
-		nSol::cWriteLog(L"Initializing GDI Animation & GDI+ APIs.");
+		nSol::cWriteLog(L"Initializing GDI Animation & GDI+ APIs ...");
 		if (!nSol::cInitAPI())
 		{
 			MessageBoxW(NULL, L"Error occurred!\n(Failed to initialize GDI Animation & GDI+ APIs)", L"", MB_OK | MB_ICONERROR);
@@ -786,8 +789,8 @@ namespace nApp
 		_com_error err(hr);
 		if (!SUCCEEDED(hr))
 		{
-			MessageBoxW(NULL, L"Error occurred!\n(Failed to execute DwmExtendFrameIntoClientArea)", L"", MB_OK | MB_ICONERROR);
-			nSol::cWriteLog(L"Failed to execute \"DwmExtendFrameIntoClientArea\".", L"", L"ERROR");
+			MessageBoxW(NULL, L"Error occurred!\n(Unexpected errors \"DwmExtendFrameIntoClientArea\")", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Unexpected errors \"DwmExtendFrameIntoClientArea\".", L"", L"ERROR");
 			return false;
 		}
 		else nSol::cWriteLog(L"Extended frame into client area (MARGINS: 1,1,1,1).");
@@ -1007,7 +1010,7 @@ namespace nApp
 			else if (APPLICATION_THEME == L"Obisidan") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
         }
 
-		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove style "CS_DBLCLKS" (double click messages) from class style "BUTTON"
+		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove window style "CS_DBLCLKS" (double click messages) from class style "BUTTON"
 
 		// Update class for standard controls
 		SetAppThemeClass(APPLICATION_THEME);
@@ -1039,6 +1042,7 @@ namespace nApp
 		SendMessageW(SS_TextNotePasswordEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
 		SendMessageW(SS_TextNoteMultilineEditbox, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
 		SendMessageW(SS_TextNoteCBSelectTheme, WM_SETFONT, (WPARAM)OBJM_Main->HFO_Note, TRUE);
+
 		return true;
 	}
 
@@ -1055,7 +1059,7 @@ namespace nApp
 		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);   // Show main content container
 
 		IS_APPREADY = true;
-		nSol::cWriteLog(L"Application is ready.");
+		nSol::cWriteLog(L"Application is ready.", L"", L"INFO", 1);
 	}
 
 
@@ -1068,15 +1072,18 @@ namespace nApp
 	{
 		nSol::cWriteLog(L"Exiting the application ...");
 
+		// Remove WS_EX_LAYERED ex-style from main window (Bring back close animation from visual styles)
 		DWORD exStyles = GetWindowLongW(MAIN_HWND, GWL_EXSTYLE);
 		SetWindowLongW(MAIN_HWND, GWL_EXSTYLE, exStyles & ~WS_EX_LAYERED);
 		nSol::cWriteLog(L"Removes extended window style (WS_EX_LAYERED).");
+
+		// Reverse DwmExtendFrameIntoClientArea() (Disable frame shadow effects)
 		MARGINS borders = { 0,0,0,0 };
 		HRESULT hr = DwmExtendFrameIntoClientArea(MAIN_HWND, &borders);
 		if (!SUCCEEDED(hr))
 		{
-			MessageBoxW(NULL, L"Error occurred!\n(Failed to execute DwmExtendFrameIntoClientArea)", L"", MB_OK | MB_ICONERROR);
-			nSol::cWriteLog(L"Failed to execute \"DwmExtendFrameIntoClientArea\".", L"", L"ERROR");
+			MessageBoxW(NULL, L"Error occurred!\n(Unexpected errors \"DwmExtendFrameIntoClientArea\")", L"", MB_OK | MB_ICONERROR);
+			nSol::cWriteLog(L"Unexpected errors \"DwmExtendFrameIntoClientArea\".", L"", L"ERROR");
 		}
 		else nSol::cWriteLog(L"Extended frame into client area (MARGINS: 0,0,0,0).");
 	}
@@ -1090,10 +1097,12 @@ namespace nApp
 	*/
 	void OnDestroy()
 	{
+		// Destroy subclasses
 		unsigned short c = 0;
 		for (auto& x : Vector_Subclasses) if (DestroyWindow(*x)) c++;
 		nSol::cWriteLog(L"Destroyed ", (std::to_wstring(c) + L" subclasses.").c_str());
 
+		// Delete global objects
 		delete CBDL_CustomDraw1_Manager;
 		delete BA_Radio3_Manager;
 		delete BA_Radio2_Manager;
@@ -1101,8 +1110,12 @@ namespace nApp
 		delete BA_CaptionBar_Manager;
 		delete OBJM_Main;
 		nSol::cWriteLog(L"Global objects deleted.");
+
+		// Uninitialize APIs
 		if (nSol::cUnInitAPI()) nSol::cWriteLog(L"GDI Animation & GDI+ APIs uninitialized.");
 		else nSol::cWriteLog(L"Failed to uninitialize GDI Animation & GDI+ APIs.", L"", L"ERROR");
+
+		// Clears previously set minimum timer resolution
 		if (timeEndPeriod(15) == TIMERR_NOERROR) nSol::cWriteLog(L"Previously set minimum timer resolution cleared.");
 	}
 }
