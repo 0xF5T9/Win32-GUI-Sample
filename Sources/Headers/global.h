@@ -12,7 +12,9 @@
 *    GLOBAL PARAMETERS    *
 ***************************/
 
-extern LPCWSTR WndClassName;
+extern const LPCWSTR WndClassName;
+extern const std::wstring SettingFileName;
+extern const std::wstring LogFileName;
 extern int APPLICATION_WIDTH, APPLICATION_HEIGHT;
 extern std::wstring APPLICATION_THEME;
 extern WCHAR* APPLICATION_PATH;

@@ -210,6 +210,9 @@ namespace nSol
 	}
 
 
+	/**
+	* Write log file
+	*/
 	bool cWriteLog(std::wstring desc, LPCTSTR result = L"", std::wstring log_type = L"INFO", int log_level = 2, bool EndSession = 0)
 	{
 		static std::wofstream oFile;
@@ -217,7 +220,7 @@ namespace nSol
 
 		if (!EndSession && DEBUG_LEVEL >= log_level)
 		{
-			oFile.open(((std::wstring)aPath + (std::wstring)L"\\log.txt").c_str(), std::ios_base::app);
+			oFile.open(((std::wstring)aPath + (std::wstring)L"\\" + LogFileName).c_str(), std::ios_base::app);
 			if (oFile.is_open())
 			{
 				std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
@@ -235,7 +238,7 @@ namespace nSol
 		{
 			if (EndSession && DEBUG_LEVEL >= 1)
 			{
-				oFile.open(((std::wstring)aPath + (std::wstring)L"\\log.txt").c_str(), std::ios_base::app);
+				oFile.open(((std::wstring)aPath + (std::wstring)L"\\" + LogFileName).c_str(), std::ios_base::app);
 				if (oFile.is_open())
 				{
 					std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
@@ -436,6 +439,165 @@ namespace nSol
 namespace nApp
 {
 	/**
+	* Load application settings from file
+	*/
+	bool LoadSettingFile()
+	{
+		static std::filesystem::path aPath(APPLICATION_PATH);  // Application directory path
+
+		short Attempts = 0;
+		bool FirstWarning = 1;
+		while (true)
+		{
+			std::wifstream cFile(((std::wstring)aPath + (std::wstring)L"\\" + SettingFileName).c_str());  // File name
+
+			// Check if the file is already exists. If so, start reading the file.
+			if (cFile.is_open()) 
+			{
+				std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
+				cFile.imbue(utf8_loc); // Set locale before making any conversion
+				
+				// Read the file line by line
+				std::wstring line;
+				while (std::getline(cFile, line))
+				{
+					// line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end()); | Remove all whitespaces on line
+					if (line[0] == '#' || line.empty()) continue; // Ignore lines start with '#' or empty lines
+
+					auto delimiterPos = line.find(L"=");
+					auto name = line.substr(0, delimiterPos);
+					auto value = line.substr(delimiterPos + 1);
+					if (value[0] == ' ') value = line.substr(delimiterPos + 2);
+
+					// Scan and read data from file
+					if (name == L"Debug" || name == L"Debug ")  // Debug level
+					{
+						// Update global variables's value
+						if (value == L"0")
+						{
+							DEBUG_LEVEL = 0;
+						}
+						else if (value == L"1")
+						{
+							DEBUG_LEVEL = 1;
+						}
+						else if (value == L"2")
+						{
+							DEBUG_LEVEL = 2;
+						}
+						else
+						{
+							DEBUG_LEVEL = 1;
+						}
+					}
+					else if (name == L"Theme" || name == L"Theme ")  // Theme
+					{
+						if (value == L"Light") APPLICATION_THEME = L"Light";
+						else if (value == L"Dark") APPLICATION_THEME = L"Dark";
+						else if (value == L"Ristretto") APPLICATION_THEME = L"Ristretto";
+						else if (value == L"Obisidan") APPLICATION_THEME = L"Obisidan";
+						else value = L"Obisidan";
+					}
+				}
+				cFile.close();  // Close file
+				return true;
+			}
+
+			// Else create a new file
+			else 
+			{
+				if (FirstWarning == 1) { /*MessageBoxW(NULL, L"Default settings file not found, generating one ...", L"", MB_OK | MB_ICONINFORMATION);*/ FirstWarning = 0; }
+				std::wofstream oFile(((std::wstring)aPath + (std::wstring)L"\\" + SettingFileName).c_str());
+				std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
+				oFile.imbue(utf8_loc); // Set locale before making any conversion
+				oFile << L"# Available themes: Light, Dark, Risretto, Obisidan.\n# Available settings: Debug\n\nTheme = Obisidan\nDebug = 1"; // Write default file
+				oFile.close(); // Close file
+				if (Attempts == 3) { return false; }
+				Attempts++;
+			}
+		}
+
+		return false;
+	}
+
+	
+	/**
+	* Update application setting file
+	*/
+	void UpdateSettingFile(std::wstring mID, std::wstring mVal)
+	{
+		static std::filesystem::path aPath(APPLICATION_PATH);  // Application directory path
+
+		std::wstring APPEND;
+		std::wstring apTheme = L"";
+		std::wstring apDebug = L"";
+
+		if (mID == L"DEBUG")
+		{
+			short Attempts = 0;
+			while (true)
+			{
+				std::wofstream oFile(((std::wstring)aPath + (std::wstring)L"\\" + SettingFileName).c_str());
+				if (oFile.is_open()) // Check if the file is exists
+				{
+					std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
+					oFile.imbue(utf8_loc); // Set locale before making any conversion
+
+					apTheme += APPLICATION_THEME;
+					apDebug += mVal;
+
+					APPEND = L"# Available themes: Light, Dark, Risretto, Obisidan.\n# Available settings: Debug\n\nTheme = ";
+					APPEND += apTheme;
+					APPEND += L"\nDebug = ";
+					APPEND += apDebug;
+
+					oFile << APPEND;
+					oFile.close(); // Close file
+					break;
+				}
+				else
+				{
+					if (Attempts == 3) { MessageBoxW(NULL, L"Error occurred!\n(Lack of read/write permission)\n- Try to run the application as administrator", L"", MB_OK | MB_ICONERROR); exit(1); }
+					Attempts++;
+				}
+			}
+			return;
+		}
+		else if (mID == L"THEME")
+		{
+			short Attempts = 0;
+			while (true)
+			{
+				std::wofstream oFile(((std::wstring)aPath + (std::wstring)L"\\" + SettingFileName).c_str());
+				if (oFile.is_open()) // Check if the file is exists
+				{
+					std::locale utf8_loc(std::locale(), new std::codecvt_utf8<wchar_t>);
+					oFile.imbue(utf8_loc); // Set locale before making any conversion
+
+					apTheme += mVal;
+					apDebug += std::to_wstring(DEBUG_LEVEL);
+
+					APPEND = L"# Available themes: Light, Dark, Risretto, Obisidan.\n# Available settings: Debug\n\nTheme = ";
+					APPEND += apTheme;
+					APPEND += L"\nDebug = ";
+					APPEND += apDebug;
+
+					oFile << APPEND;
+					oFile.close(); // Close file
+					break;
+				}
+				else
+				{
+					if (Attempts == 3) { MessageBoxW(NULL, L"Error occurred!\n(Lack of read/write permission)\n- Try to run the application as administrator", L"", MB_OK | MB_ICONERROR); exit(1); }
+					Attempts++;
+				}
+			}
+			return;
+		}
+	}
+
+
+	/**
 	* Set window theme class for standard controls (Non-Custom/Owner-Drawn Controls)
 	* Ex: Button, ScrollBar
 	*/
@@ -523,28 +685,31 @@ namespace nApp
 				SWP_NOZORDER);
 			
 			{	// Get scrollbar info and check if the current container size need scrollbar
-				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-				SCROLLINFO si;
-				si.cbSize = sizeof(SCROLLINFO);
-				si.fMask = SIF_ALL;
+				if (!OnInit)
+				{
+					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+					SCROLLINFO si;
+					si.cbSize = sizeof(SCROLLINFO);
+					si.fMask = SIF_ALL;
 
-				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
-				{
-					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
-					nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
-				}
+					if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+					{
+						MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+						nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+					}
 
-				if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
-				{
-					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
-				}
-				else
-				{
-					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+					if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
+					{
+						ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+					}
+					else
+					{
+						ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+					}
 				}
 			}
 
-			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+			if (!OnInit) SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 		}
 		else if (Theme == L"Dark")	// Dark theme
 		{
@@ -594,28 +759,31 @@ namespace nApp
 				SWP_NOZORDER);
 
 			{	// Get scrollbar info and check if the current container size need scrollbar
-				RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-				SCROLLINFO si;
-				si.cbSize = sizeof(SCROLLINFO);
-				si.fMask = SIF_ALL;
+				if (!OnInit)
+				{
+					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+					SCROLLINFO si;
+					si.cbSize = sizeof(SCROLLINFO);
+					si.fMask = SIF_ALL;
 
-				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
-				{
-					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
-					nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
-				}
+					if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+					{
+						MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
+						nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
+					}
 
-				if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
-				{
-					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
-				}
-				else
-				{
-					ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+					if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
+					{
+						ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+					}
+					else
+					{
+						ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+					}
 				}
 			}
 
-			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
+			if (!OnInit) SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
 		}
 		else if (Theme == L"Ristretto")  // Ristretto theme
 		{
@@ -667,7 +835,7 @@ namespace nApp
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
 
-			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
+			if (!OnInit) SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
 		}
 		else if (Theme == L"Obisidan")  // Obisidan theme
 		{
@@ -719,7 +887,7 @@ namespace nApp
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
 
-			SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
+			if (!OnInit) SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
 		}
 
 		// Redraw entire application window

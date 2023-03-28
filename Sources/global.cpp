@@ -24,11 +24,13 @@ using std::wstring, std::map, std::vector, Gdiplus::GdiplusStartupInput;
 *    GLOBAL PARAMETERS    *
 ***************************/
 
-LPCWSTR WndClassName = L"Win32GUISample";                   // Main window's class name
-int APPLICATION_WIDTH = 519, APPLICATION_HEIGHT = 566;      // Default main window's size
-wstring APPLICATION_THEME = L"Obisidan";                    // Default theme
-WCHAR* APPLICATION_PATH;                                    // Application directory path (ptr)
-int DEBUG_LEVEL = 1;                                        // Debug level
+extern const LPCWSTR WndClassName = L"Win32GUISample";          // Main window's class name
+extern const std::wstring SettingFileName = L"settings.cfg";    // Setting file name
+extern const std::wstring LogFileName = L"log.txt";             // Log file name
+int APPLICATION_WIDTH = 519, APPLICATION_HEIGHT = 566;          // Default main window's size
+wstring APPLICATION_THEME = L"Obisidan";                        // Default theme
+WCHAR* APPLICATION_PATH;                                        // Application directory path (ptr)
+int DEBUG_LEVEL = 1;                                            // Debug level
 
 // HWND placeholders that keep track of which button from its group is selected
 HWND CURRENT_SELECTEDRADIO2;

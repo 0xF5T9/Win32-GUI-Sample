@@ -35,11 +35,24 @@ int WINAPI wWinMain(
 		return -1;
 	}
 
-	// Load application directory path
-	WCHAR TextBuffer[MAX_PATH];
-	APPLICATION_PATH = _wgetcwd(TextBuffer, MAX_PATH);
-	std::wstring WSTR_TextBuffer(TextBuffer);
-	nSol::cWriteLog(L"Loaded application path: ", (L"\"" + WSTR_TextBuffer + L"\"").c_str());
+	{
+		// Load application directory path
+		bool IsAppDirPathLoaded = 0;
+		WCHAR TextBuffer[MAX_PATH];
+		APPLICATION_PATH = _wgetcwd(TextBuffer, MAX_PATH);
+		std::wstring WSTR_TextBuffer(TextBuffer);
+		if (!WSTR_TextBuffer.empty()) IsAppDirPathLoaded = 1;
+
+
+		// Load application settings from file
+		bool IsSettFileLoaded = 0;
+		if (nApp::LoadConfig()) IsSettFileLoaded = 1;
+		if (IsAppDirPathLoaded) nSol::cWriteLog(L"Loaded application path: ", (L"\"" + WSTR_TextBuffer + L"\"").c_str());
+		else nSol::cWriteLog(L"Failed to load application path.", L"", L"ERROR");
+		if (IsSettFileLoaded) nSol::cWriteLog(L"Loaded application settings from file.");
+		else nSol::cWriteLog(L"Failed to load application settings from file, using default settings.", L"", L"ERROR");
+	}
+
 
 	// Create main window using registered window class
 	int DesktopWidth = 0, DesktopHeight = 0; nSol::GetDesktopResolution(DesktopWidth, DesktopHeight);   // Get user desktop resolution
@@ -814,15 +827,19 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
                     {
 						case 0:
 							nApp::SetAppTheme(L"Light");
+							nApp::UpdateConfig(L"THEME", L"Light");
 							break;
 						case 1:
 							nApp::SetAppTheme(L"Dark");
+							nApp::UpdateConfig(L"THEME", L"Dark");
 							break;
 						case 2:
 							nApp::SetAppTheme(L"Ristretto");
+							nApp::UpdateConfig(L"THEME", L"Ristretto");
 							break;
 						case 3:
 							nApp::SetAppTheme(L"Obisidan");
+							nApp::UpdateConfig(L"THEME", L"Obisidan");
 							break;
                     }
 
