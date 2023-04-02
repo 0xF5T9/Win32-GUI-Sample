@@ -46,7 +46,7 @@ int WINAPI wWinMain(
 
 		// Load application settings from file
 		bool IsSettFileLoaded = 0;
-		if (nApp::LoadConfig()) IsSettFileLoaded = 1;
+		if (nApp::LoadSettingFile()) IsSettFileLoaded = 1;
 		if (IsAppDirPathLoaded) nSol::cWriteLog(L"Loaded application path: ", (L"\"" + WSTR_TextBuffer + L"\"").c_str());
 		else nSol::cWriteLog(L"Failed to load application path.", L"", L"ERROR");
 		if (IsSettFileLoaded) nSol::cWriteLog(L"Loaded application settings from file.");
@@ -827,19 +827,19 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
                     {
 						case 0:
 							nApp::SetAppTheme(L"Light");
-							nApp::UpdateConfig(L"THEME", L"Light");
+							nApp::UpdateSettingFile(L"THEME", L"Light");
 							break;
 						case 1:
 							nApp::SetAppTheme(L"Dark");
-							nApp::UpdateConfig(L"THEME", L"Dark");
+							nApp::UpdateSettingFile(L"THEME", L"Dark");
 							break;
 						case 2:
 							nApp::SetAppTheme(L"Ristretto");
-							nApp::UpdateConfig(L"THEME", L"Ristretto");
+							nApp::UpdateSettingFile(L"THEME", L"Ristretto");
 							break;
 						case 3:
 							nApp::SetAppTheme(L"Obisidan");
-							nApp::UpdateConfig(L"THEME", L"Obisidan");
+							nApp::UpdateSettingFile(L"THEME", L"Obisidan");
 							break;
                     }
 
