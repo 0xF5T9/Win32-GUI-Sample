@@ -73,7 +73,7 @@ extern HWND MAIN_HWND;
 extern HWND BTN_Close, BTN_Minimize, SS_Title;
 
 // Container window handles (MAINCONTENTCTR)
-extern HWND SS_MAINCONTENTCTR, SB_MAINCONTENTCTR;
+extern HWND SSCTR_MAINCONTENT, SB_SSCTR_MAINCONTENT;
 extern HWND SS_Heading1,
 	BTN_Standard, BTN_Radio2Left, BTN_Radio2Right, BTN_Radio3Left, BTN_Radio3Middle, BTN_Radio3Right;
 extern HWND SS_Heading2,
@@ -82,7 +82,7 @@ extern HWND SS_Heading2,
 	SS_TextNoteMultilineEditbox, SS_ED_Multiline, ED_Multiline, BTN_MultilineEditboxOK;
 extern HWND SS_Heading3,
 	SS_TextNoteCBSelectTheme, CB_SelectTheme;
-
+extern std::vector<HWND*> VECTOR_SSCTR_MAINCONTENT;
 
 
 
@@ -104,4 +104,3 @@ RECT_SizeBorder_Right;
 ***********************/
 
 extern std::vector<HWND*> Vector_Subclasses;
-extern std::vector<HWND*> Vector_MAINCONTENTCTR;

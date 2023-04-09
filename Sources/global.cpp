@@ -84,8 +84,8 @@ HINSTANCE MAIN_HINSTANCE;
 HWND MAIN_HWND;
 HWND BTN_Close, BTN_Minimize, SS_Title;
 
-// Container window handles (MAINCONTENTCTR)
-HWND SS_MAINCONTENTCTR, SB_MAINCONTENTCTR;
+// Container content handles (SSCTR_MAINCONTENT)
+HWND SSCTR_MAINCONTENT, SB_SSCTR_MAINCONTENT;
 HWND SS_Heading1,
 	BTN_Standard, BTN_Radio2Left, BTN_Radio2Right, BTN_Radio3Left, BTN_Radio3Middle, BTN_Radio3Right;
 HWND SS_Heading2,
@@ -94,7 +94,7 @@ HWND SS_Heading2,
 	SS_TextNoteMultilineEditbox, SS_ED_Multiline, ED_Multiline, BTN_MultilineEditboxOK;
 HWND SS_Heading3,
 	SS_TextNoteCBSelectTheme, CB_SelectTheme;
-
+vector<HWND*> VECTOR_SSCTR_MAINCONTENT;   // Contains SSCTR_MAINCONTENT childs hwnd that need to be updated with SetWindowTheme() upon theme changes
 
 
 
@@ -116,4 +116,3 @@ RECT_SizeBorder_Right = { APPLICATION_WIDTH - BORDER_WIDTH, 1, APPLICATION_WIDTH
 ***********************/
 
 vector<HWND*> Vector_Subclasses;       // Contains HWNDs that is subclassed
-vector<HWND*> Vector_MAINCONTENTCTR;   // Contains MAINCONTENTCTR's child HWNDs that need to be updated with SetWindowTheme() upon theme changes

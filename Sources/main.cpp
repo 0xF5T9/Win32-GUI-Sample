@@ -180,7 +180,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				else SetTextColor((HDC)wp, OBJM_Main->CLR_InactiveText);
 				RET_CTLCOLORSTATIC = &OBJM_Main->HBR_Primary;
 			}
-			else if ((HWND)lp == SS_MAINCONTENTCTR)
+			else if ((HWND)lp == SSCTR_MAINCONTENT)
 			{
 				static bool OnFirst = 1;
 				if (OnFirst)
@@ -326,7 +326,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			if (wp == SIZE_MAXIMIZED)
 			{
-				RedrawWindow(SS_MAINCONTENTCTR, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+				RedrawWindow(SSCTR_MAINCONTENT, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 				IS_WINDOWMAXIMIZED = true;
 			}
 			else IS_WINDOWMAXIMIZED = false;
@@ -335,22 +335,6 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			// Caption
 			RECT_Caption.right = LOWORD(lp) - BORDER_WIDTH;
-
-			// Main content container
-			if (!IS_APPTHEMESHOWSCROLLBAR)
-			{
-				SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
-					LOWORD(lp) - (BORDER_WIDTH * 2), // W
-					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),   // H
-					SWP_NOZORDER);
-			}
-			else 
-			{
-				SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
-					LOWORD(lp) - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH, // W
-					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),   // H
-					SWP_NOZORDER);
-			}
 
 			// Top size border
 			RECT_SizeBorder_Top.right = LOWORD(lp);
@@ -368,55 +352,71 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			RECT_SizeBorder_Right.right = LOWORD(lp);
 			RECT_SizeBorder_Right.bottom = HIWORD(lp) - BORDER_WIDTH;
 
-			// Scrollbar (Size)
-			static RECT sbRect; GetClientRect(SB_MAINCONTENTCTR, &sbRect);
+			// Container (SSCTR_MAINCONTENT)
+			if (!IS_APPTHEMESHOWSCROLLBAR)
+			{
+				SetWindowPos(SSCTR_MAINCONTENT, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+					LOWORD(lp) - (BORDER_WIDTH * 2), // W
+					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),   // H
+					SWP_NOZORDER);
+			}
+			else 
+			{
+				SetWindowPos(SSCTR_MAINCONTENT, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+					LOWORD(lp) - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH, // W
+					HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top),   // H
+					SWP_NOZORDER);
+			}
+
+			// Container scrollbar (SSCTR_MAINCONTENT)
+			static RECT sbRect; GetClientRect(SB_SSCTR_MAINCONTENT, &sbRect);
 			static int sbWidth = 0, sbHeight = 0;
 			sbWidth = sbRect.right - sbRect.left;   //
-			sbHeight = sbRect.bottom - sbRect.top;  // Get latest mcctr_scrollbar's width & height
+			sbHeight = sbRect.bottom - sbRect.top;  // Get the latest container scrollbar width & height
 
 			if (HIWORD(lp) - (BORDER_WIDTH * 2) - CAPTIONBAR_HEIGHT > sbHeight || HIWORD(lp) - (BORDER_WIDTH * 2) - CAPTIONBAR_HEIGHT < sbHeight)
 				// Update new scrollbar's height to fit new container size (height resize)
-				SetWindowPos(SB_MAINCONTENTCTR, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, RECT_Caption.bottom, sbWidth, HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), SWP_NOZORDER);
+				SetWindowPos(SB_SSCTR_MAINCONTENT, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, RECT_Caption.bottom, sbWidth, HIWORD(lp) - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), SWP_NOZORDER);
 			else
 				// Update new scrollbar's posX (width resize)
-				SetWindowPos(SB_MAINCONTENTCTR, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, RECT_Caption.bottom, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+				SetWindowPos(SB_SSCTR_MAINCONTENT, NULL, LOWORD(lp) - BORDER_WIDTH - sbWidth, RECT_Caption.bottom, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 
-			// Main content container & its scrollbar info
-			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+			// Container scrollbar info (SSCTR_MAINCONTENT)
+			static RECT LRECT_SSCTR_MAINCONTENT; GetClientRect(SSCTR_MAINCONTENT, &LRECT_SSCTR_MAINCONTENT);
 			{
 				SCROLLINFO si;
 				si.cbSize = sizeof(SCROLLINFO);
 				si.fMask = SIF_ALL;
 
 				// Get current scroll info
-				if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+				if (SendMessageW(SB_SSCTR_MAINCONTENT, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 				{
 					MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 					nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
 				}
-				si.nPage = rMCCTR.bottom; // Update new page size
+				si.nPage = LRECT_SSCTR_MAINCONTENT.bottom; // Update new page size
 
 				// Scroll the container back to the zero pos and reset scroll pos
-				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, si.nPos, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				ScrollWindowEx(SSCTR_MAINCONTENT, NULL, si.nPos, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 				si.nPos = 0;
 
 				// Set scrollbar info
-				SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
+				SendMessageW(SB_SSCTR_MAINCONTENT, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 				// Show|Hide the scrollbar if needed
 				if (!IS_APPTHEMESHOWSCROLLBAR)
 				{
-					ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+					ShowWindow(SB_SSCTR_MAINCONTENT, SW_HIDE);
 				}
 				else
 				{
 					if ((unsigned int)si.nPage > (unsigned int)si.nMax)
 					{
-						ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+						ShowWindow(SB_SSCTR_MAINCONTENT, SW_HIDE);
 					}
 					else
 					{
-						ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+						ShowWindow(SB_SSCTR_MAINCONTENT, SW_SHOW);
 					}
 				}
 			}
@@ -466,7 +466,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SCROLLINFO si;
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
-			if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+			if (SendMessageW(SB_SSCTR_MAINCONTENT, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 				nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
@@ -508,33 +508,33 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				if (si.nPos < si.nMin)
 				{
-					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, ScrollPixel - (-(si.nPos)), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+					ScrollWindowEx(SSCTR_MAINCONTENT, NULL, ScrollPixel - (-(si.nPos)), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 					si.nPos = si.nMin;
 				}
 				else if (si.nPos > si.nMax - (int)si.nPage)
 				{
-					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, -ScrollPixel + -((si.nMax - (int)si.nPage) - si.nPos), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+					ScrollWindowEx(SSCTR_MAINCONTENT, NULL, -ScrollPixel + -((si.nMax - (int)si.nPage) - si.nPos), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 					si.nPos = si.nMax - (int)si.nPage;
 				}
 				else
 				{
-					ScrollWindowEx(SS_MAINCONTENTCTR, NULL, (ScrollingDown ? -ScrollPixel : ScrollPixel), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+					ScrollWindowEx(SSCTR_MAINCONTENT, NULL, (ScrollingDown ? -ScrollPixel : ScrollPixel), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 				}
 			}
 			else
 			{
 				if (si.nPos < si.nMin) si.nPos = si.nMin;
 				else if (si.nPos > si.nMax - (int)si.nPage) si.nPos = si.nMax - (int)si.nPage;
-				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, (PreviousPos - si.nPos),
+				ScrollWindowEx(SSCTR_MAINCONTENT, NULL, (PreviousPos - si.nPos),
 					NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 			}
 
 			// Update new page size
-			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-			si.nPage = rMCCTR.bottom;   
+			static RECT LRECT_SSCTR_MAINCONTENT; GetClientRect(SSCTR_MAINCONTENT, &LRECT_SSCTR_MAINCONTENT);
+			si.nPage = LRECT_SSCTR_MAINCONTENT.bottom;   
 
 			// Set scroll info
-			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
+			SendMessageW(SB_SSCTR_MAINCONTENT, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 			return (LRESULT)0;
 		}
@@ -551,7 +551,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 			SCROLLINFO si;
 			si.cbSize = sizeof(SCROLLINFO);
 			si.fMask = SIF_ALL;
-			if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+			if (SendMessageW(SB_SSCTR_MAINCONTENT, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 			{
 				MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 				nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
@@ -578,25 +578,25 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			if (si.nPos < si.nMin)
 			{
-				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, ScrollPixel - (-(si.nPos)), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				ScrollWindowEx(SSCTR_MAINCONTENT, NULL, ScrollPixel - (-(si.nPos)), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 				si.nPos = si.nMin;
 			}
 			else if (si.nPos > si.nMax - (int)si.nPage)
 			{
-				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, -ScrollPixel + -((si.nMax - (int)si.nPage) - si.nPos), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				ScrollWindowEx(SSCTR_MAINCONTENT, NULL, -ScrollPixel + -((si.nMax - (int)si.nPage) - si.nPos), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 				si.nPos = si.nMax - (int)si.nPage;
 			}
 			else
 			{
-				ScrollWindowEx(SS_MAINCONTENTCTR, NULL, (ScrollingDown ? -ScrollPixel : ScrollPixel), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+				ScrollWindowEx(SSCTR_MAINCONTENT, NULL, (ScrollingDown ? -ScrollPixel : ScrollPixel), NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
 			}
 
 			// Update new page size
-			static RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
-			si.nPage = rMCCTR.bottom; 
+			static RECT LRECT_SSCTR_MAINCONTENT; GetClientRect(SSCTR_MAINCONTENT, &LRECT_SSCTR_MAINCONTENT);
+			si.nPage = LRECT_SSCTR_MAINCONTENT.bottom; 
 
 			// Set scroll info
-			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
+			SendMessageW(SB_SSCTR_MAINCONTENT, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
 
 			return (LRESULT)0;
 		}
@@ -638,7 +638,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 				{
 					// Show debug info
 
-					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+					RECT LRECT_SSCTR_MAINCONTENT; GetClientRect(SSCTR_MAINCONTENT, &LRECT_SSCTR_MAINCONTENT);
 					WCHAR* wcaSelectedR2 = new WCHAR[(UINT64)GetWindowTextLengthW(CURRENT_SELECTEDRADIO2) + (UINT64)1]; GetWindowTextW(CURRENT_SELECTEDRADIO2, wcaSelectedR2, GetWindowTextLengthW(CURRENT_SELECTEDRADIO2) + 1);
 					WCHAR* wcaSelectedR3 = new WCHAR[(UINT64)GetWindowTextLengthW(CURRENT_SELECTEDRADIO3) + (UINT64)1]; GetWindowTextW(CURRENT_SELECTEDRADIO3, wcaSelectedR3, GetWindowTextLengthW(CURRENT_SELECTEDRADIO3) + 1);
 					std::wstring wstrSelectedR2(wcaSelectedR2);
@@ -648,7 +648,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 					MessageBoxW(MAIN_HWND, (L"Window size: " + std::to_wstring(APPLICATION_WIDTH) + L"x" + std::to_wstring(APPLICATION_HEIGHT) + L"\n"
 											+ L"Caption size: " + std::to_wstring(RECT_Caption.bottom - RECT_Caption.top) + L"\n"
-											+ L"Container size (Main content): " + std::to_wstring(rMCCTR.bottom) + L"x" + std::to_wstring(rMCCTR.right) + L"\n"
+											+ L"Container size (Main content): " + std::to_wstring(LRECT_SSCTR_MAINCONTENT.bottom) + L"x" + std::to_wstring(LRECT_SSCTR_MAINCONTENT.right) + L"\n"
 											+ L"Theme: " + APPLICATION_THEME + L" (F5)\n"
 											+ L"IsReady: " + (IS_APPREADY ? L"Yes" : L"No") + L"\n"
 											+ L"IsWindowMaximized: " + (IS_WINDOWMAXIMIZED ? L"Yes" : L"No") + L"\n"
@@ -711,7 +711,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	return DefWindowProcW(hWnd, msg, wp, lp);
 }
 
-LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK WindowProcedure_SSCTR_MAINCONTENT(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	static bool bEditboxFocusInvalidateCheck = 0;
 
@@ -722,7 +722,7 @@ LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, 
 
 		case WM_NCDESTROY:
 		{
-			RemoveWindowSubclass(hWnd, &WindowProcedure_MainContentCTR, uIdSubclass);
+			RemoveWindowSubclass(hWnd, &WindowProcedure_SSCTR_MAINCONTENT, uIdSubclass);
 			return (LRESULT)0;
 		}
 

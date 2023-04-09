@@ -25,6 +25,7 @@
 #include "./Ex_DarkMode.h"    // Reverse and access to undocumented window "Dark Mode" API
 #include "./obj_manager.h"    // Object manager class
 #include "./subclasses.h"     // Subclasses classes
+#include "./structs.h"        // My structs definitions
 #include "./global.h"         // Global variables distribution
 
 /**
@@ -41,7 +42,7 @@ Gdiplus::Pen, Gdiplus::PenAlignmentCenter, Gdiplus::Unit, Gdiplus::UnitPixel;
 
 // CALLBACK FORWARD DECLARATIONS
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK WindowProcedure_MainContentCTR(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK WindowProcedure_SSCTR_MAINCONTENT(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SC_EditControl(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 namespace nSol
@@ -606,7 +607,7 @@ namespace nApp
 		if (Theme == L"Light")
 		{
 			WCHAR TextBuffer[256];
-			for (auto& x : Vector_MAINCONTENTCTR)
+			for (auto& x : VECTOR_SSCTR_MAINCONTENT)
 			{
 				GetClassNameW(*x, TextBuffer, 256);
 				std::wstring lwstr(TextBuffer);
@@ -619,7 +620,7 @@ namespace nApp
 		else if (Theme == L"Dark" || Theme == L"Ristretto" || Theme == L"Obisidan")
 		{
 			WCHAR TextBuffer[256];
-			for (auto& x : Vector_MAINCONTENTCTR)
+			for (auto& x : VECTOR_SSCTR_MAINCONTENT)
 			{
 				GetClassNameW(*x, TextBuffer, 256);
 				std::wstring lwstr(TextBuffer);
@@ -678,8 +679,8 @@ namespace nApp
 			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
-			// Update "MAINCONTENT" container position/size
-			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+			// Update "SSCTR_MAINCONTENT" container position and size
+			SetWindowPos(SSCTR_MAINCONTENT, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH,                       // W
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
@@ -687,12 +688,12 @@ namespace nApp
 			{	// Get scrollbar info and check if the current container size need scrollbar
 				if (!OnInit)
 				{
-					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+					RECT rMCCTR; GetClientRect(SSCTR_MAINCONTENT, &rMCCTR);
 					SCROLLINFO si;
 					si.cbSize = sizeof(SCROLLINFO);
 					si.fMask = SIF_ALL;
 
-					if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+					if (SendMessageW(SB_SSCTR_MAINCONTENT, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 					{
 						MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 						nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
@@ -700,11 +701,11 @@ namespace nApp
 
 					if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
 					{
-						ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+						ShowWindow(SB_SSCTR_MAINCONTENT, SW_HIDE);
 					}
 					else
 					{
-						ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+						ShowWindow(SB_SSCTR_MAINCONTENT, SW_SHOW);
 					}
 				}
 			}
@@ -752,8 +753,8 @@ namespace nApp
 			// Update class for standard controls
 			SetAppThemeClass(APPLICATION_THEME);
 
-			// Update "MAINCONTENT" container position/size
-			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+			// Update "SSCTR_MAINCONTENT" container position and size
+			SetWindowPos(SSCTR_MAINCONTENT, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 				APPLICATION_WIDTH - (BORDER_WIDTH * 2) - STD_SCROLLBAR_WIDTH,                       // W
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
@@ -761,12 +762,12 @@ namespace nApp
 			{	// Get scrollbar info and check if the current container size need scrollbar
 				if (!OnInit)
 				{
-					RECT rMCCTR; GetClientRect(SS_MAINCONTENTCTR, &rMCCTR);
+					RECT rMCCTR; GetClientRect(SSCTR_MAINCONTENT, &rMCCTR);
 					SCROLLINFO si;
 					si.cbSize = sizeof(SCROLLINFO);
 					si.fMask = SIF_ALL;
 
-					if (SendMessageW(SB_MAINCONTENTCTR, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
+					if (SendMessageW(SB_SSCTR_MAINCONTENT, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
 					{
 						MessageBoxW(NULL, L"Error occurred!\n(Failed to get scroll info)", L"", MB_OK | MB_ICONWARNING);
 						nSol::cWriteLog(L"Failed to get scroll info.", L"", L"ERROR");
@@ -774,11 +775,11 @@ namespace nApp
 
 					if ((unsigned int)rMCCTR.bottom > (unsigned int)si.nMax)
 					{
-						ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+						ShowWindow(SB_SSCTR_MAINCONTENT, SW_HIDE);
 					}
 					else
 					{
-						ShowWindow(SB_MAINCONTENTCTR, SW_SHOW);
+						ShowWindow(SB_SSCTR_MAINCONTENT, SW_SHOW);
 					}
 				}
 			}
@@ -827,10 +828,10 @@ namespace nApp
 			SetAppThemeClass(APPLICATION_THEME);
 
 			// This theme don't need the scrollbar to be visible
-			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+			ShowWindow(SB_SSCTR_MAINCONTENT, SW_HIDE);
 
-			// Update "MAINCONTENT" container position/size
-			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+			// Update "SSCTR_MAINCONTENT" container position and size
+			SetWindowPos(SSCTR_MAINCONTENT, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 				APPLICATION_WIDTH - (BORDER_WIDTH * 2),                                             // W
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
@@ -879,10 +880,10 @@ namespace nApp
 			SetAppThemeClass(APPLICATION_THEME);
 
 			// This theme don't need the scrollbar to be visible
-			ShowWindow(SB_MAINCONTENTCTR, SW_HIDE);
+			ShowWindow(SB_SSCTR_MAINCONTENT, SW_HIDE);
 
-			// Update "MAINCONTENT" container position/size
-			SetWindowPos(SS_MAINCONTENTCTR, NULL, BORDER_WIDTH, RECT_Caption.bottom,
+			// Update "SSCTR_MAINCONTENT" container position and size
+			SetWindowPos(SSCTR_MAINCONTENT, NULL, BORDER_WIDTH, RECT_Caption.bottom,
 				APPLICATION_WIDTH - (BORDER_WIDTH * 2),                                             // W
 				APPLICATION_HEIGHT - (BORDER_WIDTH * 2) - (RECT_Caption.bottom - RECT_Caption.top), // H
 				SWP_NOZORDER);
@@ -999,186 +1000,221 @@ namespace nApp
 	*/
 	bool InitControl(HWND hWnd)
 	{
-		// Close button
-		BTN_Close = CreateWindowExW(NULL, L"BUTTON", L"",
-			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
-		BA_CaptionBar_Manager->SetSubclass(BTN_Close);
-		Vector_Subclasses.push_back(&BTN_Close);
+		// Global HWND controls:
+		{
+			// Close button
+			BTN_Close = CreateWindowExW(NULL, L"BUTTON", L"",
+				WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_CLOSE, NULL, NULL);
+			BA_CaptionBar_Manager->SetSubclass(BTN_Close);
+			Vector_Subclasses.push_back(&BTN_Close);
 
-		// Minimize button
-		BTN_Minimize = CreateWindowExW(NULL, L"BUTTON", L"",
-			WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
-		BA_CaptionBar_Manager->SetSubclass(BTN_Minimize);
-		Vector_Subclasses.push_back(&BTN_Minimize);
+			// Minimize button
+			BTN_Minimize = CreateWindowExW(NULL, L"BUTTON", L"",
+				WS_CHILD | BS_OWNERDRAW, 0, 0, 58, 37, hWnd, (HMENU)BUTTON_MINIMIZE, NULL, NULL);
+			BA_CaptionBar_Manager->SetSubclass(BTN_Minimize);
+			Vector_Subclasses.push_back(&BTN_Minimize);
 
-		// Window title
-		WCHAR* TextBuffer_AppTitle = new WCHAR[(UINT64)GetWindowTextLengthW(hWnd) + (UINT64)1];
-		GetWindowTextW(hWnd, TextBuffer_AppTitle, GetWindowTextLengthW(hWnd) + 1);
-		SS_Title = CreateWindowW(L"STATIC", TextBuffer_AppTitle,
-			WS_CHILD | SS_NOPREFIX | SS_LEFT, 13, 7, 300, 28, hWnd, NULL, NULL, NULL);
-		delete[] TextBuffer_AppTitle;
+			// Window title
+			WCHAR* TextBuffer_AppTitle = new WCHAR[(UINT64)GetWindowTextLengthW(hWnd) + (UINT64)1];
+			GetWindowTextW(hWnd, TextBuffer_AppTitle, GetWindowTextLengthW(hWnd) + 1);
+			SS_Title = CreateWindowW(L"STATIC", TextBuffer_AppTitle,
+				WS_CHILD | SS_NOPREFIX | SS_LEFT, 13, 7, 300, 28, hWnd, NULL, NULL, NULL);
+			delete[] TextBuffer_AppTitle;
+		}
 
-		// Main content container (borders & caption areas excluded)
-		SS_MAINCONTENTCTR = CreateWindowExW(WS_EX_CONTROLPARENT, L"STATIC", L"", WS_CLIPCHILDREN | WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, BORDER_WIDTH + CAPTIONBAR_HEIGHT,
+
+		// Container: SSCTR_MAINCONTENT
+		// Description: Viewport container, hold and displays most of the application controls
+		{
+			ContainerInfo CI_SSCTR_MAINCONTENT;  // Container info struct, keep track of the container's infos
+
+			// Create the container
+			SSCTR_MAINCONTENT = CreateWindowExW(WS_EX_CONTROLPARENT, L"STATIC", L"", WS_CLIPCHILDREN | WS_CHILD | SS_NOPREFIX, BORDER_WIDTH, BORDER_WIDTH + CAPTIONBAR_HEIGHT,
 			0, 0, hWnd, NULL, NULL, NULL);
-		SetWindowSubclass(SS_MAINCONTENTCTR, &WindowProcedure_MainContentCTR, NULL, NULL);
-		Vector_Subclasses.push_back(&SS_MAINCONTENTCTR);
+			SetWindowSubclass(SSCTR_MAINCONTENT, &WindowProcedure_SSCTR_MAINCONTENT, NULL, NULL);
+			Vector_Subclasses.push_back(&SSCTR_MAINCONTENT);
 
-		// Main content container's scrollbar
-		SB_MAINCONTENTCTR = nSol::CreateVerticalSB(hWnd, STD_SCROLLBAR_WIDTH, CAPTIONBAR_HEIGHT);
-		{
-			SCROLLINFO si;
-			si.cbSize = sizeof(SCROLLINFO);
-			si.fMask = SIF_ALL;
-			si.nPos = 0; // Initiate scrollbar pos
-			si.nMin = 0; // Min scrollbar pos
-			si.nMax = 516 + 85 + (MAINCONTENTCTR_PADDING * 2); // Max scrollbar pos = (total content sizes + spaces between contents + paddings)
-			si.nPage = 211; // Actual width|height of the container
-			SendMessageW(SB_MAINCONTENTCTR, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
-			Vector_MAINCONTENTCTR.push_back(&SB_MAINCONTENTCTR);
-		}
+			// Create container contents
+			{
+				/// LINE 1:
+				SS_Heading1 = CreateWindowExW(NULL, L"STATIC", L"Sample buttons:",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 155, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+				CI_SSCTR_MAINCONTENT.EndLine(SS_Heading1);
 
-		// Main content container's childs:
-		{
-			SS_Heading1 = CreateWindowExW(NULL, L"STATIC", L"Sample buttons:",
-				WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-				MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING, 155, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
+				/// LINE 2:
+				{
+					BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 130, 40, SSCTR_MAINCONTENT, (HMENU)BUTTON_STANDARD, NULL, NULL);
+					BA_Standard_Manager->SetSubclass(BTN_Standard);
+					Vector_Subclasses.push_back(&BTN_Standard);
+
+					BTN_Radio2Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
+						WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 65, 40, SSCTR_MAINCONTENT, (HMENU)BUTTON_R2LEFT, NULL, NULL);
+					Vector_Subclasses.push_back(&BTN_Radio2Left);
+					BA_Radio2_Manager->SetSubclass(BTN_Radio2Left);
+
+					BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
+						WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 205, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 65, 40, SSCTR_MAINCONTENT, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
+					Vector_Subclasses.push_back(&BTN_Radio2Right);
+					BA_Radio2_Manager->SetSubclass(BTN_Radio2Right);
+
+					BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
+						WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 65, 40, SSCTR_MAINCONTENT, (HMENU)BUTTON_R3LEFT, NULL, NULL);
+					BA_Radio3_Manager->SetSubclass(BTN_Radio3Left);
+					Vector_Subclasses.push_back(&BTN_Radio3Left);
+
+					BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
+						WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 345, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 65, 40, SSCTR_MAINCONTENT, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
+					BA_Radio3_Manager->SetSubclass(BTN_Radio3Middle);
+					Vector_Subclasses.push_back(&BTN_Radio3Middle);
+
+					BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
+						WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 410, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 65, 40, SSCTR_MAINCONTENT, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
+					BA_Radio3_Manager->SetSubclass(BTN_Radio3Right);
+					Vector_Subclasses.push_back(&BTN_Radio3Right);
+				}
+				CI_SSCTR_MAINCONTENT.EndLine(BTN_Standard);
+			}
 
 			{
-				BTN_Standard = CreateWindowExW(NULL, L"BUTTON", L"Standard",
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 44, 130, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_STANDARD, NULL, NULL);
-				BA_Standard_Manager->SetSubclass(BTN_Standard);
-				Vector_Subclasses.push_back(&BTN_Standard);
+				/// LINE 3:
+				SS_Heading2 = CreateWindowExW(NULL, L"STATIC", L"Sample editboxs:",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 164, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+				CI_SSCTR_MAINCONTENT.EndLine(SS_Heading2);
 
-				BTN_Radio2Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 140, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2LEFT, NULL, NULL);
-				Vector_Subclasses.push_back(&BTN_Radio2Left);
-				BA_Radio2_Manager->SetSubclass(BTN_Radio2Left);
+				/// LINE 4:
+				{
+					SS_TextNoteNormalEditbox = CreateWindowExW(NULL, L"STATIC", L"(Normal)",
+						WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+						MAINCONTENTCTR_PADDING + 360,
+						MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 80, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+					if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 270, 33, SSCTR_MAINCONTENT,
+						SS_ED_Normal, ED_Normal,
+						WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL)) return false;
+					SetWindowSubclass(ED_Normal, &SC_EditControl, NULL, NULL);
+					Vector_Subclasses.push_back(&ED_Normal);
+					BTN_NormalEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"OK",
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
+						MAINCONTENTCTR_PADDING + 280,
+						MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 70, 33,
+						SSCTR_MAINCONTENT, (HMENU)BUTTON_EDNORMALOK, NULL, NULL);
+					BA_Standard_Manager->SetSubclass(BTN_NormalEditboxOK);
+					Vector_Subclasses.push_back(&BTN_NormalEditboxOK);
 
-				BTN_Radio2Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 205, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R2RIGHT, NULL, NULL);
-				Vector_Subclasses.push_back(&BTN_Radio2Right);
-				BA_Radio2_Manager->SetSubclass(BTN_Radio2Right);
+					CI_SSCTR_MAINCONTENT.EndLine(SS_ED_Normal);
+				}
 
-				BTN_Radio3Left = CreateWindowEx(NULL, L"BUTTON", L"Left",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 280, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3LEFT, NULL, NULL);
-				BA_Radio3_Manager->SetSubclass(BTN_Radio3Left);
-				Vector_Subclasses.push_back(&BTN_Radio3Left);
+				/// LINE 5:
+				{
+					SS_TextNotePasswordEditbox = CreateWindowExW(NULL, L"STATIC", L"(Password)",
+						WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+						MAINCONTENTCTR_PADDING + 360,
+						MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 95, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+					if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 270, 33, SSCTR_MAINCONTENT,
+						SS_ED_Password, ED_Password,
+						WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL | ES_PASSWORD)) return false;
+					SetWindowSubclass(ED_Password, &SC_EditControl, NULL, NULL);
+					Vector_Subclasses.push_back(&ED_Password);
+					BTN_PasswordEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"OK",
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
+						MAINCONTENTCTR_PADDING + 280,
+						MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 70, 33,
+						SSCTR_MAINCONTENT, (HMENU)BUTTON_EDPASSWORDOK, NULL, NULL);
+					BA_Standard_Manager->SetSubclass(BTN_PasswordEditboxOK);
+					Vector_Subclasses.push_back(&BTN_PasswordEditboxOK);
 
-				BTN_Radio3Middle = CreateWindowEx(NULL, L"BUTTON", L"Middle",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 345, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3MIDDLE, NULL, NULL);
-				BA_Radio3_Manager->SetSubclass(BTN_Radio3Middle);
-				Vector_Subclasses.push_back(&BTN_Radio3Middle);
+					CI_SSCTR_MAINCONTENT.EndLine(SS_ED_Password);
+				}
 
-				BTN_Radio3Right = CreateWindowEx(NULL, L"BUTTON", L"Right",
-					WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, MAINCONTENTCTR_PADDING + 410, MAINCONTENTCTR_PADDING + 44, 65, 40, SS_MAINCONTENTCTR, (HMENU)BUTTON_R3RIGHT, NULL, NULL);
-				BA_Radio3_Manager->SetSubclass(BTN_Radio3Right);
-				Vector_Subclasses.push_back(&BTN_Radio3Right);
+				/// LINE 6:
+				{
+					SS_TextNoteMultilineEditbox = CreateWindowExW(NULL, L"STATIC", L"(Multiline)",
+						WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+						MAINCONTENTCTR_PADDING,
+						MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 95, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+					CI_SSCTR_MAINCONTENT.EndLine(SS_TextNoteMultilineEditbox);
+					/// LINE 7:
+					if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 478, 200, SSCTR_MAINCONTENT,
+						SS_ED_Multiline, ED_Multiline,
+						WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN)) return false;
+					SetWindowSubclass(ED_Multiline, &SC_EditControl, NULL, NULL);
+					Vector_Subclasses.push_back(&ED_Multiline);
+					CI_SSCTR_MAINCONTENT.EndLine(SS_ED_Multiline);
+					/// LINE 8:
+					BTN_MultilineEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"Clear",
+						WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
+						MAINCONTENTCTR_PADDING,
+						MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos() - 5, 478, 33,
+						SSCTR_MAINCONTENT, (HMENU)BUTTON_EDMULTILINEOK, NULL, NULL);
+					BA_Standard_Manager->SetSubclass(BTN_MultilineEditboxOK);
+					Vector_Subclasses.push_back(&BTN_MultilineEditboxOK);
+					CI_SSCTR_MAINCONTENT.EndLine(BTN_MultilineEditboxOK, -5);
+				}
+			}
+
+			{
+				/// LINE 9:
+				SS_Heading3 = CreateWindowExW(NULL, L"STATIC", L"Sample comboboxs:",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 190, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+				CI_SSCTR_MAINCONTENT.EndLine(SS_Heading3);
+				/// LINE 10:
+				SS_TextNoteCBSelectTheme = CreateWindowExW(NULL, L"STATIC", L"(Select theme)",
+					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+					MAINCONTENTCTR_PADDING + 130,
+					MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 127, 34, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+				CB_SelectTheme = CreateWindowExW(NULL, L"COMBOBOX", L"",
+					WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED,
+					MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + CI_SSCTR_MAINCONTENT.GetCurVertPos(), 120, NULL/*(Determinated by WM_MEASUREITEM)*/, SSCTR_MAINCONTENT, NULL, NULL, NULL);
+				CBDL_CustomDraw1_Manager->SetComboboxSubclass(CB_SelectTheme);
+				Vector_Subclasses.push_back(&CB_SelectTheme);
+
+				// Initialize combobox items
+				const UINT total_items = 4;
+				const UINT longest_item_textlength = 10;  // Including null string
+				WCHAR item_array[total_items][longest_item_textlength] =
+				{
+					TEXT("Light"), TEXT("Dark"), TEXT("Ristretto"), TEXT("Obisidan")
+				};
+				WCHAR text_buffer[longest_item_textlength];
+				memset(&text_buffer, 0, sizeof(text_buffer)); // Memset to ensure the buffer is clean
+				for (int i = 0; i < total_items; i++)         // Load items to the combobox
+				{
+					wcscpy_s(text_buffer, sizeof(text_buffer) / sizeof(WCHAR), (WCHAR*)item_array[i]);
+					SendMessageW(CB_SelectTheme, CB_ADDSTRING, 0, (LPARAM)text_buffer);
+				}
+				// Set default item based on 'x' condition
+				SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);                                              
+				if (APPLICATION_THEME == L"Dark") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
+				else if (APPLICATION_THEME == L"Ristretto") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
+				else if (APPLICATION_THEME == L"Obisidan") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
+				
+				CI_SSCTR_MAINCONTENT.EndLine(CB_SelectTheme);
+			}
+
+			// Create container scrollbar
+			SB_SSCTR_MAINCONTENT = nSol::CreateVerticalSB(hWnd, STD_SCROLLBAR_WIDTH, CAPTIONBAR_HEIGHT);
+			{
+				SCROLLINFO si;
+				si.cbSize = sizeof(SCROLLINFO);
+				si.fMask = SIF_ALL;
+				si.nPos = 0; // Initiate scrollbar pos
+				si.nMin = 0; // Min scrollbar pos
+				si.nMax = CI_SSCTR_MAINCONTENT.GetContentPixels() + (MAINCONTENTCTR_PADDING * 2);  // Max scrollbar pos = (total vertical content pixels + spacing pixels + paddings)
+				si.nPage = 211; // Actual width|height of the container
+				SendMessageW(SB_SSCTR_MAINCONTENT, SBM_SETSCROLLINFO, TRUE, (LPARAM)&si);
+				VECTOR_SSCTR_MAINCONTENT.push_back(&SB_SSCTR_MAINCONTENT);
 			}
 		}
+		
 
-		{
-			SS_Heading2 = CreateWindowExW(NULL, L"STATIC", L"Sample editboxs:",
-				WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-				MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 94, 164, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-
-			{
-				SS_TextNoteNormalEditbox = CreateWindowExW(NULL, L"STATIC", L"(Normal)",
-					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-					MAINCONTENTCTR_PADDING + 360,
-					MAINCONTENTCTR_PADDING + 138, 80, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-				if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 138, 270, 33, SS_MAINCONTENTCTR,
-					SS_ED_Normal, ED_Normal,
-					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL)) return false;
-				SetWindowSubclass(ED_Normal, &SC_EditControl, NULL, NULL); // Continue work
-				Vector_Subclasses.push_back(&ED_Normal);
-				BTN_NormalEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"OK",
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
-					MAINCONTENTCTR_PADDING + 280,
-					MAINCONTENTCTR_PADDING + 138, 70, 33,
-					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDNORMALOK, NULL, NULL);
-				BA_Standard_Manager->SetSubclass(BTN_NormalEditboxOK);
-				Vector_Subclasses.push_back(&BTN_NormalEditboxOK);
-			}
-
-			{
-				SS_TextNotePasswordEditbox = CreateWindowExW(NULL, L"STATIC", L"(Password)",
-					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-					MAINCONTENTCTR_PADDING + 360,
-					MAINCONTENTCTR_PADDING + 181, 95, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-				if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 181, 270, 33, SS_MAINCONTENTCTR,
-					SS_ED_Password, ED_Password,
-					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL | ES_PASSWORD)) return false;
-				SetWindowSubclass(ED_Password, &SC_EditControl, NULL, NULL);
-				Vector_Subclasses.push_back(&ED_Password);
-				BTN_PasswordEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"OK",
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
-					MAINCONTENTCTR_PADDING + 280,
-					MAINCONTENTCTR_PADDING + 181, 70, 33,
-					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDPASSWORDOK, NULL, NULL);
-				BA_Standard_Manager->SetSubclass(BTN_PasswordEditboxOK);
-				Vector_Subclasses.push_back(&BTN_PasswordEditboxOK);
-			}
-
-			{
-				SS_TextNoteMultilineEditbox = CreateWindowExW(NULL, L"STATIC", L"(Multiline)",
-					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-					MAINCONTENTCTR_PADDING,
-					MAINCONTENTCTR_PADDING + 225, 95, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-				if (!nSol::CreateEditControl(MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 269, 478, 200, SS_MAINCONTENTCTR,
-					SS_ED_Multiline, ED_Multiline,
-					WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN)) return false;
-				SetWindowSubclass(ED_Multiline, &SC_EditControl, NULL, NULL);
-				Vector_Subclasses.push_back(&ED_Multiline);
-				BTN_MultilineEditboxOK = CreateWindowExW(NULL, L"BUTTON", L"Clear",
-					WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
-					MAINCONTENTCTR_PADDING,
-					MAINCONTENTCTR_PADDING + 472, 478, 33,
-					SS_MAINCONTENTCTR, (HMENU)BUTTON_EDMULTILINEOK, NULL, NULL);
-				BA_Standard_Manager->SetSubclass(BTN_MultilineEditboxOK);
-				Vector_Subclasses.push_back(&BTN_MultilineEditboxOK);
-			}
-		}
-
-        {
-            SS_Heading3 = CreateWindowExW(NULL, L"STATIC", L"Sample comboboxs:",
-                WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 517, 190, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-			SS_TextNoteCBSelectTheme = CreateWindowExW(NULL, L"STATIC", L"(Select theme)",
-				WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-				MAINCONTENTCTR_PADDING + 130,
-				MAINCONTENTCTR_PADDING + 564, 127, 34, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-            CB_SelectTheme = CreateWindowExW(NULL, L"COMBOBOX", L"",
-                WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED,
-                MAINCONTENTCTR_PADDING, MAINCONTENTCTR_PADDING + 561, 120, NULL/*(Determinated by WM_MEASUREITEM)*/, SS_MAINCONTENTCTR, NULL, NULL, NULL);
-			CBDL_CustomDraw1_Manager->SetComboboxSubclass(CB_SelectTheme);
-            Vector_Subclasses.push_back(&CB_SelectTheme);
-
-            // Initialize combobox items
-			const UINT total_items = 4;
-			const UINT longest_item_textlength = 10;  // Including null string
-            WCHAR item_array[total_items][longest_item_textlength] =
-            {
-                TEXT("Light"), TEXT("Dark"), TEXT("Ristretto"), TEXT("Obisidan")
-            };
-            WCHAR text_buffer[longest_item_textlength];
-            memset(&text_buffer, 0, sizeof(text_buffer)); // Memset to ensure the buffer is clean
-            for (int i = 0; i < total_items; i++)         // Load items to the combobox
-            {
-                wcscpy_s(text_buffer, sizeof(text_buffer) / sizeof(WCHAR), (WCHAR*)item_array[i]);
-                SendMessageW(CB_SelectTheme, CB_ADDSTRING, 0, (LPARAM)text_buffer);
-            }
-			// Set default item based on 'x' condition
-            SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);                                              
-            if (APPLICATION_THEME == L"Dark") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
-            else if (APPLICATION_THEME == L"Ristretto") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
-			else if (APPLICATION_THEME == L"Obisidan") SendMessageW(CB_SelectTheme, CB_SETCURSEL, (WPARAM)3, (LPARAM)0);
-        }
-
-		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove window style "CS_DBLCLKS" (double click messages) from class style "BUTTON"
+		// Extra standard class modifies
+		nSol::RemoveWindowStyle(BTN_Standard, CS_DBLCLKS); // Remove window style "CS_DBLCLKS" (double click messages) from the standard class style "BUTTON"
 
 		// Update class for standard controls
 		SetAppThemeClass(APPLICATION_THEME);
@@ -1224,7 +1260,7 @@ namespace nApp
 		ShowWindow(BTN_Close, SW_NORMAL);           // Show close button
 		ShowWindow(BTN_Minimize, SW_NORMAL);        // Show minimize button
 		ShowWindow(SS_Title, SW_NORMAL);            // Show main window title
-		ShowWindow(SS_MAINCONTENTCTR, SW_NORMAL);   // Show main content container
+		ShowWindow(SSCTR_MAINCONTENT, SW_NORMAL);   // Show container (Default viewport container)
 
 		IS_APPREADY = true;
 		nSol::cWriteLog(L"Application is ready.", L"", L"INFO", 1);
