@@ -25,7 +25,7 @@ INT g_CurrentWindowHeight = 566;                                  // Default app
 INT g_AppLogLevel = 1;                                        // Default Application debug level.
 MyTheme g_CurrentAppTheme = MyTheme::Monokai;                        // Default application theme.
 path g_AppDirectoryPath;                                      // Application directory path.
-UIObjectManager *g_AppUIObjectManager = nullptr;              // Application UI object mananger.
+UIElements *g_pUIElements; // Global UI objects.
 
 // Application states:
 bool g_IsWindowReady = false;                          // Indicate whether the application is initialized and ready.

@@ -7,1346 +7,454 @@
 #include "../Global/global.h"                 // The distribution header of the global variables, forward declarations and my class declarations.
 
 /// @class MyColor definitions:
-// Constructor:
-MyColor::MyColor()
+// Constructors:
+MyColor::MyColor(BYTE red, BYTE green, BYTE blue, BYTE alpha) : red(red), green(green), blue(blue), alpha(alpha)
 {
-    // Increment the total number of instances.
-    MyColor::TotalInstances++;
+    // Variant(s).
+    this->clr = RGB(this->red, this->green, this->blue);
+    this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->hBrush = CreateSolidBrush(this->clr);
+    if (!this->hBrush)
+        WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"MyColor()\"]", MyLogType::Error);
+
+    MyColor::totalInstances++;
 }
-MyColor::MyColor(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha, INT ID)
+MyColor::MyColor(RGBA colors) : red(colors.red), green(colors.green), blue(colors.blue), alpha(colors.alpha)
 {
-    // Set instance ID.
-    this->SetInstanceID(ID);
+    // Variant(s).
+    this->clr = RGB(this->red, this->green, this->blue);
+    this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->hBrush = CreateSolidBrush(this->clr);
+    if (!this->hBrush)
+        WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"MyColor()\"]", MyLogType::Error);
 
-    // Initialize the instance.
-    if (!this->Update(Red, Green, Blue, Alpha))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyColor::TotalInstances++;
+    MyColor::totalInstances++;
 }
-// Copy Constructor:
-MyColor::MyColor(const MyColor &other)
+// Copy constructor:
+MyColor::MyColor(const MyColor &other) : red(other.red), green(other.green), blue(other.blue), alpha(other.alpha)
 {
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
+    // Variant(s).
+    this->clr = RGB(this->red, this->green, this->blue);
+    this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->hBrush = CreateSolidBrush(this->clr);
+    if (!this->hBrush)
+        WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"MyColor()\"]", MyLogType::Error);
 
-    // Initialize the instance.
-    if (!this->Update(other.Red, other.Green, other.Blue, other.Alpha))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: Copy Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyColor::TotalInstances++;
+    MyColor::totalInstances++;
 }
-// Assignment Operator:
+// Assignment operator:
 MyColor &MyColor::operator=(const MyColor &other)
 {
     // Check if self assignment.
     if (this == &other)
         return *this;
 
-    // Check if the other instance is uninitialized.
-    if (!other.isInitialized)
+    // Allocation variable(s).
+    this->red = other.red;
+    this->green = other.green;
+    this->blue = other.blue;
+    this->alpha = other.alpha;
+
+    // Variant(s).
+    this->clr = RGB(this->red, this->green, this->blue);
+    this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    if (this->hBrush)
     {
-        // Copy the values from the other instance.
-        this->Red = other.Red;
-        this->Green = other.Green;
-        this->Blue = other.Blue;
-        this->Alpha = other.Alpha;
-        this->CLR = other.CLR;
-        this->GDIP_CL = other.GDIP_CL;
-        this->ID = other.ID;
-
-        // If this instance is initialized, destroy unmanaged object(s).
-        if (this->isInitialized)
-        {
-            if (!this->DestroyUnmanagedObjects())
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-                error_message.append(L"STRUCT: MyColor\n");
-                error_message.append(L"FUNC: Assignment Operator");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        return *this;
+        if (!DeleteObject(this->hBrush))
+            WriteLog(L"Failed to delete the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"&operator=()\"]", MyLogType::Error);
+        this->hBrush = nullptr;
     }
-
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
-    {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyColor\n");
-            error_message.append(L"FUNC: Assignment Operator");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.Red, other.Green, other.Blue, other.Alpha))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: Assignment Operator");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
+    this->hBrush = CreateSolidBrush(this->clr);
+    if (!this->hBrush)
+        WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"&operator=()\"]", MyLogType::Error);
 
     return *this;
 }
 // Destructor:
 MyColor::~MyColor()
 {
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
+    // Deallocation of unmanaged object(s).
+    if (this->hBrush)
     {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyColor\n");
-            error_message.append(L"FUNC: Destructor");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
+        if (!DeleteObject(this->hBrush))
+            WriteLog(L"Failed to delete the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"~MyColor()\"]", MyLogType::Error);
+        this->hBrush = nullptr;
     }
 
-    // Decrement the total number of instances.
-    MyColor::TotalInstances--;
+    MyColor::totalInstances--;
 }
-// Private member function(s):
-bool MyColor::DestroyUnmanagedObjects()
+// Public static member function(s) [GENERAL FUNCTIONS]:
+UINT MyColor::getTotalInstances()
 {
-    // Destroy unmanaged object(s).
-    if (!DeleteObject(this->HBR))
+    return MyColor::totalInstances;
+}
+// Public member function(s) [GENERAL FUNCTIONS]:
+BYTE MyColor::getRed() const
+{
+    return this->red;
+}
+BYTE MyColor::getGreen() const
+{
+    return this->green;
+}
+BYTE MyColor::getBlue() const
+{
+    return this->blue;
+}
+BYTE MyColor::getAlpha() const
+{
+    return this->alpha;
+}
+const COLORREF &MyColor::getCOLORREF() const
+{
+    return this->clr;
+}
+Gdiplus::Color &MyColor::getGDIPColor()
+{
+    return this->gdipColor;
+}
+HBRUSH &MyColor::getHBRUSH()
+{
+    return this->hBrush;
+}
+bool MyColor::update(BYTE red, BYTE green, BYTE blue, BYTE alpha)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        // Allocation variable(s).
+        this->red = red;
+        this->green = green;
+        this->blue = blue;
+        this->alpha = alpha;
+
+        // Variant(s).
+        this->clr = RGB(this->red, this->green, this->blue);
+        this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+        if (this->hBrush)
+        {
+            if (!DeleteObject(this->hBrush))
+            {
+                error_message = L"Failed to delete the brush object.";
+                break;
+            }
+            this->hBrush = nullptr;
+        }
+        this->hBrush = CreateSolidBrush(this->clr);
+        if (!this->hBrush)
+        {
+            error_message = L"Failed to create the brush object.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyColor\" | FUNC: \"update()\"]", MyLogType::Error);
         return false;
-
-    // Set object pointer(s) to null after the deallocation(s).
-    this->HBR = nullptr;
-
-    // Decrement the total number of initialized instances.
-    MyColor::TotalInitializedInstances--;
-
-    // Update initialization state.
-    this->isInitialized = false;
-
-    return true;
-}
-// Public static member function(s):
-UINT MyColor::GetTotalInstances()
-{
-    return MyColor::TotalInstances;
-}
-UINT MyColor::GetTotalInitializedInstances()
-{
-    return MyColor::TotalInitializedInstances;
-}
-// Public member function(s):
-INT MyColor::GetInstanceID()
-{
-    return this->ID;
-}
-void MyColor::SetInstanceID(INT ID)
-{
-    this->ID = ID;
-}
-BYTE MyColor::GetRed()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetRed()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
     }
-
-    return this->Red;
-}
-BYTE MyColor::GetGreen()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetGreen()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Green;
-}
-BYTE MyColor::GetBlue()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetBlue()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Blue;
-}
-BYTE MyColor::GetAlpha()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetAlpha()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Alpha;
-}
-COLORREF MyColor::GetCLR()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetCLR()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->CLR;
-}
-Gdiplus::Color MyColor::GetGDIPColor()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetGDIPColor()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->GDIP_CL;
-}
-Gdiplus::Color &MyColor::GetGDIPColorRef()
-{
-    return this->GDIP_CL;
-}
-HBRUSH MyColor::GetHBR()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyColor\n");
-        error_message.append(L"FUNC: GetHBR()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->HBR;
-}
-HBRUSH &MyColor::GetHBRRef()
-{
-    return this->HBR;
-}
-bool MyColor::Update(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha)
-{
-    // Check if the instance is initialized.
-    if (this->isInitialized)
-    {
-        // Destroys the unmanaged object(s).
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyColor\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-            return false;
-        }
-    }
-
-    // Update the new color values.
-    this->Red = Red;
-    this->Green = Green;
-    this->Blue = Blue;
-    this->Alpha = Alpha;
-
-    // Create new COLORREF variant of the color.
-    this->CLR = RGB(Red, Green, Blue);
-
-    // Create Gdiplus::Color variant of the color.
-    this->GDIP_CL = Gdiplus::Color(Alpha, Red, Green, Blue);
-
-    // Create new HBRUSH variant of the color.
-    {
-        // The brush handle should be null before creation.
-        if (this->HBR)
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"The brush handle should be null, but it is not.\n\n");
-            error_message.append(L"STRUCT: MyColor\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-
-        // Create the brush object.
-        this->HBR = CreateSolidBrush(this->CLR);
-
-        // Check if the brush object is successfully created.
-        if (!this->HBR)
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to create the brush object.\n\n");
-            error_message.append(L"STRUCT: MyColor\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Increment the total number of initialized instances.
-    MyColor::TotalInitializedInstances++;
-
-    // Update the initialization state.
-    this->isInitialized = true;
 
     return true;
 }
 
 /// @class MyFont definitions:
-// Constructor:
-MyFont::MyFont()
+// Constructors:
+MyFont::MyFont(std::wstring name, USHORT size, USHORT weight, DWORD quality) : name(name), size(size), weight(weight), quality(quality)
 {
-    // Increment the total number of instances.
-    MyFont::TotalInstances++;
+    // Variant(s).
+    this->hFont = CreateFontW(static_cast<INT>(this->size), 0, 0, 0x1, static_cast<INT>(this->weight),
+                              FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, this->quality,
+                              DEFAULT_PITCH | FF_DONTCARE, static_cast<LPCWSTR>(this->name.c_str()));
+    if (!this->hFont)
+        WriteLog(L"Failed to create the font object.", L" [CLASS: \"MyFont\" | FUNC: \"MyFont()\"]", MyLogType::Error);
+
+    MyFont::totalInstances++;
 }
-MyFont::MyFont(std::wstring Name, USHORT Size, USHORT Weight, DWORD Quality, INT ID)
+// Copy constructor:
+MyFont::MyFont(const MyFont &other) : name(other.name), size(other.size), weight(other.weight), quality(other.quality)
 {
-    // Set instance ID.
-    this->SetInstanceID(ID);
+    // Variant(s).
+    this->hFont = CreateFontW(static_cast<INT>(this->size), 0, 0, 0x1, static_cast<INT>(this->weight),
+                              FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, this->quality,
+                              DEFAULT_PITCH | FF_DONTCARE, static_cast<LPCWSTR>(this->name.c_str()));
+    if (!this->hFont)
+        WriteLog(L"Failed to create the font object.", L" [CLASS: \"MyFont\" | FUNC: \"MyFont()\"]", MyLogType::Error);
 
-    // Initialize the instance.
-    if (!this->Update(Name, Size, Weight, Quality))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyFont::TotalInstances++;
+    MyFont::totalInstances++;
 }
-// Copy Constructor:
-MyFont::MyFont(const MyFont &other)
-{
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.Name, other.Size, other.Weight, other.Quality))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: Copy Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyFont::TotalInstances++;
-}
-// Assignment Operator:
+// Assignment operator:
 MyFont &MyFont::operator=(const MyFont &other)
 {
     // Check if self assignment.
     if (this == &other)
         return *this;
 
-    // Check if the other instance is uninitialized.
-    if (!other.isInitialized)
+    // Allocation variable(s).
+    this->name = other.name;
+    this->size = other.size;
+    this->weight = other.weight;
+    this->quality = other.quality;
+
+    // Variant(s).
+    if (this->hFont)
     {
-        // Copy the values from the other instance.
-        this->Name = other.Name;
-        this->Size = other.Size;
-        this->Weight = other.Weight;
-        this->Quality = other.Quality;
-        this->ID = other.ID;
-
-        // If this instance is initialized, destroy unmanaged object(s).
-        if (this->isInitialized)
-        {
-            if (!this->DestroyUnmanagedObjects())
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-                error_message.append(L"STRUCT: MyFont\n");
-                error_message.append(L"FUNC: Assignment Operator");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        return *this;
+        if (!DeleteObject(this->hFont))
+            WriteLog(L"Failed to delete the font object.", L" [CLASS: \"MyFont\" | FUNC: \"&operator=()\"]", MyLogType::Error);
+        this->hFont = nullptr;
     }
-
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
-    {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyFont\n");
-            error_message.append(L"FUNC: Assignment Operator");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.Name, other.Size, other.Weight, other.Quality))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: Assignment Operator");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
+    this->hFont = CreateFontW(static_cast<INT>(this->size), 0, 0, 0x1, static_cast<INT>(this->weight),
+                              FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, this->quality,
+                              DEFAULT_PITCH | FF_DONTCARE, static_cast<LPCWSTR>(this->name.c_str()));
+    if (!this->hFont)
+        WriteLog(L"Failed to create the font object.", L" [CLASS: \"MyFont\" | FUNC: \"&operator=()\"]", MyLogType::Error);
 
     return *this;
 }
 // Destructor:
 MyFont::~MyFont()
 {
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
+    // Deallocation of unmanaged object(s).
+    if (this->hFont)
     {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyFont\n");
-            error_message.append(L"FUNC: Destructor");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
+        if (!DeleteObject(this->hFont))
+            WriteLog(L"Failed to delete the font object.", L" [CLASS: \"MyFont\" | FUNC: \"~MyFont()\"]", MyLogType::Error);
+        this->hFont = nullptr;
     }
 
-    // Decrement the total number of instances.
-    MyFont::TotalInstances--;
+    MyFont::totalInstances--;
 }
-// Private member function(s):
-bool MyFont::DestroyUnmanagedObjects()
+// Public static member function(s) [GENERAL FUNCTIONS]:
+UINT MyFont::getTotalInstances()
 {
-    // Destroy unmanaged object(s).
-    if (!DeleteObject(this->HFO))
+    return MyFont::totalInstances;
+}
+// Public member function(s) [GENERAL FUNCTIONS]:
+std::wstring MyFont::getName() const
+{
+    return this->name;
+}
+USHORT MyFont::getSize() const
+{
+    return this->size;
+}
+USHORT MyFont::getWeight() const
+{
+    return this->weight;
+}
+DWORD MyFont::getQuality() const
+{
+    return this->quality;
+}
+HFONT &MyFont::getHFONT()
+{
+    return this->hFont;
+}
+bool MyFont::update(std::wstring name, USHORT size, USHORT weight, DWORD quality)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        // Allocation variable(s).
+        this->name = name;
+        this->size = size;
+        this->weight = weight;
+        this->quality = quality;
+
+        // Variant(s).
+        if (this->hFont)
+        {
+            if (!DeleteObject(this->hFont))
+            {
+                error_message = L"Failed to delete the font object.";
+                break;
+            }
+            this->hFont = nullptr;
+        }
+        this->hFont = CreateFontW(static_cast<INT>(this->size), 0, 0, 0x1, static_cast<INT>(this->weight),
+                                  FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, this->quality,
+                                  DEFAULT_PITCH | FF_DONTCARE, static_cast<LPCWSTR>(this->name.c_str()));
+        if (!this->hFont)
+        {
+            error_message = L"Failed to create the font object.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyFont\" | FUNC: \"update()\"]", MyLogType::Error);
         return false;
-
-    // Set object pointer(s) to null after the deallocation(s).
-    this->HFO = nullptr;
-
-    // Decrement the total number of initialized instances.
-    MyFont::TotalInitializedInstances--;
-
-    // Update initialization state.
-    this->isInitialized = false;
-
-    return true;
-}
-// Public static member function(s):
-UINT MyFont::GetTotalInstances()
-{
-    return MyFont::TotalInstances;
-}
-UINT MyFont::GetTotalInitializedInstances()
-{
-    return MyFont::TotalInitializedInstances;
-}
-// Public member function(s):
-INT MyFont::GetInstanceID()
-{
-    return this->ID;
-}
-void MyFont::SetInstanceID(INT ID)
-{
-    this->ID = ID;
-}
-std::wstring MyFont::GetName()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: GetName()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
     }
-
-    return this->Name;
-}
-USHORT MyFont::GetSize()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: GetSize()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Size;
-}
-USHORT MyFont::GetWeight()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: GetWeight()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Weight;
-}
-DWORD MyFont::GetQuality()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: GetQuality()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Quality;
-}
-HFONT MyFont::GetHFO()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyFont\n");
-        error_message.append(L"FUNC: GetHFO()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->HFO;
-}
-HFONT &MyFont::GetHFORef()
-{
-    return this->HFO;
-}
-bool MyFont::Update(std::wstring Name, USHORT Size, USHORT Weight, DWORD Quality)
-{
-    // Check if the instance is initialized.
-    if (this->isInitialized)
-    {
-        // Destroys the unmanaged object(s).
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyFont\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-            return false;
-        }
-    }
-
-    // Update the new font values.
-    this->Name = Name;
-    this->Size = Size;
-    this->Weight = Weight;
-    this->Quality = Quality;
-
-    // Create new HFONT variant of the color.
-    {
-        // The font handle should be null before creation.
-        if (this->HFO)
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"The font handle should be null, but it is not.\n\n");
-            error_message.append(L"STRUCT: MyFont\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-
-        // Create the font object.
-        this->HFO = CreateFontW(static_cast<INT>(this->Size), 0, 0, 0x1, static_cast<INT>(this->Weight),
-                                FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, this->Quality,
-                                DEFAULT_PITCH | FF_DONTCARE, static_cast<LPCWSTR>(this->Name.c_str()));
-
-        // Check if the font object is successfully created.
-        if (!this->HFO)
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to create the font object.\n\n");
-            error_message.append(L"STRUCT: MyFont\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Increment the total number of initialized instances.
-    MyFont::TotalInitializedInstances++;
-
-    // Update the initialization state.
-    this->isInitialized = true;
 
     return true;
 }
 
 /// @class MyIcon definitions:
-// Constructor:
-MyIcon::MyIcon()
+// Constructors:
+MyIcon::MyIcon(HINSTANCE hInstance, INT width, INT height, INT resourceID, UINT loadImageFlags) : hInstance(hInstance), width(width), height(height), resourceID(resourceID), loadImageFlags(loadImageFlags)
 {
-    // Increment the total number of instances.
-    MyIcon::TotalInstances++;
+    // Variant(s).
+    this->hIcon = reinterpret_cast<HICON>(LoadImageW(this->hInstance, MAKEINTRESOURCEW(this->resourceID), IMAGE_ICON, this->width, this->height, this->loadImageFlags));
+    if (!this->hIcon)
+        WriteLog(L"Failed to create the icon object.", L" [CLASS: \"MyIcon\" | FUNC: \"MyIcon()\"]", MyLogType::Error);
+
+    MyIcon::totalInstances++;
 }
-MyIcon::MyIcon(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad, INT ID)
+// Copy constructor:
+MyIcon::MyIcon(const MyIcon &other) : hInstance(other.hInstance), width(other.width), height(other.height), resourceID(other.resourceID), loadImageFlags(other.loadImageFlags)
 {
-    // Set instance ID.
-    this->SetInstanceID(ID);
+    // Variant(s).
+    this->hIcon = reinterpret_cast<HICON>(LoadImageW(this->hInstance, MAKEINTRESOURCEW(this->resourceID), IMAGE_ICON, this->width, this->height, this->loadImageFlags));
+    if (!this->hIcon)
+        WriteLog(L"Failed to create the icon object.", L" [CLASS: \"MyIcon\" | FUNC: \"MyIcon()\"]", MyLogType::Error);
 
-    // Initialize the instance.
-    if (!this->Update(hInstance, Width, Height, ResourceID, HICON_fuLoad))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyIcon::TotalInstances++;
+    MyIcon::totalInstances++;
 }
-// Copy Constructor:
-MyIcon::MyIcon(const MyIcon &other)
-{
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.hInstance, other.Width, other.Height, other.ResourceID, other.HICON_fuLoad))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: Copy Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyIcon::TotalInstances++;
-}
-// Assignment Operator:
+// Assignment operator:
 MyIcon &MyIcon::operator=(const MyIcon &other)
 {
     // Check if self assignment.
     if (this == &other)
         return *this;
 
-    // Check if the other instance is uninitialized.
-    if (!other.isInitialized)
+    // Allocation variable(s).
+    this->hInstance = other.hInstance;
+    this->width = other.width;
+    this->height = other.height;
+    this->resourceID = other.resourceID;
+    this->loadImageFlags = other.loadImageFlags;
+
+    // Variant(s).
+    if (this->hIcon)
     {
-        // Copy the values from the other instance.
-        this->hInstance = other.hInstance;
-        this->Width = other.Width;
-        this->Height = other.Height;
-        this->ResourceID = other.ResourceID;
-        this->HICON_fuLoad = other.HICON_fuLoad;
-        this->ID = other.ID;
-
-        // If this instance is initialized, destroy unmanaged object(s).
-        if (this->isInitialized)
-        {
-            if (!this->DestroyUnmanagedObjects())
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-                error_message.append(L"STRUCT: MyIcon\n");
-                error_message.append(L"FUNC: Assignment Operator");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        return *this;
+        if (!DestroyIcon(this->hIcon))
+            WriteLog(L"Failed to delete the icon object.", L" [CLASS: \"MyIcon\" | FUNC: \"&operator=()\"]", MyLogType::Error);
+        this->hIcon = nullptr;
     }
-
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
-    {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyIcon\n");
-            error_message.append(L"FUNC: Assignment Operator");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.hInstance, other.Width, other.Height, other.ResourceID, other.HICON_fuLoad))
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the instance.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: Assignment Operator");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
+    this->hIcon = reinterpret_cast<HICON>(LoadImageW(this->hInstance, MAKEINTRESOURCEW(this->resourceID), IMAGE_ICON, this->width, this->height, this->loadImageFlags));
+    if (!this->hIcon)
+        WriteLog(L"Failed to create the icon object.", L" [CLASS: \"MyIcon\" | FUNC: \"&operator=()\"]", MyLogType::Error);
 
     return *this;
 }
 // Destructor:
 MyIcon::~MyIcon()
 {
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
+    // Deallocation of unmanaged object(s).
+    if (this->hIcon)
     {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyIcon\n");
-            error_message.append(L"FUNC: Destructor");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
+        if (!DestroyIcon(this->hIcon))
+            WriteLog(L"Failed to delete the icon object.", L" [CLASS: \"MyIcon\" | FUNC: \"~MyIcon()\"]", MyLogType::Error);
+        this->hIcon = nullptr;
     }
 
-    // Decrement the total number of instances.
-    MyIcon::TotalInstances--;
+    MyIcon::totalInstances--;
 }
-// Private member function(s):
-bool MyIcon::DestroyUnmanagedObjects()
+// Public static member function(s) [GENERAL FUNCTIONS]:
+UINT MyIcon::getTotalInstances()
 {
-    // Destroy unmanaged object(s).
-    if (!DestroyIcon(this->HICO))
-        return false;
-
-    // Set object pointer(s) to null after the deallocation(s).
-    this->HICO = nullptr;
-
-    // Decrement the total number of initialized instances.
-    MyIcon::TotalInitializedInstances--;
-
-    // Update initialization state.
-    this->isInitialized = false;
-
-    return true;
+    return MyIcon::totalInstances;
 }
-// Public static member function(s):
-UINT MyIcon::GetTotalInstances()
+// Public member function(s) [GENERAL FUNCTIONS]:
+HINSTANCE MyIcon::getHINSTANCE() const
 {
-    return MyIcon::TotalInstances;
-}
-UINT MyIcon::GetTotalInitializedInstances()
-{
-    return MyIcon::TotalInitializedInstances;
-}
-// Public member function(s):
-INT MyIcon::GetInstanceID()
-{
-    return this->ID;
-}
-void MyIcon::SetInstanceID(INT ID)
-{
-    this->ID = ID;
-}
-HINSTANCE MyIcon::GetHINSTANCE()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: GetHINSTANCE()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
     return this->hInstance;
 }
-INT MyIcon::GetWidth()
+INT MyIcon::getWidth() const
 {
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: GetWidth()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Width;
+    return this->width;
 }
-INT MyIcon::GetHeight()
+INT MyIcon::getHeight() const
 {
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: GetHeight()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->Height;
+    return this->height;
 }
-INT MyIcon::GetResourceID()
+INT MyIcon::getResourceID() const
 {
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: GetResourceID()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->ResourceID;
+    return this->resourceID;
 }
-UINT MyIcon::GetLoadImageFlag()
+UINT MyIcon::getLoadImageFlags() const
 {
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: GetLoadImageFlag()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->HICON_fuLoad;
+    return this->loadImageFlags;
 }
-HICON MyIcon::GetHICO()
+HICON &MyIcon::getHICON()
 {
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"The object is not initialized yet.\n\n");
-        error_message.append(L"STRUCT: MyIcon\n");
-        error_message.append(L"FUNC: GetHICO()");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->HICO;
+    return this->hIcon;
 }
-HICON &MyIcon::GetHICORef()
+bool MyIcon::update(HINSTANCE hInstance, INT width, INT height, INT resourceID, UINT loadImageFlags)
 {
-    return this->HICO;
-}
-bool MyIcon::Update(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad)
-{
-    // Check if the instance is initialized.
-    if (this->isInitialized)
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
     {
-        // Destroys the unmanaged object(s).
-        if (!this->DestroyUnmanagedObjects())
+        // Allocation variable(s).
+        this->hInstance = hInstance;
+        this->width = width;
+        this->height = height;
+        this->resourceID = resourceID;
+        this->loadImageFlags = loadImageFlags;
+
+        // Variant(s).
+        if (this->hIcon)
         {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            error_message.append(L"STRUCT: MyIcon\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-            return false;
+            if (!DestroyIcon(this->hIcon))
+            {
+                error_message = L"Failed to delete the icon object.";
+                break;
+            }
+            this->hIcon = nullptr;
         }
-    }
-
-    // Update the new icon values.
-    this->hInstance = hInstance;
-    this->Width = Width;
-    this->Height = Height;
-    this->ResourceID = ResourceID;
-    this->HICON_fuLoad = HICON_fuLoad;
-
-    // Create new HFONT variant of the icon.
-    {
-        // The icon handle should be null before creation.
-        if (this->HICO)
+        this->hIcon = reinterpret_cast<HICON>(LoadImageW(this->hInstance, MAKEINTRESOURCEW(this->resourceID), IMAGE_ICON, this->width, this->height, this->loadImageFlags));
+        if (!this->hIcon)
         {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"The icon handle should be null, but it is not.\n\n");
-            error_message.append(L"STRUCT: MyIcon\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
+            error_message = L"Failed to create the icon object.";
+            break;
         }
 
-        // Create the icon object.
-        this->HICO = reinterpret_cast<HICON>(LoadImageW(this->hInstance, MAKEINTRESOURCEW(this->ResourceID), IMAGE_ICON, this->Width, this->Height, this->HICON_fuLoad));
-
-        // Check if the icon object is successfully created.
-        if (!this->HICO)
-        {
-            std::wstring error_message = L"";
-            error_message.append(L"Error occurred!\n");
-            error_message.append(L"Failed to create the icon object.\n\n");
-            error_message.append(L"STRUCT: MyIcon\n");
-            error_message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
+        are_all_operation_success = true;
     }
 
-    // Increment the total number of initialized instances.
-    MyIcon::TotalInitializedInstances++;
-
-    // Update the initialization state.
-    this->isInitialized = true;
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyIcon\" | FUNC: \"update()\"]", MyLogType::Error);
+        return false;
+    }
 
     return true;
 }
 
 /// @class MyImage definitions:
-// Constructor:
-MyImage::MyImage()
+// Constructors:
+MyImage::MyImage(INT resourceID, MyImageFormat format) : resourceID(resourceID), format(format)
 {
-    // Increment the total number of instances.
-    MyImage::TotalInstances++;
-}
-MyImage::MyImage(INT ResourceID, ImageFormat Format, INT ID)
-{
-    // Set instance ID.
-    this->SetInstanceID(ID);
-
-    // Initialize the instance.
-    if (!this->Update(ResourceID, Format))
+    // Variant(s).
     {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to initialize the instance.\n\n");
-        message.append(L"STRUCT: MyImage\n");
-        message.append(L"FUNC: Constructor");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyImage::TotalInstances++;
-}
-// Copy Constructor:
-MyImage::MyImage(const MyImage &other)
-{
-    // Check if the other instance is uninitialized.
-    if (!other.isInitialized)
-    {
-        // Copy the values from the other instance.
-        this->ResourceID = other.ResourceID;
-        this->Format = other.Format;
-        this->ID = other.ID;
-
-        // Increment the total number of instances.
-        MyImage::TotalInstances++;
-
-        return;
-    }
-
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.ResourceID, other.Format))
-    {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to initialize the instance.\n\n");
-        message.append(L"STRUCT: MyImage\n");
-        message.append(L"FUNC: Copy Constructor");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    // Increment the total number of instances.
-    MyImage::TotalInstances++;
-}
-// Assignment Operator:
-MyImage &MyImage::operator=(const MyImage &other)
-{
-    // Check if self assignment.
-    if (this == &other)
-        return *this;
-
-    // Check if the other instance is uninitialized.
-    if (!other.isInitialized)
-    {
-        // Copy the values from the other instance.
-        this->ResourceID = other.ResourceID;
-        this->Format = other.Format;
-        this->ID = other.ID;
-
-        // If this instance is initialized, destroy unmanaged object(s).
-        if (this->isInitialized)
-        {
-            if (!this->DestroyUnmanagedObjects())
-            {
-                std::wstring message = L"";
-                message.append(L"Error occurred!\n");
-                message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-                message.append(L"STRUCT: MyImage\n");
-                message.append(L"FUNC: Assignment Operator");
-                MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        return *this;
-    }
-
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
-    {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring message = L"";
-            message.append(L"Error occurred!\n");
-            message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            message.append(L"STRUCT: MyImage\n");
-            message.append(L"FUNC: Assignment Operator");
-            MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Set instance ID.
-    this->SetInstanceID(other.ID);
-
-    // Initialize the instance.
-    if (!this->Update(other.ResourceID, other.Format))
-    {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to initialize the instance.\n\n");
-        message.append(L"STRUCT: MyImage\n");
-        message.append(L"FUNC: Assignment Operator");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-
-    return *this;
-}
-// Destructor:
-MyImage::~MyImage()
-{
-    // If this instance is initialized, destroy unmanaged object(s).
-    if (this->isInitialized)
-    {
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring message = L"";
-            message.append(L"Error occurred!\n");
-            message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            message.append(L"STRUCT: MyImage\n");
-            message.append(L"FUNC: Destructor");
-            MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // Decrement the total number of instances.
-    MyImage::TotalInstances--;
-}
-// Private member function(s):
-bool MyImage::DestroyUnmanagedObjects()
-{
-    // Delete the image object.
-    delete this->pImage;
-    this->pImage = nullptr;
-
-    // Release the resource stream.
-    this->pStream->Release();
-    this->pStream = nullptr;
-
-    // Decrement the total number of initialized instances.
-    MyImage::TotalInitializedInstances--;
-
-    // Update initialization state.
-    this->isInitialized = false;
-
-    return true;
-}
-// Public static member function(s):
-UINT MyImage::GetTotalInstances()
-{
-    return MyImage::TotalInstances;
-}
-UINT MyImage::GetTotalInitializedInstances()
-{
-    return MyImage::TotalInitializedInstances;
-}
-// Public member function(s):
-INT MyImage::GetInstanceID()
-{
-    return this->ID;
-}
-void MyImage::SetInstanceID(INT ID)
-{
-    this->ID = ID;
-}
-INT MyImage::GetResourceID()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"The object is not initialized yet.\n\n");
-        message.append(L"STRUCT: MyImage\n");
-        message.append(L"FUNC: GetResourceID()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return NULL;
-    }
-
-    return this->ResourceID;
-}
-ImageFormat MyImage::GetFormat()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"The object is not initialized yet.\n\n");
-        message.append(L"STRUCT: MyImage\n");
-        message.append(L"FUNC: GetFormat()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return ImageFormat::Unknown;
-    }
-
-    return this->Format;
-}
-Gdiplus::Image *MyImage::GetImage()
-{
-    // Check if the instance is initialized.
-    if (!this->isInitialized)
-    {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"The object is not initialized yet.\n\n");
-        message.append(L"STRUCT: MyImage\n");
-        message.append(L"FUNC: GetImage()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-        return nullptr;
-    }
-
-    return this->pImage;
-}
-Gdiplus::Image *&MyImage::GetImageRef()
-{
-    return this->pImage;
-}
-bool MyImage::Update(INT ResourceID, ImageFormat Format)
-{
-    // Check if the instance is initialized.
-    if (this->isInitialized)
-    {
-        // Destroys the unmanaged object(s).
-        if (!this->DestroyUnmanagedObjects())
-        {
-            std::wstring message = L"";
-            message.append(L"Error occurred!\n");
-            message.append(L"Failed to destroy the unmanaged object(s).\n\n");
-            message.append(L"STRUCT: MyImage\n");
-            message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-            return false;
-        }
-    }
-
-    // Update the new image values.
-    this->ResourceID = ResourceID;
-    this->Format = Format;
-
-    // Create new Gdiplus::Image variant of the icon.
-    {
-        // The image pointer and resource stream pointer should be null before creation.
-        if (this->pImage || this->pStream)
-        {
-            std::wstring message = L"";
-            message.append(L"Error occurred!\n");
-            message.append(L"The image pointer and resource stream pointer should be null, but they are not.\n\n");
-            message.append(L"STRUCT: MyImage\n");
-            message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
-            return false;
-        }
-
         // Create the image object.
         bool are_all_operation_success = false;
         std::wstring error_message = L"";
         while (!are_all_operation_success)
         {
             // Get resource type string.
-            std::wstring ResourceType = L"";
-            bool isPredefinedResourceType = false;
-            auto PredefinedResourceType = RT_RCDATA;
-            switch (this->Format)
+            std::wstring resource_type = L"";
+            bool is_predefined_resource_type = false;
+            auto predefined_resource_type = RT_RCDATA;
+            switch (this->format)
             {
-            case ImageFormat::JPG:
-                ResourceType = L"JPG";
+            case MyImageFormat::JPG:
+                resource_type = L"JPG";
                 break;
-            case ImageFormat::PNG:
-                ResourceType = L"PNG";
+            case MyImageFormat::PNG:
+                resource_type = L"PNG";
                 break;
-            case ImageFormat::ICO:
-                ResourceType = L"ICO";
-                PredefinedResourceType = RT_GROUP_ICON; 
-                isPredefinedResourceType = true;
+            case MyImageFormat::ICO:
+                resource_type = L"ICO";
+                predefined_resource_type = RT_GROUP_ICON;
+                is_predefined_resource_type = true;
                 // Note: For now loading ico file from application resource will result in GDI+ error code 2
                 // as the Gdiplus::Image::FromStream() method expect the stream to contains a single icon and not the whole icon group.
                 // This can be solve by using BeginResourceExtract() to extract the icon from the icon group.
@@ -1355,63 +463,63 @@ bool MyImage::Update(INT ResourceID, ImageFormat Format)
             default:
                 break;
             }
-            if (ResourceType.empty())
+            if (resource_type.empty())
             {
                 error_message = L"Invalid resource format.";
                 break;
             }
 
             // Find the resource.
-            HRSRC hResource = FindResourceW(NULL, MAKEINTRESOURCEW(this->ResourceID), (isPredefinedResourceType ? PredefinedResourceType : ResourceType.c_str()));
-            if (!hResource)
+            HRSRC resource_handle = FindResourceW(NULL, MAKEINTRESOURCEW(this->resourceID), (is_predefined_resource_type ? predefined_resource_type : resource_type.c_str()));
+            if (!resource_handle)
             {
                 error_message = L"Resource not found.";
                 break;
             }
 
             // Get the resource size.
-            DWORD ResourceSize = SizeofResource(NULL, hResource);
-            if (!ResourceSize)
+            DWORD resource_size = SizeofResource(NULL, resource_handle);
+            if (!resource_size)
             {
                 error_message = L"Failed to retrieve the resource size.";
                 break;
             }
 
             // Load the resource.
-            HGLOBAL hGlobal = LoadResource(NULL, hResource);
-            if (!hGlobal)
+            HGLOBAL global_handle = LoadResource(NULL, resource_handle);
+            if (!global_handle)
             {
                 error_message = L"Failed to load the resource.";
                 break;
             }
 
             // Lock the resource and get pointer to the resource data.
-            const void *pResourceData = LockResource(hGlobal);
-            if (!pResourceData)
+            const void *p_resource_data = LockResource(global_handle);
+            if (!p_resource_data)
             {
                 error_message = L"Failed to lock the resource.";
                 break;
             }
 
             // Allocate the global memory object.
-            HGLOBAL hBuffer = GlobalAlloc(GMEM_MOVEABLE, ResourceSize);
-            if (!hBuffer)
+            HGLOBAL buffer_handle = GlobalAlloc(GMEM_MOVEABLE, resource_size);
+            if (!buffer_handle)
             {
                 error_message = L"Failed to allocate the global memory object.";
                 break;
             }
 
             // Lock the global memory object.
-            void *pBuffer = GlobalLock(hBuffer);
-            if (!pBuffer)
+            void *p_buffer = GlobalLock(buffer_handle);
+            if (!p_buffer)
             {
                 error_message = L"Failed to lock the global memory object.";
                 break;
             }
-            memcpy(pBuffer, pResourceData, ResourceSize);
+            memcpy(p_buffer, p_resource_data, resource_size);
 
             // Create stream from the resource data.
-            HRESULT hr = CreateStreamOnHGlobal(hBuffer, TRUE, &this->pStream);
+            HRESULT hr = CreateStreamOnHGlobal(buffer_handle, TRUE, &this->pStream);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create stream from resource data.";
@@ -1425,10 +533,10 @@ bool MyImage::Update(INT ResourceID, ImageFormat Format)
                 error_message = L"Failed to create the image object from the stream (The GDI+ API might not be initialized yet).";
                 break;
             }
-            auto Status = this->pImage->GetLastStatus();
-            if (Status)
+            auto status = this->pImage->GetLastStatus();
+            if (status)
             {
-                error_message = L"Failed to create the image object from the stream (GDI+ Error Code: " + std::to_wstring(Status) + L").";
+                error_message = L"Failed to create the image object from the stream (GDI+ Error Code: " + std::to_wstring(status) + L").";
                 break;
             }
 
@@ -1438,561 +546,610 @@ bool MyImage::Update(INT ResourceID, ImageFormat Format)
         // Check if the image object was successfully created.
         if (!are_all_operation_success)
         {
-            std::wstring message = L"";
-            message.append(L"Error occurred!\n");
-            message.append(L"Failed to create the image object.\n");
-            message.append(L"Error Message: " + error_message + L"\n\n");
-            message.append(L"STRUCT: MyImage\n");
-            message.append(L"FUNC: Update()");
-            MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-            return false;
+            WriteLog(L"Failed to create the image object.", L" [CLASS: \"MyImage\" | FUNC: \"MyImage()\"]", MyLogType::Error);
         }
     }
 
-    // Increment the total number of initialized instances.
-    MyImage::TotalInitializedInstances++;
-
-    // Update the initialization state.
-    this->isInitialized = true;
-
-    return true;
+    MyImage::totalInstances++;
 }
-
-/// @class UIObjectManager_Colors definitions:
-// Public member function(s) [GENERAL FUNCTIONS]:
-void UIObjectManager_Colors::UpdateMainColors(MyColor Primary, MyColor Secondary, MyColor Border, MyColor Border_Inactive,
-                          MyColor Text, MyColor Text_Inactive, MyColor Focus, MyColor CloseHover, MyColor MinimizeHover,
-                          MyColor NonClient_CloseButton_Background_OnHover, MyColor NonClient_CloseButton_Background_OnDown,
-                          MyColor NonClient_MinimizeButton_Background_OnHover, MyColor NonClient_MinimizeButton_Background_OnDown, MyColor Background)
+// Copy constructor:
+MyImage::MyImage(const MyImage &other) : resourceID(other.resourceID), format(other.format)
 {
-    this->Primary = Primary;
-    this->Secondary = Secondary;
-    this->Border = Border;
-    this->Border_Inactive = Border_Inactive;
-    this->Text = Text;
-    this->Text_Inactive = Text_Inactive;
-    this->Focus = Focus;
-    this->CloseHover = CloseHover;
-    this->MinimizeHover = MinimizeHover;
-    this->NonClient_CloseButton_Background_OnHover = NonClient_CloseButton_Background_OnHover;
-    this->NonClient_CloseButton_Background_OnDown = NonClient_CloseButton_Background_OnDown;
-    this->NonClient_MinimizeButton_Background_OnHover = NonClient_MinimizeButton_Background_OnHover;
-    this->NonClient_MinimizeButton_Background_OnDown = NonClient_MinimizeButton_Background_OnDown;
-    this->Background = Background;
-}
-void UIObjectManager_Colors::UpdateCaptionColors(MyColor Caption_Background, MyColor Caption_Text, MyColor Caption_Text_Inactive)
-{
-    this->Caption_Background = Caption_Background;
-    this->Caption_Text = Caption_Text;
-    this->Caption_Text_Inactive = Caption_Text_Inactive;
-}
-void UIObjectManager_Colors::UpdateStandardButtonColors(MyColor StandardButton, MyColor StandardButton_OnHover, MyColor StandardButton_OnDown, MyColor StandardButton_Border, MyColor StandardButton_Border_OnHover, MyColor StandardButton_Border_OnDown, MyColor StandardButton_Text_Default, MyColor StandardButton_Text_Highlight)
-{
-    this->StandardButton = StandardButton;
-    this->StandardButton_OnHover = StandardButton_OnHover;
-    this->StandardButton_OnDown = StandardButton_OnDown;
-    this->StandardButton_Border = StandardButton_Border;
-    this->StandardButton_Border_OnHover = StandardButton_Border_OnHover;
-    this->StandardButton_Border_OnDown = StandardButton_Border_OnDown;
-    this->StandardButton_Text_Default = StandardButton_Text_Default;
-    this->StandardButton_Text_Highlight = StandardButton_Text_Highlight;
-}
-void UIObjectManager_Colors::UpdateRadioButtonColors(MyColor RadioPrimary, MyColor RadioPrimary_OnHover, MyColor RadioPrimary_OnDown, MyColor RadioSecondary, MyColor RadioSecondary_OnHover, MyColor RadioSecondary_OnDown, MyColor Radio_Border, MyColor Radio_Border_OnHover, MyColor Radio_Border_OnDown,
-                                                     MyColor SelectedRadioPrimary, MyColor SelectedRadioPrimary_OnHover, MyColor SelectedRadioPrimary_OnDown, MyColor SelectedRadioSecondary, MyColor SelectedRadioSecondary_OnHover, MyColor SelectedRadioSecondary_OnDown, MyColor SelectedRadio_Border, MyColor SelectedRadio_Border_OnHover, MyColor SelectedRadio_Border_OnDown,
-                                                     MyColor Radio_Text_Default, MyColor Radio_Text_Highlight)
-{
-    this->RadioPrimary = RadioPrimary;
-    this->RadioPrimary_OnHover = RadioPrimary_OnHover;
-    this->RadioPrimary_OnDown = RadioPrimary_OnDown;
-    this->RadioSecondary = RadioSecondary;
-    this->RadioSecondary_OnHover = RadioSecondary_OnHover;
-    this->RadioSecondary_OnDown = RadioSecondary_OnDown;
-    this->Radio_Border = Radio_Border;
-    this->Radio_Border_OnHover = Radio_Border_OnHover;
-    this->Radio_Border_OnDown = Radio_Border_OnDown;
-    this->SelectedRadioPrimary = SelectedRadioPrimary;
-    this->SelectedRadioPrimary_OnHover = SelectedRadioPrimary_OnHover;
-    this->SelectedRadioPrimary_OnDown = SelectedRadioPrimary_OnDown;
-    this->SelectedRadioSecondary = SelectedRadioSecondary;
-    this->SelectedRadioSecondary_OnHover = SelectedRadioSecondary_OnHover;
-    this->SelectedRadioSecondary_OnDown = SelectedRadioSecondary_OnDown;
-    this->SelectedRadio_Border = SelectedRadio_Border;
-    this->SelectedRadio_Border_OnHover = SelectedRadio_Border_OnHover;
-    this->SelectedRadio_Border_OnDown = SelectedRadio_Border_OnDown;
-    this->Radio_Text_Default = Radio_Text_Default;
-    this->Radio_Text_Highlight = Radio_Text_Highlight;
-}
-void UIObjectManager_Colors::UpdateEditColors(MyColor Edit, MyColor Edit_Border, MyColor Edit_Border_Selected)
-{
-    this->Edit = Edit;
-    this->Edit_Border = Edit_Border;
-    this->Edit_Border_Selected = Edit_Border_Selected;
-}
-void UIObjectManager_Colors::UpdateComboboxColors(MyColor Combobox, MyColor Combobox_Border, MyColor Combobox_Dropdownlist_Background, MyColor Combobox_Dropdownlist_Background_Selected, MyColor Combobox_Dropdownlist_Border, MyColor Combobox_Dropdownlist_Text_Default, MyColor Combobox_Dropdownlist_Text_Selected)
-{
-    this->Combobox = Combobox;
-    this->Combobox_Border = Combobox_Border;
-    this->Combobox_Dropdownlist_Background = Combobox_Dropdownlist_Background;
-    this->Combobox_Dropdownlist_Background_Selected = Combobox_Dropdownlist_Background_Selected;
-    this->Combobox_Dropdownlist_Border = Combobox_Dropdownlist_Border;
-    this->Combobox_Dropdownlist_Text_Default = Combobox_Dropdownlist_Text_Default;
-    this->Combobox_Dropdownlist_Text_Selected = Combobox_Dropdownlist_Text_Selected;
-}
-// Public member function(s) [CONTAINER FUNCTIONS]:
-void UIObjectManager_Colors::AddColor(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha, INT ID)
-{
-    // Check if the ID is unique.
-    if (ID != 0)
+    // Variant(s).
     {
-        for (auto &color : this->Container)
-        {
-            if (color.GetInstanceID() == ID)
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"Another instance already uses this ID.\n");
-                error_message.append(L"CLASS: UIObjectManager_Colors\n");
-                error_message.append(L"FUNC: AddColor()");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-
-    // Add the object to the container.
-    this->Container.push_back(MyColor(Red, Green, Blue, Alpha, ID));
-}
-bool UIObjectManager_Colors::RemoveColor(INT ID)
-{
-    // Iterate through the container and remove the instance with the specified ID.
-    for (auto it = this->Container.begin(); it != this->Container.end();)
-    {
-        if ((*it).GetInstanceID() == ID)
-        {
-            it = this->Container.erase(it);
-            return true;
-        }
-        else
-            it++;
-    }
-
-    return false;
-}
-bool UIObjectManager_Colors::RemoveColorEx(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha)
-{
-    bool isAtLeastOneObjectRemoved = false;
-
-    // Iterate through the container and remove the instance(s) with the specified values.
-    for (auto it = this->Container.begin(); it != this->Container.end();)
-    {
-        if ((*it).GetRed() == Red &&
-            (*it).GetGreen() == Green &&
-            (*it).GetBlue() == Blue &&
-            (*it).GetAlpha() == Alpha)
-        {
-            it = this->Container.erase(it);
-            isAtLeastOneObjectRemoved = true;
-        }
-        else
-            it++;
-    }
-
-    if (!isAtLeastOneObjectRemoved)
-        return false;
-
-    return true;
-}
-MyColor *UIObjectManager_Colors::GetColor(INT ID)
-{
-    // Iterate through the container and find the instance with the specified ID.
-    for (auto &color : this->Container)
-    {
-        if (color.GetInstanceID() == ID)
-            return &color;
-    }
-
-    return nullptr;
-}
-MyColor *UIObjectManager_Colors::GetColorEx(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha)
-{
-    // Iterate through the container and find the instance with the specified values.
-    for (auto &color : this->Container)
-    {
-        if (color.GetRed() == Red &&
-            color.GetGreen() == Green &&
-            color.GetBlue() == Blue &&
-            color.GetAlpha() == Alpha)
-            return &color;
-    }
-
-    return nullptr;
-}
-std::vector<MyColor> &UIObjectManager_Colors::GetContainer()
-{
-    return this->Container;
-}
-
-/// @class UIObjectManager_Fonts definitions:
-// Public member function(s) [GENERAL FUNCTIONS]:
-void UIObjectManager_Fonts::UpdateMainFonts(MyFont Default, MyFont Caption, MyFont Edit)
-{
-    this->Default = Default;
-    this->Caption = Caption;
-    this->Edit = Edit;
-}
-void UIObjectManager_Fonts::UpdateContainerFonts(MyFont Heading, MyFont Note)
-{
-    this->Heading = Heading;
-    this->Note = Note;
-}
-// Public member function(s) [CONTAINER FUNCTIONS]:
-void UIObjectManager_Fonts::AddFont(std::wstring Name, USHORT Size, USHORT Weight, DWORD Quality, INT ID)
-{
-    // Check if the ID is unique.
-    if (ID != 0)
-    {
-        for (auto &font : this->Container)
-        {
-            if (font.GetInstanceID() == ID)
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"Another instance already uses this ID.\n");
-                error_message.append(L"CLASS: UIObjectManager_Fonts\n");
-                error_message.append(L"FUNC: AddFont()");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-
-    // Add the object to the container.
-    this->Container.push_back(MyFont(Name, Size, Weight, Quality, ID));
-}
-bool UIObjectManager_Fonts::RemoveFont(INT ID)
-{
-    // Iterate through the container and remove the instance with the specified ID.
-    for (auto it = this->Container.begin(); it != this->Container.end();)
-    {
-        if ((*it).GetInstanceID() == ID)
-        {
-            it = this->Container.erase(it);
-            return true;
-        }
-        else
-            it++;
-    }
-
-    return false;
-}
-bool UIObjectManager_Fonts::RemoveFontEx(std::wstring Name, USHORT Size, USHORT Weight, DWORD Quality)
-{
-    bool isAtLeastOneObjectRemoved = false;
-
-    // Iterate through the container and remove the instance(s) with the specified values.
-    for (auto it = this->Container.begin(); it != this->Container.end();)
-    {
-        if ((*it).GetName() == Name &&
-            (*it).GetSize() == Size &&
-            (*it).GetWeight() == Weight &&
-            (*it).GetQuality() == Quality)
-        {
-            it = this->Container.erase(it);
-            isAtLeastOneObjectRemoved = true;
-        }
-        else
-            it++;
-    }
-
-    if (!isAtLeastOneObjectRemoved)
-        return false;
-
-    return true;
-}
-MyFont *UIObjectManager_Fonts::GetFont(INT ID)
-{
-    for (auto &font : this->Container)
-    {
-        if (font.GetInstanceID() == ID)
-            return &font;
-    }
-
-    return nullptr;
-}
-MyFont *UIObjectManager_Fonts::GetFontEx(std::wstring Name, USHORT Size, USHORT Weight, DWORD Quality)
-{
-    // Iterate through the container and find the instance with the specified values.
-    for (auto &font : this->Container)
-    {
-        if (font.GetName() == Name &&
-            font.GetSize() == Size &&
-            font.GetWeight() == Weight &&
-            font.GetQuality() == Quality)
-            return &font;
-    }
-
-    return nullptr;
-}
-std::vector<MyFont> &UIObjectManager_Fonts::GetContainer()
-{
-    return this->Container;
-}
-
-/// @class UIObjectManager_Icons definitions:
-// Constructor:
-UIObjectManager_Icons::UIObjectManager_Icons(HINSTANCE hInstance)
-{
-    // Initialize the default icons.
-    if (!this->InitDefaultIcons(hInstance))
-    {
+        // Create the image object.
+        bool are_all_operation_success = false;
         std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to initialize the default icons.\n");
-        error_message.append(L"CLASS: UIObjectManager_Icons\n");
-        error_message.append(L"FUNC: Constructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
+        while (!are_all_operation_success)
+        {
+            // Get resource type string.
+            std::wstring resource_type = L"";
+            bool is_predefined_resource_type = false;
+            auto predefined_resource_type = RT_RCDATA;
+            switch (this->format)
+            {
+            case MyImageFormat::JPG:
+                resource_type = L"JPG";
+                break;
+            case MyImageFormat::PNG:
+                resource_type = L"PNG";
+                break;
+            case MyImageFormat::ICO:
+                resource_type = L"ICO";
+                predefined_resource_type = RT_GROUP_ICON;
+                is_predefined_resource_type = true;
+                // Note: For now loading ico file from application resource will result in GDI+ error code 2
+                // as the Gdiplus::Image::FromStream() method expect the stream to contains a single icon and not the whole icon group.
+                // This can be solve by using BeginResourceExtract() to extract the icon from the icon group.
+                // Further work must be done.
+                break;
+            default:
+                break;
+            }
+            if (resource_type.empty())
+            {
+                error_message = L"Invalid resource format.";
+                break;
+            }
+
+            // Find the resource.
+            HRSRC resource_handle = FindResourceW(NULL, MAKEINTRESOURCEW(this->resourceID), (is_predefined_resource_type ? predefined_resource_type : resource_type.c_str()));
+            if (!resource_handle)
+            {
+                error_message = L"Resource not found.";
+                break;
+            }
+
+            // Get the resource size.
+            DWORD resource_size = SizeofResource(NULL, resource_handle);
+            if (!resource_size)
+            {
+                error_message = L"Failed to retrieve the resource size.";
+                break;
+            }
+
+            // Load the resource.
+            HGLOBAL global_handle = LoadResource(NULL, resource_handle);
+            if (!global_handle)
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+
+            // Lock the resource and get pointer to the resource data.
+            const void *p_resource_data = LockResource(global_handle);
+            if (!p_resource_data)
+            {
+                error_message = L"Failed to lock the resource.";
+                break;
+            }
+
+            // Allocate the global memory object.
+            HGLOBAL buffer_handle = GlobalAlloc(GMEM_MOVEABLE, resource_size);
+            if (!buffer_handle)
+            {
+                error_message = L"Failed to allocate the global memory object.";
+                break;
+            }
+
+            // Lock the global memory object.
+            void *p_buffer = GlobalLock(buffer_handle);
+            if (!p_buffer)
+            {
+                error_message = L"Failed to lock the global memory object.";
+                break;
+            }
+            memcpy(p_buffer, p_resource_data, resource_size);
+
+            // Create stream from the resource data.
+            HRESULT hr = CreateStreamOnHGlobal(buffer_handle, TRUE, &this->pStream);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create stream from resource data.";
+                break;
+            }
+
+            // Create the image object from the stream.
+            this->pImage = Gdiplus::Image::FromStream(this->pStream);
+            if (!this->pImage)
+            {
+                error_message = L"Failed to create the image object from the stream (The GDI+ API might not be initialized yet).";
+                break;
+            }
+            auto status = this->pImage->GetLastStatus();
+            if (status)
+            {
+                error_message = L"Failed to create the image object from the stream (GDI+ Error Code: " + std::to_wstring(status) + L").";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the image object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the image object.", L" [CLASS: \"MyImage\" | FUNC: \"MyImage()\"]", MyLogType::Error);
+        }
     }
+
+    MyImage::totalInstances++;
+}
+// Assignment operator:
+MyImage &MyImage::operator=(const MyImage &other)
+{
+    // Check if self assignment.
+    if (this == &other)
+        return *this;
+
+    // Allocation variable(s).
+    this->resourceID = other.resourceID;
+    this->format = other.format;
+
+    // Variant(s).
+    if (this->pImage)
+    {
+        delete this->pImage;
+        this->pImage = nullptr;
+        this->pStream->Release();
+        this->pStream = nullptr;
+    }
+    {
+        // Create the image object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            // Get resource type string.
+            std::wstring resource_type = L"";
+            bool is_predefined_resource_type = false;
+            auto predefined_resource_type = RT_RCDATA;
+            switch (this->format)
+            {
+            case MyImageFormat::JPG:
+                resource_type = L"JPG";
+                break;
+            case MyImageFormat::PNG:
+                resource_type = L"PNG";
+                break;
+            case MyImageFormat::ICO:
+                resource_type = L"ICO";
+                predefined_resource_type = RT_GROUP_ICON;
+                is_predefined_resource_type = true;
+                // Note: For now loading ico file from application resource will result in GDI+ error code 2
+                // as the Gdiplus::Image::FromStream() method expect the stream to contains a single icon and not the whole icon group.
+                // This can be solve by using BeginResourceExtract() to extract the icon from the icon group.
+                // Further work must be done.
+                break;
+            default:
+                break;
+            }
+            if (resource_type.empty())
+            {
+                error_message = L"Invalid resource format.";
+                break;
+            }
+
+            // Find the resource.
+            HRSRC resource_handle = FindResourceW(NULL, MAKEINTRESOURCEW(this->resourceID), (is_predefined_resource_type ? predefined_resource_type : resource_type.c_str()));
+            if (!resource_handle)
+            {
+                error_message = L"Resource not found.";
+                break;
+            }
+
+            // Get the resource size.
+            DWORD resource_size = SizeofResource(NULL, resource_handle);
+            if (!resource_size)
+            {
+                error_message = L"Failed to retrieve the resource size.";
+                break;
+            }
+
+            // Load the resource.
+            HGLOBAL global_handle = LoadResource(NULL, resource_handle);
+            if (!global_handle)
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+
+            // Lock the resource and get pointer to the resource data.
+            const void *p_resource_data = LockResource(global_handle);
+            if (!p_resource_data)
+            {
+                error_message = L"Failed to lock the resource.";
+                break;
+            }
+
+            // Allocate the global memory object.
+            HGLOBAL buffer_handle = GlobalAlloc(GMEM_MOVEABLE, resource_size);
+            if (!buffer_handle)
+            {
+                error_message = L"Failed to allocate the global memory object.";
+                break;
+            }
+
+            // Lock the global memory object.
+            void *p_buffer = GlobalLock(buffer_handle);
+            if (!p_buffer)
+            {
+                error_message = L"Failed to lock the global memory object.";
+                break;
+            }
+            memcpy(p_buffer, p_resource_data, resource_size);
+
+            // Create stream from the resource data.
+            HRESULT hr = CreateStreamOnHGlobal(buffer_handle, TRUE, &this->pStream);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create stream from resource data.";
+                break;
+            }
+
+            // Create the image object from the stream.
+            this->pImage = Gdiplus::Image::FromStream(this->pStream);
+            if (!this->pImage)
+            {
+                error_message = L"Failed to create the image object from the stream (The GDI+ API might not be initialized yet).";
+                break;
+            }
+            auto status = this->pImage->GetLastStatus();
+            if (status)
+            {
+                error_message = L"Failed to create the image object from the stream (GDI+ Error Code: " + std::to_wstring(status) + L").";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the image object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the image object.", L" [CLASS: \"MyImage\" | FUNC: \"&operator=()\"]", MyLogType::Error);
+        }
+    }
+
+    return *this;
 }
 // Destructor:
-UIObjectManager_Icons::~UIObjectManager_Icons()
+MyImage::~MyImage()
 {
-    // Deinitialize the default icons.
-    if (!this->DeinitDefaultIcons())
+    // Deallocation of unmanaged object(s).
+    if (this->pImage)
     {
-        std::wstring error_message = L"";
-        error_message.append(L"Error occurred!\n");
-        error_message.append(L"Failed to deinitialize the default icons.\n");
-        error_message.append(L"CLASS: UIObjectManager_Icons\n");
-        error_message.append(L"FUNC: Destructor");
-        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-        exit(EXIT_FAILURE);
-    }
-}
-// Private member function(s) [(DE)INITIALIZATION FUNCTIONS]:
-bool UIObjectManager_Icons::InitDefaultIcons(HINSTANCE hInstance)
-{
-    if (this->Cross_Black || this->Cross_Grey || this->Cross_White || this->Minus_Black || this->Minus_Grey || this->Minus_White || this->MAINICON)
-        return false;
-
-    this->Cross_Black = new MyIcon(hInstance, 20, 20, IDI_ICON1);
-    this->Cross_Grey = new MyIcon(hInstance, 20, 20, IDI_ICON2);
-    this->Cross_White = new MyIcon(hInstance, 20, 20, IDI_ICON3);
-    this->Minus_Black = new MyIcon(hInstance, 20, 20, IDI_ICON4);
-    this->Minus_Grey = new MyIcon(hInstance, 20, 20, IDI_ICON5);
-    this->Minus_White = new MyIcon(hInstance, 20, 20, IDI_ICON6);
-    this->MAINICON = new MyIcon(hInstance, 20, 20, IDI_ICON7);
-
-    if (!this->Cross_Black || !this->Cross_Grey || !this->Cross_White || !this->Minus_Black || !this->Minus_Grey || !this->Minus_White || !this->MAINICON)
-        return false;
-
-    return true;
-}
-bool UIObjectManager_Icons::DeinitDefaultIcons()
-{
-    delete this->Cross_Black;
-    delete this->Cross_Grey;
-    delete this->Cross_White;
-    delete this->Minus_Black;
-    delete this->Minus_Grey;
-    delete this->Minus_White;
-    delete this->MAINICON;
-
-    return true;
-}
-// Public member function(s) [CONTAINER FUNCTIONS]:
-void UIObjectManager_Icons::AddIcon(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad, INT ID)
-{
-    // Check if the ID is unique.
-    if (ID != 0)
-    {
-        for (auto &font : this->Container)
-        {
-            if (font.GetInstanceID() == ID)
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"Another instance already uses this ID.\n");
-                error_message.append(L"CLASS: UIObjectManager_Fonts\n");
-                error_message.append(L"FUNC: AddFont()");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                exit(EXIT_FAILURE);
-            }
-        }
+        delete this->pImage;
+        this->pImage = nullptr;
+        this->pStream->Release();
+        this->pStream = nullptr;
     }
 
-    // Add the object to the container.
-    this->Container.push_back(MyIcon(hInstance, Width, Height, ResourceID, HICON_fuLoad, ID));
+    MyImage::totalInstances--;
 }
-bool UIObjectManager_Icons::RemoveIcon(INT ID)
+// Public static member function(s) [GENERAL FUNCTIONS]:
+UINT MyImage::getTotalInstances()
 {
-    // Iterate through the container and remove the instance with the specified ID.
-    for (auto it = this->Container.begin(); it != this->Container.end();)
-    {
-        if ((*it).GetInstanceID() == ID)
-        {
-            it = this->Container.erase(it);
-            return true;
-        }
-        else
-            it++;
-    }
-
-    return false;
-}
-bool UIObjectManager_Icons::RemoveIconEx(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad)
-{
-    bool isAtLeastOneObjectRemoved = false;
-
-    // Iterate through the container and remove the instance(s) with the specified values.
-    for (auto it = this->Container.begin(); it != this->Container.end();)
-    {
-        if ((*it).GetHINSTANCE() == hInstance &&
-            (*it).GetWidth() == Width &&
-            (*it).GetHeight() == Height &&
-            (*it).GetResourceID() == ResourceID &&
-            (*it).GetLoadImageFlag() == HICON_fuLoad)
-        {
-            it = this->Container.erase(it);
-            isAtLeastOneObjectRemoved = true;
-        }
-        else
-            it++;
-    }
-
-    if (!isAtLeastOneObjectRemoved)
-        return false;
-
-    return true;
-}
-MyIcon *UIObjectManager_Icons::GetIcon(INT ID)
-{
-    // Iterate through the container and find the instance with the specified ID.
-    for (auto &icon : this->Container)
-    {
-        if (icon.GetInstanceID() == ID)
-            return &icon;
-    }
-
-    return nullptr;
-}
-MyIcon *UIObjectManager_Icons::GetIconEx(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad)
-{
-    // Iterate through the container and find the instance with the specified values.
-    for (auto &icon : this->Container)
-    {
-        if (icon.GetHINSTANCE() == hInstance &&
-            icon.GetWidth() == Width &&
-            icon.GetHeight() == Height &&
-            icon.GetResourceID() == ResourceID &&
-            icon.GetLoadImageFlag() == HICON_fuLoad)
-            return &icon;
-    }
-
-    return nullptr;
-}
-std::vector<MyIcon> &UIObjectManager_Icons::GetContainer()
-{
-    return this->Container;
-}
-
-/// @class UIObjectManager_Images definitions:
-// Constructor:
-UIObjectManager_Images::UIObjectManager_Images()
-{
-    this->Cross_Grey.Update(IDB_PNG1, ImageFormat::PNG);
-    this->Cross_White.Update(IDB_PNG2, ImageFormat::PNG);
-    this->Cross_Black.Update(IDB_PNG3, ImageFormat::PNG);
-    this->Minus_Grey.Update(IDB_PNG4, ImageFormat::PNG);
-    this->Minus_White.Update(IDB_PNG5, ImageFormat::PNG);
-    this->Minus_Black.Update(IDB_PNG6, ImageFormat::PNG);
+    return MyImage::totalInstances;
 }
 // Public member function(s) [GENERAL FUNCTIONS]:
-void UIObjectManager_Images::UpdateNonClientButtonImages(MyImage NonClient_CloseButton_Default, MyImage NonClient_CloseButton_Hover, MyImage NonClient_CloseButton_Down,
-    MyImage NonClient_MinimizeButton_Default, MyImage NonClient_MinimizeButton_Hover, MyImage NonClient_MinimizeButton_Down)
+INT MyImage::getResourceID() const
 {
-    this->NonClient_CloseButton_Default = NonClient_CloseButton_Default;
-    this->NonClient_CloseButton_Hover = NonClient_CloseButton_Hover;
-    this->NonClient_CloseButton_Down = NonClient_CloseButton_Down;
-    this->NonClient_MinimizeButton_Default = NonClient_MinimizeButton_Default;
-    this->NonClient_MinimizeButton_Hover = NonClient_MinimizeButton_Hover;
-    this->NonClient_MinimizeButton_Down = NonClient_MinimizeButton_Down;
+    return this->resourceID;
+}
+MyImageFormat MyImage::getFormat() const
+{
+    return this->format;
+}
+Gdiplus::Image *MyImage::getGDIPImage() const
+{
+    return this->pImage;
+}
+bool MyImage::update(INT resourceID, MyImageFormat format)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        // Allocation variable(s).
+        this->resourceID = resourceID;
+        this->format = format;
+
+        // Variant(s).
+        if (this->pImage)
+        {
+            delete this->pImage;
+            this->pImage = nullptr;
+            this->pStream->Release();
+            this->pStream = nullptr;
+        }
+        {
+            // Get resource type string.
+            std::wstring resource_type = L"";
+            bool is_predefined_resource_type = false;
+            auto predefined_resource_type = RT_RCDATA;
+            switch (this->format)
+            {
+            case MyImageFormat::JPG:
+                resource_type = L"JPG";
+                break;
+            case MyImageFormat::PNG:
+                resource_type = L"PNG";
+                break;
+            case MyImageFormat::ICO:
+                resource_type = L"ICO";
+                predefined_resource_type = RT_GROUP_ICON;
+                is_predefined_resource_type = true;
+                // Note: For now loading ico file from application resource will result in GDI+ error code 2
+                // as the Gdiplus::Image::FromStream() method expect the stream to contains a single icon and not the whole icon group.
+                // This can be solve by using BeginResourceExtract() to extract the icon from the icon group.
+                // Further work must be done.
+                break;
+            default:
+                break;
+            }
+            if (resource_type.empty())
+            {
+                error_message = L"Invalid resource format.";
+                break;
+            }
+
+            // Find the resource.
+            HRSRC resource_handle = FindResourceW(NULL, MAKEINTRESOURCEW(this->resourceID), (is_predefined_resource_type ? predefined_resource_type : resource_type.c_str()));
+            if (!resource_handle)
+            {
+                error_message = L"Resource not found.";
+                break;
+            }
+
+            // Get the resource size.
+            DWORD resource_size = SizeofResource(NULL, resource_handle);
+            if (!resource_size)
+            {
+                error_message = L"Failed to retrieve the resource size.";
+                break;
+            }
+
+            // Load the resource.
+            HGLOBAL global_handle = LoadResource(NULL, resource_handle);
+            if (!global_handle)
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+
+            // Lock the resource and get pointer to the resource data.
+            const void *p_resource_data = LockResource(global_handle);
+            if (!p_resource_data)
+            {
+                error_message = L"Failed to lock the resource.";
+                break;
+            }
+
+            // Allocate the global memory object.
+            HGLOBAL buffer_handle = GlobalAlloc(GMEM_MOVEABLE, resource_size);
+            if (!buffer_handle)
+            {
+                error_message = L"Failed to allocate the global memory object.";
+                break;
+            }
+
+            // Lock the global memory object.
+            void *p_buffer = GlobalLock(buffer_handle);
+            if (!p_buffer)
+            {
+                error_message = L"Failed to lock the global memory object.";
+                break;
+            }
+            memcpy(p_buffer, p_resource_data, resource_size);
+
+            // Create stream from the resource data.
+            HRESULT hr = CreateStreamOnHGlobal(buffer_handle, TRUE, &this->pStream);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create stream from resource data.";
+                break;
+            }
+
+            // Create the image object from the stream.
+            this->pImage = Gdiplus::Image::FromStream(this->pStream);
+            if (!this->pImage)
+            {
+                error_message = L"Failed to create the image object from the stream (The GDI+ API might not be initialized yet).";
+                break;
+            }
+            auto status = this->pImage->GetLastStatus();
+            if (status)
+            {
+                error_message = L"Failed to create the image object from the stream (GDI+ Error Code: " + std::to_wstring(status) + L").";
+                break;
+            }
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyImage\" | FUNC: \"update()\"]", MyLogType::Error);
+        return false;
+    }
+
+    return true;
 }
 
-/// @class UIObjectManager_Miscs definitions:
+/// @class UIColors definitions:
+// Public member function(s) [GENERAL FUNCTIONS]:
+void UIColors::updateMainColors(RGBA primary, RGBA secondary, RGBA borderActive, RGBA borderInactive,
+                                RGBA textActive, RGBA textInactive, RGBA textHighlight, RGBA focus, RGBA background)
+{
+    this->primary = MyColor(primary);
+    this->secondary = MyColor(secondary);
+    this->borderActive = MyColor(borderActive);
+    this->borderInactive = MyColor(borderInactive);
+    this->textActive = MyColor(textActive);
+    this->textInactive = MyColor(textInactive);
+    this->textHighlight = MyColor(textHighlight);
+    this->focus = MyColor(focus);
+    this->background = MyColor(background);
+}
+void UIColors::updateCaptionColors(RGBA captionBackground, RGBA captionTextActive, RGBA captionTextInactive,
+                                   RGBA closeButtonBackgroundOnHover, RGBA closeButtonBackgroundOnDown,
+                                   RGBA maximizeButtonBackgroundOnHover, RGBA maximizeButtonBackgroundOnDown,
+                                   RGBA minimizeButtonBackgroundOnHover, RGBA minimizeButtonBackgroundOnDown)
+{
+    this->captionBackground = MyColor(captionBackground);
+    this->captionTextActive = MyColor(captionTextActive);
+    this->captionTextInactive = MyColor(captionTextInactive);
+    this->closeButtonBackgroundOnHover = MyColor(closeButtonBackgroundOnHover);
+    this->closeButtonBackgroundOnDown = MyColor(closeButtonBackgroundOnDown);
+    this->maximizeButtonBackgroundOnHover = MyColor(maximizeButtonBackgroundOnHover);
+    this->maximizeButtonBackgroundOnDown = MyColor(maximizeButtonBackgroundOnDown);
+    this->minimizeButtonBackgroundOnHover = MyColor(minimizeButtonBackgroundOnHover);
+    this->minimizeButtonBackgroundOnDown = MyColor(minimizeButtonBackgroundOnDown);
+}
+void UIColors::updateStandardButtonColors(RGBA standardButtonDefault, RGBA standardButtonHover, RGBA standardButtonDown,
+                                          RGBA standardButtonBorderDefault, RGBA standardButtonBorderHover, RGBA standardButtonBorderDown)
+{
+    this->standardButtonDefault = MyColor(standardButtonDefault);
+    this->standardButtonHover = MyColor(standardButtonHover);
+    this->standardButtonDown = MyColor(standardButtonDown);
+    this->standardButtonBorderDefault = MyColor(standardButtonBorderDefault);
+    this->standardButtonBorderHover = MyColor(standardButtonBorderHover);
+    this->standardButtonBorderDown = MyColor(standardButtonBorderDown);
+}
+void UIColors::updateRadioButtonColors(RGBA radioButtonPrimaryDefault, RGBA radioButtonPrimaryHover, RGBA radioButtonPrimaryDown,
+                                       RGBA radioButtonSecondaryDefault, RGBA radioButtonSecondaryHover, RGBA radioButtonSecondaryDown,
+                                       RGBA radioButtonBorderDefault, RGBA radioButtonBorderHover, RGBA radioButtonBorderDown,
+                                       RGBA selectedRadioButtonPrimaryDefault, RGBA selectedRadioButtonPrimaryHover, RGBA selectedRadioButtonPrimaryDown,
+                                       RGBA selectedRadioButtonSecondaryDefault, RGBA selectedRadioButtonSecondaryHover, RGBA selectedRadioButtonSecondaryDown,
+                                       RGBA selectedRadioButtonBorderDefault, RGBA selectedRadioButtonBorderHover, RGBA selectedRadioButtonBorderDown)
+{
+    this->radioButtonPrimaryDefault = MyColor(radioButtonPrimaryDefault);
+    this->radioButtonPrimaryHover = MyColor(radioButtonPrimaryHover);
+    this->radioButtonPrimaryDown = MyColor(radioButtonPrimaryDown);
+    this->radioButtonSecondaryDefault = MyColor(radioButtonSecondaryDefault);
+    this->radioButtonSecondaryHover = MyColor(radioButtonSecondaryHover);
+    this->radioButtonSecondaryDown = MyColor(radioButtonSecondaryDown);
+    this->radioButtonBorderDefault = MyColor(radioButtonBorderDefault);
+    this->radioButtonBorderHover = MyColor(radioButtonBorderHover);
+    this->radioButtonBorderDown = MyColor(radioButtonBorderDown);
+    this->selectedRadioButtonPrimaryDefault = MyColor(selectedRadioButtonPrimaryDefault);
+    this->selectedRadioButtonPrimaryHover = MyColor(selectedRadioButtonPrimaryHover);
+    this->selectedRadioButtonPrimaryDown = MyColor(selectedRadioButtonPrimaryDown);
+    this->selectedRadioButtonSecondaryDefault = MyColor(selectedRadioButtonSecondaryDefault);
+    this->selectedRadioButtonSecondaryHover = MyColor(selectedRadioButtonSecondaryHover);
+    this->selectedRadioButtonSecondaryDown = MyColor(selectedRadioButtonSecondaryDown);
+    this->selectedRadioButtonBorderDefault = MyColor(selectedRadioButtonBorderDefault);
+    this->selectedRadioButtonBorderHover = MyColor(selectedRadioButtonBorderHover);
+    this->selectedRadioButtonBorderDown = MyColor(selectedRadioButtonBorderDown);
+}
+void UIColors::updateEditboxColors(RGBA editbox, RGBA editboxBorderDefault, RGBA editboxBorderSelected)
+{
+    this->editbox = MyColor(editbox);
+    this->editboxBorderDefault = MyColor(editboxBorderDefault);
+    this->editboxBorderSelected = MyColor(editboxBorderSelected);
+}
+void UIColors::updateDDLComboboxColors(RGBA ddlCombobox, RGBA ddlComboboxBorder, RGBA ddlComboboxItemBackground, RGBA ddlComboboxSelectedItemBackground,
+                                       RGBA ddlComboboxDropdownlistBorder, RGBA ddlComboboxItemTextDefault, RGBA ddlComboboxItemTextSelected)
+{
+    this->ddlCombobox = MyColor(ddlCombobox);
+    this->ddlComboboxBorder = MyColor(ddlComboboxBorder);
+    this->ddlComboboxItemBackground = MyColor(ddlComboboxItemBackground);
+    this->ddlComboboxSelectedItemBackground = MyColor(ddlComboboxSelectedItemBackground);
+    this->ddlComboboxDropdownlistBorder = MyColor(ddlComboboxDropdownlistBorder);
+    this->ddlComboboxItemTextDefault = MyColor(ddlComboboxItemTextDefault);
+    this->ddlComboboxItemTextSelected = MyColor(ddlComboboxItemTextSelected);
+}
+
+/// @class UIFonts definitions:
+// Public member function(s) [GENERAL FUNCTIONS]:
+void UIFonts::updateFonts(MyFont caption, MyFont editbox, MyFont ddlCombobox, MyFont heading, MyFont note)
+{
+    this->caption = caption;
+    this->editbox = editbox;
+    this->ddlCombobox = ddlCombobox;
+    this->heading = heading;
+    this->note = note;
+}
+
+/// @class UIImages definitions:
+// Public member function(s) [GENERAL FUNCTIONS]:
+void UIImages::updateNonClientButtonImages(MyImage &nonClientCloseButtonDefault, MyImage &nonClientCloseButtonHover, MyImage &nonClientCloseButtonDown,
+                                           MyImage &nonClientMinimizeButtonDefault, MyImage &nonClientMinimizeButtonHover, MyImage &nonClientMinimizeButtonDown)
+{
+    this->pNonClientCloseButtonDefault = std::make_unique<MyImage>(nonClientCloseButtonDefault);
+    this->pNonClientCloseButtonHover = std::make_unique<MyImage>(nonClientCloseButtonHover);
+    this->pNonClientCloseButtonDown = std::make_unique<MyImage>(nonClientCloseButtonDown);
+    this->pNonClientMinimizeButtonDefault = std::make_unique<MyImage>(nonClientMinimizeButtonDefault);
+    this->pNonClientMinimizeButtonHover = std::make_unique<MyImage>(nonClientMinimizeButtonHover);
+    this->pNonClientMinimizeButtonDown = std::make_unique<MyImage>(nonClientMinimizeButtonDown);
+}
+
+/// @class UIRectangles definitions:
 // Constructor:
-UIObjectManager_Miscs::UIObjectManager_Miscs()
+UIRectangles::UIRectangles()
 {
     // Caption bar area rectangle.
-    this->RECT_Caption =
+    this->rectCaption =
         {
-            WINDOW_BORDER_DEFAULTWIDTH,                                  // Left
-            WINDOW_BORDER_DEFAULTWIDTH,                                  // Top
-            g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH,               // Right
-            WINDOW_BORDER_DEFAULTWIDTH + WINDOW_CAPTIONBAR_DEFAULTHEIGHT // Bottom
+            WINDOW_BORDER_DEFAULTWIDTH,                                  // Left.
+            WINDOW_BORDER_DEFAULTWIDTH,                                  // Top.
+            g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH,           // Right.
+            WINDOW_BORDER_DEFAULTWIDTH + WINDOW_CAPTIONBAR_DEFAULTHEIGHT // Bottom.
         };
 
     // Top border area rectangle.
-    this->RECT_SizeBorder_Top =
+    this->rectSizeBorderTop =
         {
             0,                         // Left
             0,                         // Top
-            g_CurrentWindowWidth,          // Right
+            g_CurrentWindowWidth,      // Right
             WINDOW_BORDER_DEFAULTWIDTH // Bottom
         };
 
     // Bottom border area rectangle.
-    this->RECT_SizeBorder_Bottom =
+    this->rectSizeBorderBottom =
         {
-            0,                                              // Left
+            0,                                                  // Left
             g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH, // Top
             g_CurrentWindowWidth,                               // Right
             g_CurrentWindowHeight                               // Bottom
         };
 
     // Left border area rectangle.
-    this->RECT_SizeBorder_Left =
+    this->rectSizeBorderLeft =
         {
             0,                          // Left
             1,                          // Top
             WINDOW_BORDER_DEFAULTWIDTH, // Right
-            g_CurrentWindowHeight - 1       // Bottom
+            g_CurrentWindowHeight - 1   // Bottom
         };
 
     // Right border area rectangle.
-    this->RECT_SizeBorder_Right =
+    this->rectSizeBorderRight =
         {
             g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH, // Left
-            1,                                             // Top
+            1,                                                 // Top
             g_CurrentWindowWidth,                              // Right
             g_CurrentWindowHeight - 1                          // Bottom
         };
 }
 
-/// @class UIObjectManager definitions:
-// Constructor:
-UIObjectManager::UIObjectManager(HINSTANCE hInstance)
+/// @class UIElements definitions:
+// Public static member function(s) [GENERAL FUNCTIONS]:
+void UIElements::showTotalInstances()
 {
-    Icons = new UIObjectManager_Icons(hInstance);
-    this->Pointers.pCurrentBorderBrush = &Colors.Border.GetHBRRef();
-}
-// Destructor:
-UIObjectManager::~UIObjectManager()
-{
-    delete Icons;
-}
-// Public static member function(s):
-void UIObjectManager::ShowTotalObjects()
-{
-    std::wstring DebugMsg = L"";
-    DebugMsg.append(L"Total MyColor instances: " + std::to_wstring(MyColor::GetTotalInstances()) + L"\n");
-    DebugMsg.append(L"Total MyFont instances: " + std::to_wstring(MyFont::GetTotalInstances()) + L"\n");
-    DebugMsg.append(L"Total MyIcon instances: " + std::to_wstring(MyIcon::GetTotalInstances()) + L"\n");
-    DebugMsg.append(L"Total MyImage instances: " + std::to_wstring(MyImage::GetTotalInstances()) + L"\n");
-    DebugMsg.append(L"--\n");
-    DebugMsg.append(L"Total initialized MyColor instances: " + std::to_wstring(MyColor::GetTotalInitializedInstances()) + L"\n");
-    DebugMsg.append(L"Total initialized MyFont instances: " + std::to_wstring(MyFont::GetTotalInitializedInstances()) + L"\n");
-    DebugMsg.append(L"Total initialized MyIcon instances: " + std::to_wstring(MyIcon::GetTotalInitializedInstances()) + L"\n");
-    DebugMsg.append(L"Total initialized MyImage instances: " + std::to_wstring(MyImage::GetTotalInitializedInstances()) + L"\n");
-    MessageBoxW(NULL, DebugMsg.c_str(), L"", MB_OK | MB_ICONINFORMATION);
+    UINT total_color_instances = MyColor::getTotalInstances();
+    UINT total_font_instances = MyFont::getTotalInstances();
+    UINT total_icon_instances = MyIcon::getTotalInstances();
+    UINT total_image_instances = MyImage::getTotalInstances();
+
+    std::wstring message = L"";
+    message.append(L"Total instances: " + std::to_wstring(total_color_instances + total_font_instances + total_icon_instances + total_image_instances) + L"\n");
+    message.append(L"- Colors: " + std::to_wstring(total_color_instances) + L"\n");
+    message.append(L"- Fonts: " + std::to_wstring(total_font_instances) + L"\n");
+    message.append(L"- Icons: " + std::to_wstring(total_icon_instances) + L"\n");
+    message.append(L"- Images: " + std::to_wstring(total_image_instances) + L"\n");
+    MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONINFORMATION);
 }

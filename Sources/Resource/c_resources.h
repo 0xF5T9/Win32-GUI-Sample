@@ -3,7 +3,9 @@
  * @brief Define application constants and include project resource header.
 */
 
-#pragma once
+#ifndef C_RESOURCES_H
+#define C_RESOURCES_H
+
 #define NOMINMAX    // Defines NOMINMAX to prevent the Windows header <Windows.h> from defining its own min and max macros.
 #define OEMRESOURCE // Enable OEM resource marcos.
 
@@ -91,3 +93,5 @@
                         WS_MINIMIZEBOX    | \
                         WS_MAXIMIZEBOX    | \
                         WS_CLIPCHILDREN)
+
+#endif // C_RESOURCES_H

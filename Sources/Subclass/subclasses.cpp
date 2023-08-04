@@ -115,27 +115,27 @@ bool MyStandardButton::installSubclass(HWND hWnd)
         // Initialize the animation variables.
         error_message = L"Failed to initialize the animation variables.";
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonRGB[0],
-                                               this->pColorStandardButtonDefault->GetGDIPColorRef().GetRed(),
+                                               this->pColorStandardButtonDefault->getGDIPColor().GetRed(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonRGB[1],
-                                               this->pColorStandardButtonDefault->GetGDIPColorRef().GetGreen(),
+                                               this->pColorStandardButtonDefault->getGDIPColor().GetGreen(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonRGB[2],
-                                               this->pColorStandardButtonDefault->GetGDIPColorRef().GetBlue(),
+                                               this->pColorStandardButtonDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[0],
-                                               this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetRed(),
+                                               this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[1],
-                                               this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetGreen(),
+                                               this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[2],
-                                               this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetBlue(),
+                                               this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         error_message = L"";
@@ -178,22 +178,22 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Default)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -318,22 +318,22 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Hover)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -458,22 +458,22 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Down)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->GetGDIPColorRef().GetRed(), 0.7, 0.3, &p_transition_button_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->GetGDIPColorRef().GetGreen(), 0.7, 0.3, &p_transition_button_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->GetGDIPColorRef().GetBlue(), 0.7, 0.3, &p_transition_button_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->GetGDIPColorRef().GetRed(), 0.7, 0.3, &p_transition_button_border_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->GetGDIPColorRef().GetGreen(), 0.7, 0.3, &p_transition_button_border_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->GetGDIPColorRef().GetBlue(), 0.7, 0.3, &p_transition_button_border_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -602,40 +602,40 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Flash)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_transition_button_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_transition_button_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_transition_button_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_reverse_transition_button_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
+            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -961,14 +961,14 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
             }
 
             // Select font object.
-            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyStandardButton::pFontDefault->GetHFORef())))
+            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyStandardButton::pFontDefault->getHFONT())))
             {
                 error_message = L"Failed to select the font object.";
                 break;
             }
 
             // Set text color.
-            if (SetTextColor(mem_hdc, (p_this->isHoverState || p_this->isDownState ? MyStandardButton::pColorTextHighlight->GetCLR() : MyStandardButton::pColorTextDefault->GetCLR())) == CLR_INVALID)
+            if (SetTextColor(mem_hdc, (p_this->isHoverState || p_this->isDownState ? MyStandardButton::pColorTextHighlight->getCOLORREF() : MyStandardButton::pColorTextDefault->getCOLORREF())) == CLR_INVALID)
             {
                 error_message = L"Failed to set the text color.";
                 break;
@@ -977,7 +977,7 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
             // Begin painting to the memory device context.
             {
                 // Draw the button's background.
-                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &MyStandardButton::pColorBackground->GetGDIPColorRef()))
+                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &MyStandardButton::pColorBackground->getGDIPColor()))
                 {
                     error_message = L"Failed to draw the button's background.";
                     break;
@@ -996,7 +996,7 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
                 // Draw the button's focus border.
                 if (GetFocus() == hWnd)
                 {
-                    if (!MyDraw_DrawRoundRect(&gdip_graphics, gdip_rect_button, 4, 1, MyStandardButton::pColorFocus->GetGDIPColorRef()))
+                    if (!MyDraw_DrawRoundRect(&gdip_graphics, gdip_rect_button, 4, 1, MyStandardButton::pColorFocus->getGDIPColor()))
                     {
                         error_message = L"Failed to draw the button focus border.";
                         break;
@@ -1454,15 +1454,15 @@ bool MyImageButton::installSubclass(HWND hWnd)
         // Initialize the animation variables.
         error_message = L"Failed to initialize the animation variables.";
         if (!this->initializeAnimationVariable(this->pAnimationVariableBackgroundRGB[0],
-                                               this->pColorBackgroundDefault->GetGDIPColorRef().GetRed(),
+                                               this->pColorBackgroundDefault->getGDIPColor().GetRed(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableBackgroundRGB[1],
-                                               this->pColorBackgroundDefault->GetGDIPColorRef().GetGreen(),
+                                               this->pColorBackgroundDefault->getGDIPColor().GetGreen(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableBackgroundRGB[2],
-                                               this->pColorBackgroundDefault->GetGDIPColorRef().GetBlue(),
+                                               this->pColorBackgroundDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableDefaultIconOpacity, 1.0, 0.0, 1.0))
@@ -1513,13 +1513,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Default)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
             hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 1.0, 0.5, 0.5, &p_transition_default_icon_opacity);
@@ -1667,13 +1667,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Hover)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
             hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_default_icon_opacity);
@@ -1821,13 +1821,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Down)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->GetGDIPColorRef().GetRed(), 0.7, 0.3, &p_transition_background_rgb[0]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->GetGDIPColorRef().GetGreen(), 0.7, 0.3, &p_transition_background_rgb[1]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->GetGDIPColorRef().GetBlue(), 0.7, 0.3, &p_transition_background_rgb[2]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
             hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_default_icon_opacity);
@@ -1978,22 +1978,22 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Flash)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_transition_background_rgb[0]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_transition_background_rgb[1]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_transition_background_rgb[2]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_reverse_transition_background_rgb[0]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_reverse_transition_background_rgb[1]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_reverse_transition_background_rgb[2]);
+            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -2282,7 +2282,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 }
 
                 // Draw the button default image.
-                if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, p_this->pImageDefault->GetImageRef(), static_cast<FLOAT>(default_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
+                if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, (*(*p_this->pImageDefault)).getGDIPImage(), static_cast<FLOAT>(default_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
                 {
                     error_message = L"Failed to draw the button's default image.";
                     break;
@@ -2291,7 +2291,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 // Draw the button hover image.
                 if (!p_this->skipHoverAnimationState)
                 {
-                    if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, p_this->pImageHover->GetImageRef(), static_cast<FLOAT>(hover_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
+                    if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, (*(*p_this->pImageHover)).getGDIPImage(), static_cast<FLOAT>(hover_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
                     {
                         error_message = L"Failed to draw the button's hover image.";
                         break;
@@ -2301,7 +2301,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 // Draw the button down image.
                 if (!p_this->skipDownAnimationState)
                 {
-                    if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, p_this->pImageDown->GetImageRef(), static_cast<FLOAT>(down_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
+                    if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, (*(*p_this->pImageDown)).getGDIPImage(), static_cast<FLOAT>(down_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
                     {
                         error_message = L"Failed to draw the button's down image.";
                         break;
@@ -2311,7 +2311,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 // Draw the button's focus border.
                 if (GetFocus() == hWnd)
                 {
-                    if (!FrameRect(mem_hdc, &rect_button, MyImageButton::pColorFocus->GetHBRRef()))
+                    if (!FrameRect(mem_hdc, &rect_button, MyImageButton::pColorFocus->getHBRUSH()))
                     {
                         error_message = L"Failed to draw the button's focus border.";
                         break;
@@ -2801,39 +2801,39 @@ bool MyRadioButton::installSubclass(HWND hWnd)
         // Initialize the animation variables.
         error_message = L"Failed to initialize the animation variables.";
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[0],
-                                               this->pColorRadioButtonPrimaryDefault->GetGDIPColorRef().GetRed(),
+                                               this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetRed(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[1],
-                                               this->pColorRadioButtonPrimaryDefault->GetGDIPColorRef().GetGreen(),
+                                               this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetGreen(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[2],
-                                               this->pColorRadioButtonPrimaryDefault->GetGDIPColorRef().GetBlue(),
+                                               this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[0],
-                                               this->pColorRadioButtonSecondaryDefault->GetGDIPColorRef().GetRed(),
+                                               this->pColorRadioButtonSecondaryDefault->getGDIPColor().GetRed(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[1],
-                                               this->pColorRadioButtonSecondaryDefault->GetGDIPColorRef().GetGreen(),
+                                               this->pColorRadioButtonSecondaryDefault->getGDIPColor().GetGreen(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[2],
-                                               this->pColorRadioButtonSecondaryDefault->GetGDIPColorRef().GetBlue(),
+                                               this->pColorRadioButtonSecondaryDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[0],
-                                               this->pColorRadioButtonBorderDefault->GetGDIPColorRef().GetRed(),
+                                               this->pColorRadioButtonBorderDefault->getGDIPColor().GetRed(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[1],
-                                               this->pColorRadioButtonBorderDefault->GetGDIPColorRef().GetGreen(),
+                                               this->pColorRadioButtonBorderDefault->getGDIPColor().GetGreen(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[2],
-                                               this->pColorRadioButtonBorderDefault->GetGDIPColorRef().GetBlue(),
+                                               this->pColorRadioButtonBorderDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         error_message = L"";
@@ -2877,31 +2877,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Default)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3051,31 +3051,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Hover)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3225,31 +3225,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Down)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3399,31 +3399,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Selected)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3573,39 +3573,39 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: SelectedHover)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3755,31 +3755,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: SelectedDown)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->GetGDIPColorRef().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->GetGDIPColorRef().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->GetGDIPColorRef().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3934,58 +3934,58 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: SelectedFlash)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->GetGDIPColorRef().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->GetGDIPColorRef().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->GetGDIPColorRef().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
+            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -4394,14 +4394,14 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
             }
 
             // Select font object.
-            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyRadioButton::pFontDefault->GetHFORef())))
+            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyRadioButton::pFontDefault->getHFONT())))
             {
                 error_message = L"Failed to select the font object.";
                 break;
             }
 
             // Set text color.
-            if (SetTextColor(mem_hdc, (p_this->isHoverState || p_this->isDownState ? MyRadioButton::pColorRadioButtonTextHighlight->GetCLR() : MyRadioButton::pColorRadioButtonTextDefault->GetCLR())) == CLR_INVALID)
+            if (SetTextColor(mem_hdc, (p_this->isHoverState || p_this->isDownState ? MyRadioButton::pColorRadioButtonTextHighlight->getCOLORREF() : MyRadioButton::pColorRadioButtonTextDefault->getCOLORREF())) == CLR_INVALID)
             {
                 error_message = L"Failed to set the text color.";
                 break;
@@ -4410,7 +4410,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
             // Begin painting to the memory device context.
             {
                 // Draw the button's background.
-                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &MyRadioButton::pColorBackground->GetGDIPColorRef()))
+                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &MyRadioButton::pColorBackground->getGDIPColor()))
                 {
                     error_message = L"Failed to draw the button's background.";
                     break;
@@ -4420,7 +4420,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 INT circle1_diameter = gdip_rect_button.GetBottom() / 2;
                 INT circle1_posx = 11;
                 INT circle1_posy = (gdip_rect_button.GetBottom() / 2) - (circle1_diameter / 2);
-                if (!MyDraw_FillEllipse(&gdip_graphics, gdip_rect_button, circle1_diameter, circle1_posx, circle1_posy, &button_secondary_color, (GetFocus() == hWnd ? &MyRadioButton::pColorFocus->GetGDIPColorRef() : &button_border_color)))
+                if (!MyDraw_FillEllipse(&gdip_graphics, gdip_rect_button, circle1_diameter, circle1_posx, circle1_posy, &button_secondary_color, (GetFocus() == hWnd ? &MyRadioButton::pColorFocus->getGDIPColor() : &button_border_color)))
                 {
                     error_message = L"Failed to draw the button secondary part.";
                     break;
@@ -5257,12 +5257,12 @@ LRESULT CALLBACK MyEdit::scMyEditStatic(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 
             // Begin painting to the memory device context.
             {
-                FillRect(mem_hdc, &rect_static1, g_AppUIObjectManager->Colors.Edit.GetHBRRef());
-                FrameRect(mem_hdc, &rect_static1, g_AppUIObjectManager->Colors.Background.GetHBRRef());
-                FrameRect(mem_hdc, &rect_static2, g_AppUIObjectManager->Colors.Edit.GetHBRRef());
+                FillRect(mem_hdc, &rect_static1, g_pUIElements->colors.editbox.getHBRUSH());
+                FrameRect(mem_hdc, &rect_static1, g_pUIElements->colors.background.getHBRUSH());
+                FrameRect(mem_hdc, &rect_static2, g_pUIElements->colors.editbox.getHBRUSH());
                 Gdiplus::Graphics gdip_graphics(mem_hdc);
                 gdip_graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeAntiAlias);
-                DrawRoundRect(&gdip_graphics, gdip_rect_static, (GetFocus() == p_this->hWndEdit ? g_AppUIObjectManager->Colors.Edit_Border_Selected.GetGDIPColorRef() : g_AppUIObjectManager->Colors.Edit_Border.GetGDIPColorRef()), 2, 1);
+                DrawRoundRect(&gdip_graphics, gdip_rect_static, (GetFocus() == p_this->hWndEdit ? g_pUIElements->colors.editboxBorderSelected.getGDIPColor() : g_pUIElements->colors.editboxBorderDefault.getGDIPColor()), 2, 1);
             }
 
             // Draw contents from memory device context to target device context.
@@ -5541,7 +5541,7 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
             Gdiplus::Rect gdip_rect_combobox(rect_combobox.top, rect_combobox.left, rect_combobox.right, rect_combobox.bottom);
 
             // Create Gdiplus::SolidBrush object for drawing operations.
-            Gdiplus::SolidBrush gdip_brush_combobox = MyDDLCombobox::pColorDDLCombobox->GetGDIPColorRef();
+            Gdiplus::SolidBrush gdip_brush_combobox = MyDDLCombobox::pColorDDLCombobox->getGDIPColor();
 
             // Begin the paintings.
             hdc = BeginPaint(hWnd, &ps);
@@ -5591,14 +5591,14 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
             }
 
             // Select font object.
-            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyDDLCombobox::pFontDefault->GetHFORef())))
+            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyDDLCombobox::pFontDefault->getHFONT())))
             {
                 error_message = L"Failed to select the font object.";
                 break;
             }
 
             // Set text color.
-            if (SetTextColor(mem_hdc, MyDDLCombobox::pColorText->GetCLR()))
+            if (SetTextColor(mem_hdc, MyDDLCombobox::pColorText->getCOLORREF()))
             {
                 error_message = L"Failed to set the text color.";
                 break;
@@ -5607,11 +5607,11 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
             // Begin painting to the memory device context.
             {
                 // Draw the combobox's background.
-                FillRect(mem_hdc, &rect_combobox, MyDDLCombobox::pColorBackground->GetHBRRef());
+                FillRect(mem_hdc, &rect_combobox, MyDDLCombobox::pColorBackground->getHBRUSH());
 
                 // Draw the combobox.
                 FillRoundRect(&gdip_graphics, &gdip_brush_combobox, gdip_rect_combobox,
-                              (GetFocus() == hWnd ? MyDDLCombobox::pColorFocus->GetGDIPColorRef() : MyDDLCombobox::pColorDDLComboboxBorder->GetGDIPColorRef()), 4);
+                              (GetFocus() == hWnd ? MyDDLCombobox::pColorFocus->getGDIPColor() : MyDDLCombobox::pColorDDLComboboxBorder->getGDIPColor()), 4);
 
                 // Get and paint current selected combobox item text.
                 INT current_selected_item_index = static_cast<INT>(SendMessageW(hWnd, CB_GETCURSEL, NULL, NULL));
@@ -5701,7 +5701,7 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
 
         // Perform an extra invalidate operation, otherwise the combobox item won't be rendered.
         RedrawWindow(p_this->hWndDDLComboboxDropdownlist, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-        
+
         break;
     }
 
@@ -5805,12 +5805,12 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLComboboxDropdownlist(HWND hWnd, UINT uMsg
             RECT rect_dropdownlist_2 = rect_dropdownlist;
             rect_dropdownlist_2.top = --rect_dropdownlist_2.bottom - 1;
             FillRect(hdc, &rect_dropdownlist_2,
-                      (current_selected_combobox_item == (total_combobox_items - 1)
-                           ? MyDDLCombobox::pColorDDLComboboxSelectedItemBackground->GetHBRRef()
-                           : MyDDLCombobox::pColorDDLComboboxItemBackground->GetHBRRef()));
+                     (current_selected_combobox_item == (total_combobox_items - 1)
+                          ? MyDDLCombobox::pColorDDLComboboxSelectedItemBackground->getHBRUSH()
+                          : MyDDLCombobox::pColorDDLComboboxItemBackground->getHBRUSH()));
 
             // Draw the drop-down list's borders.
-            FrameRect(hdc, &rect_dropdownlist, MyDDLCombobox::pColorDDLComboboxDropdownlistBorder->GetHBRRef());
+            FrameRect(hdc, &rect_dropdownlist, MyDDLCombobox::pColorDDLComboboxDropdownlistBorder->getHBRUSH());
 
             are_all_operation_success = true;
         }
@@ -5984,7 +5984,7 @@ bool MyDDLCombobox::setSubclass(HWND hWnd, INT comboboxHeight)
         nApp::Window::Utility::RemoveWindowStyle(this->hWndDDLComboboxDropdownlist, CS_DROPSHADOW);
 
         // Set font for the combobox and its drop-down list window.
-        SendMessageW(this->hWndDDLCombobox, WM_SETFONT, reinterpret_cast<WPARAM>(MyDDLCombobox::pFontDefault->GetHFORef()), FALSE);
+        SendMessageW(this->hWndDDLCombobox, WM_SETFONT, reinterpret_cast<WPARAM>(MyDDLCombobox::pFontDefault->getHFONT()), FALSE);
 
         // Set the combobox height.
         ComboBox_SetItemHeight(hWnd, -1, comboboxHeight - 6);

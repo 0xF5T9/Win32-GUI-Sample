@@ -306,13 +306,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             // Begin painting to the memory device context.
             {
                 // Draw the window background.
-                FillRect(mem_hdc, &rect_application, g_AppUIObjectManager->Colors.Background.GetHBRRef());
+                FillRect(mem_hdc, &rect_application, g_pUIElements->colors.background.getHBRUSH());
 
                 // Draw the window caption background.
-                FillRect(mem_hdc, &g_AppUIObjectManager->Miscs.RECT_Caption, g_AppUIObjectManager->Colors.Caption_Background.GetHBRRef());
+                FillRect(mem_hdc, &g_pUIElements->rectangles.rectCaption, g_pUIElements->colors.captionBackground.getHBRUSH());
 
                 // Draw the window borders.
-                FrameRect(mem_hdc, &rect_application, *g_AppUIObjectManager->Pointers.pCurrentBorderBrush);
+                FrameRect(mem_hdc, &rect_application, *g_pUIElements->pointers.pCurrentBorderBrush);
             }
 
             // Draw contents from memory device context to target device context.
@@ -414,11 +414,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                 // Begin painting to the memory device context.
                 {
                     // Draw the window background.
-                    FillRect(mem_hdc, &rect_application, g_AppUIObjectManager->Colors.Background.GetHBRRef());
+                    FillRect(mem_hdc, &rect_application, g_pUIElements->colors.background.getHBRUSH());
                     // Draw the window caption background.
                     RECT rect_caption = rect_application;
                     rect_caption.bottom = WINDOW_CAPTIONBAR_DEFAULTHEIGHT;
-                    FillRect(mem_hdc, &rect_caption, g_AppUIObjectManager->Colors.Caption_Background.GetHBRRef());
+                    FillRect(mem_hdc, &rect_caption, g_pUIElements->colors.captionBackground.getHBRUSH());
                 }
 
                 // Draw contents from memory device context to target device context.
@@ -484,18 +484,18 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         // Container: MainContent
         case IDC_MAINCONTENT_CONTAINER:
         {
-            SetBkColor(hdc, g_AppUIObjectManager->Colors.Background.GetCLR());
-            SetTextColor(hdc, g_AppUIObjectManager->Colors.Text.GetCLR());
-            p_background_brush = &g_AppUIObjectManager->Colors.Background.GetHBRRef();
+            SetBkColor(hdc, g_pUIElements->colors.background.getCOLORREF());
+            SetTextColor(hdc, g_pUIElements->colors.textActive.getCOLORREF());
+            p_background_brush = &g_pUIElements->colors.background.getHBRUSH();
             break;
         }
 
         // Caption title.
         case IDC_NONCLIENT_CAPTIONTITLE_STATIC:
         {
-            SetBkColor(hdc, g_AppUIObjectManager->Colors.Caption_Background.GetCLR());
-            SetTextColor(hdc, (GetActiveWindow() == hWnd ? g_AppUIObjectManager->Colors.Text.GetCLR() : g_AppUIObjectManager->Colors.Text_Inactive.GetCLR()));
-            p_background_brush = &g_AppUIObjectManager->Colors.Caption_Background.GetHBRRef();
+            SetBkColor(hdc, g_pUIElements->colors.captionBackground.getCOLORREF());
+            SetTextColor(hdc, (GetActiveWindow() == hWnd ? g_pUIElements->colors.textActive.getCOLORREF() : g_pUIElements->colors.textInactive.getCOLORREF()));
+            p_background_brush = &g_pUIElements->colors.captionBackground.getHBRUSH();
             break;
         }
 
@@ -574,15 +574,15 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                     void *p_subclass = nullptr;
                     if (MyStandardButton::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     else if (MyImageButton::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     else if (MyRadioButton::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     // Standard controls.
                     else
@@ -635,12 +635,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WA_ACTIVE:
         {
             // Update the appropriate border color.
-            g_AppUIObjectManager->Pointers.pCurrentBorderBrush = &g_AppUIObjectManager->Colors.Border.GetHBRRef();
+            g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderActive.getHBRUSH();
 
             // If supported, set the border color attribute.
             if (g_IsWindows11BorderAttributeSupported)
             {
-                COLORREF border_color = g_AppUIObjectManager->Colors.Border.GetCLR();
+                COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
                 HRESULT hr = DwmSetWindowAttribute(hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
                 if (FAILED(hr))
                     WriteLog(L"Failed to set the window border attribute.", L" [MESSAGE: \"WM_ACTIVATE/WA_CLICKACTIVE||WA_ACTIVE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
@@ -652,12 +652,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WA_INACTIVE:
         {
             // Update the appropriate border color.
-            g_AppUIObjectManager->Pointers.pCurrentBorderBrush = &g_AppUIObjectManager->Colors.Border_Inactive.GetHBRRef();
+            g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderInactive.getHBRUSH();
 
             // If supported, set the border color attribute.
             if (g_IsWindows11BorderAttributeSupported)
             {
-                COLORREF border_color = g_AppUIObjectManager->Colors.Border_Inactive.GetCLR();
+                COLORREF border_color = g_pUIElements->colors.borderInactive.getCOLORREF();
                 HRESULT hr = DwmSetWindowAttribute(hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
                 if (FAILED(hr))
                     WriteLog(L"Failed to set the window border attribute.", L" [MESSAGE: \"WM_ACTIVATE/WA_INACTIVE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
@@ -666,12 +666,12 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             break;
         }
         }
-
+        
         // Invalidate the borders.
-        InvalidateRect(hWnd, &g_AppUIObjectManager->Miscs.RECT_SizeBorder_Left, FALSE);
-        InvalidateRect(hWnd, &g_AppUIObjectManager->Miscs.RECT_SizeBorder_Top, FALSE);
-        InvalidateRect(hWnd, &g_AppUIObjectManager->Miscs.RECT_SizeBorder_Right, FALSE);
-        InvalidateRect(hWnd, &g_AppUIObjectManager->Miscs.RECT_SizeBorder_Bottom, FALSE);
+        InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderLeft, FALSE);
+        InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderTop, FALSE);
+        InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderRight, FALSE);
+        InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderBottom, FALSE);
 
         // Invalidate non-client window controls.
         for (const auto &window : g_VectorMyWindow_NonClient)
@@ -716,11 +716,11 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         const LONG extra_sizeborder_thickness = 10;
 
         // Get caption bar and size border rects.
-        RECT rect_caption = g_AppUIObjectManager->Miscs.RECT_Caption,
-             rect_border_left = g_AppUIObjectManager->Miscs.RECT_SizeBorder_Left,
-             rect_border_top = g_AppUIObjectManager->Miscs.RECT_SizeBorder_Top,
-             rect_border_right = g_AppUIObjectManager->Miscs.RECT_SizeBorder_Right,
-             rect_border_bottom = g_AppUIObjectManager->Miscs.RECT_SizeBorder_Bottom,
+        RECT rect_caption = g_pUIElements->rectangles.rectCaption,
+             rect_border_left = g_pUIElements->rectangles.rectSizeBorderLeft,
+             rect_border_top = g_pUIElements->rectangles.rectSizeBorderTop,
+             rect_border_right = g_pUIElements->rectangles.rectSizeBorderRight,
+             rect_border_bottom = g_pUIElements->rectangles.rectSizeBorderBottom,
              rect_border_bottom_right = rect_border_bottom,
              rect_border_bottom_left = rect_border_bottom,
              rect_border_top_left = rect_border_top,
@@ -802,15 +802,15 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             g_CurrentWindowHeight = static_cast<INT>(HIWORD(lParam));
 
             // Global dimension rectangles.
-            g_AppUIObjectManager->Miscs.RECT_Caption.right = g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Left.bottom = g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Top.right = g_CurrentWindowWidth;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Right.left = g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Right.right = g_CurrentWindowWidth;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Right.bottom = g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Bottom.right = g_CurrentWindowWidth;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Bottom.top = g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH;
-            g_AppUIObjectManager->Miscs.RECT_SizeBorder_Bottom.bottom = g_CurrentWindowHeight;
+            g_pUIElements->rectangles.rectCaption.right = g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH;
+            g_pUIElements->rectangles.rectSizeBorderLeft.bottom = g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH;
+            g_pUIElements->rectangles.rectSizeBorderTop.right = g_CurrentWindowWidth;
+            g_pUIElements->rectangles.rectSizeBorderRight.left = g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH;
+            g_pUIElements->rectangles.rectSizeBorderRight.right = g_CurrentWindowWidth;
+            g_pUIElements->rectangles.rectSizeBorderRight.bottom = g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH;
+            g_pUIElements->rectangles.rectSizeBorderBottom.right = g_CurrentWindowWidth;
+            g_pUIElements->rectangles.rectSizeBorderBottom.top = g_CurrentWindowHeight - WINDOW_BORDER_DEFAULTWIDTH;
+            g_pUIElements->rectangles.rectSizeBorderBottom.bottom = g_CurrentWindowHeight;
         }
 
         // Stop all animations during resize event.
@@ -859,9 +859,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         if (IsWindow(g_Container_MainContent->pContainerWindow->hWnd))
         {
             if (!g_Container_MainContent->updateContainerDimensions(WINDOW_BORDER_DEFAULTWIDTH,
-                                                                    g_AppUIObjectManager->Miscs.RECT_Caption.bottom,
+                                                                    g_pUIElements->rectangles.rectCaption.bottom,
                                                                     g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),
-                                                                    g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_AppUIObjectManager->Miscs.RECT_Caption.bottom - g_AppUIObjectManager->Miscs.RECT_Caption.top), g_IsCurrentThemeWantScrollbarsVisible, reset_containers_scroll_position))
+                                                                    g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), g_IsCurrentThemeWantScrollbarsVisible, reset_containers_scroll_position))
             {
                 WriteLog(L"Failed to update the MainContent container's dimensions.", L" [MESSAGE: \"WM_SIZE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
             }
@@ -869,8 +869,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
         // Update the non-client controls dimensions all at once.
         HDWP hdwp_nonclient_controls = BeginDeferWindowPos(2);
-        DeferWindowPos(hdwp_nonclient_controls, g_AppUIObjectManager->Miscs.hWndNonClientCloseButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-        DeferWindowPos(hdwp_nonclient_controls, g_AppUIObjectManager->Miscs.hWndNonClientMinimizeButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58 - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+        DeferWindowPos(hdwp_nonclient_controls, g_pUIElements->miscs.hWndNonClientCloseButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+        DeferWindowPos(hdwp_nonclient_controls, g_pUIElements->miscs.hWndNonClientMinimizeButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58 - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
         if (!EndDeferWindowPos(hdwp_nonclient_controls))
             WriteLog(L"Failed to update the non-client controls' dimensions", L" [MESSAGE: \"WM_SIZE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
 
@@ -892,8 +892,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         if (g_IsAppResizing)
             g_IsAppResizing = false;
 
-        RedrawWindow(g_AppUIObjectManager->Miscs.hWndNonClientCloseButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-        RedrawWindow(g_AppUIObjectManager->Miscs.hWndNonClientMinimizeButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        RedrawWindow(g_pUIElements->miscs.hWndNonClientCloseButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        RedrawWindow(g_pUIElements->miscs.hWndNonClientMinimizeButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 
         break;
     }
@@ -1337,7 +1337,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                 // Show the debug message.
                 std::wstring debug_message = L"";
                 debug_message.append(L"Window dimensions: " + std::to_wstring(g_CurrentWindowWidth) + L"x" + std::to_wstring(g_CurrentWindowHeight) + L"\n");
-                debug_message.append(L"Caption dimensions: " + std::to_wstring(g_AppUIObjectManager->Miscs.RECT_Caption.bottom - g_AppUIObjectManager->Miscs.RECT_Caption.top) + L"\n");
+                debug_message.append(L"Caption dimensions: " + std::to_wstring(g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top) + L"\n");
                 debug_message.append(L"Container dimensions (MainContent): " + std::to_wstring(container_maincontent_width) + L"x" + std::to_wstring(container_maincontent_height) + L"\n");
                 debug_message.append(L"Log level: " + log_level_string + L"\n");
                 debug_message.append(L"Theme: " + theme_string + L" (Hotkey: F5)\n");
@@ -1361,8 +1361,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         }
 
         case VK_F2:
-        {
+        {   
             MessageBeep(MB_OK);
+            g_pUIElements->showTotalInstances();
             return 0;
         }
         }
@@ -1825,9 +1826,9 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
         case IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC:
         case IDC_MAINCONTENT_TESTZONE_STATIC:
         {
-            SetBkColor(hdc, g_AppUIObjectManager->Colors.Background.GetCLR());
-            SetTextColor(hdc, g_AppUIObjectManager->Colors.Text.GetCLR());
-            p_background_brush = &g_AppUIObjectManager->Colors.Background.GetHBRRef();
+            SetBkColor(hdc, g_pUIElements->colors.background.getCOLORREF());
+            SetTextColor(hdc, g_pUIElements->colors.textActive.getCOLORREF());
+            p_background_brush = &g_pUIElements->colors.background.getHBRUSH();
             break;
         }
 
@@ -1837,9 +1838,9 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
         case IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC:
         case IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC:
         {
-            SetBkColor(hdc, g_AppUIObjectManager->Colors.Background.GetCLR());
-            SetTextColor(hdc, g_AppUIObjectManager->Colors.Text_Inactive.GetCLR());
-            p_background_brush = &g_AppUIObjectManager->Colors.Background.GetHBRRef();
+            SetBkColor(hdc, g_pUIElements->colors.background.getCOLORREF());
+            SetTextColor(hdc, g_pUIElements->colors.textInactive.getCOLORREF());
+            p_background_brush = &g_pUIElements->colors.background.getHBRUSH();
             break;
         }
 
@@ -1865,7 +1866,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     void *p_subclass = nullptr;
                     if (MyEdit::isSubclassed(window, true, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     // Standard controls.
                     else
@@ -1886,9 +1887,9 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     if (MyEdit::isSubclassed(window, false, &p_subclass))
                     {
                         SetBkMode(hdc, OPAQUE);
-                        SetBkColor(hdc, g_AppUIObjectManager->Colors.Edit.GetCLR());
-                        SetTextColor(hdc, g_AppUIObjectManager->Colors.Text_Inactive.GetCLR());
-                        p_background_brush = &g_AppUIObjectManager->Colors.Edit.GetHBRRef();
+                        SetBkColor(hdc, g_pUIElements->colors.editbox.getCOLORREF());
+                        SetTextColor(hdc, g_pUIElements->colors.textInactive.getCOLORREF());
+                        p_background_brush = &g_pUIElements->colors.editbox.getHBRUSH();
                     }
                     // Standard controls.
                     else
@@ -1966,15 +1967,15 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     void *p_subclass = nullptr;
                     if (MyStandardButton::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     else if (MyImageButton::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     else if (MyRadioButton::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     // Standard controls.
                     else
@@ -2052,9 +2053,9 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     if (MyEdit::isSubclassed(window, false, &p_subclass))
                     {
                         SetBkMode(hdc, OPAQUE);
-                        SetBkColor(hdc, g_AppUIObjectManager->Colors.Edit.GetCLR());
-                        SetTextColor(hdc, g_AppUIObjectManager->Colors.Text.GetCLR());
-                        p_background_brush = &g_AppUIObjectManager->Colors.Edit.GetHBRRef();
+                        SetBkColor(hdc, g_pUIElements->colors.editbox.getCOLORREF());
+                        SetTextColor(hdc, g_pUIElements->colors.textActive.getCOLORREF());
+                        p_background_brush = &g_pUIElements->colors.editbox.getHBRUSH();
                     }
                     // Standard controls.
                     else
@@ -2075,7 +2076,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     void *p_subclass = nullptr;
                     if (MyDDLCombobox::isSubclassed(window, &p_subclass))
                     {
-                        p_background_brush = &g_AppUIObjectManager->Colors.NullBrush;
+                        p_background_brush = &g_pUIElements->colors.nullBrush;
                     }
                     // Standard controls.
                     else
@@ -2206,7 +2207,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
             while (!are_all_operation_success)
             {
                 // Set the combobox item height to the height of the font plus 10.
-                measure_items_struct->itemHeight = g_AppUIObjectManager->Fonts.Combobox.GetSize() + 10;
+                measure_items_struct->itemHeight = g_pUIElements->fonts.ddlCombobox.getSize() + 10;
 
                 are_all_operation_success = true;
             }
@@ -2293,20 +2294,20 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                         delete[] text_buffer;
 
                         // Prepare COLORREF variables for the background and text colors.
-                        COLORREF background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background.GetCLR();
-                        COLORREF text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Default.GetCLR();
+                        COLORREF background_color = g_pUIElements->colors.ddlComboboxItemBackground.getCOLORREF();
+                        COLORREF text_color = g_pUIElements->colors.ddlComboboxItemTextDefault.getCOLORREF();
 
                         if (draw_items_struct->itemAction & ODA_DRAWENTIRE)
                         {
                             if (draw_items_struct->itemState & ODS_COMBOBOXEDIT)
                             {
-                                background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background.GetCLR();
-                                text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Default.GetCLR();
+                                background_color = g_pUIElements->colors.ddlComboboxItemBackground.getCOLORREF();
+                                text_color = g_pUIElements->colors.ddlComboboxItemTextDefault.getCOLORREF();
                             }
                             else if (draw_items_struct->itemState & ODS_SELECTED)
                             {
-                                background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected.GetCLR();
-                                text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Selected.GetCLR();
+                                background_color = g_pUIElements->colors.ddlComboboxSelectedItemBackground.getCOLORREF();
+                                text_color = g_pUIElements->colors.ddlComboboxItemTextSelected.getCOLORREF();
                             }
 
                             SetBkMode(draw_items_struct->hDC, OPAQUE);
@@ -2328,13 +2329,13 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
 
                             if (draw_items_struct->itemState & ODS_COMBOBOXEDIT)
                             {
-                                background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background.GetCLR();
-                                text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Default.GetCLR();
+                                background_color = g_pUIElements->colors.ddlComboboxItemBackground.getCOLORREF();
+                                text_color = g_pUIElements->colors.ddlComboboxItemTextDefault.getCOLORREF();
                             }
                             else if (draw_items_struct->itemState & ODS_SELECTED)
                             {
-                                background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected.GetCLR();
-                                text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Selected.GetCLR();
+                                background_color = g_pUIElements->colors.ddlComboboxSelectedItemBackground.getCOLORREF();
+                                text_color = g_pUIElements->colors.ddlComboboxItemTextSelected.getCOLORREF();
                             }
 
                             SetBkMode(draw_items_struct->hDC, OPAQUE);
@@ -2350,13 +2351,13 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                         {
                             if (draw_items_struct->itemState & ODS_COMBOBOXEDIT)
                             {
-                                background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background.GetCLR();
-                                text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Default.GetCLR();
+                                background_color = g_pUIElements->colors.ddlComboboxItemBackground.getCOLORREF();
+                                text_color = g_pUIElements->colors.ddlComboboxItemTextDefault.getCOLORREF();
                             }
                             else if (draw_items_struct->itemState & ODS_SELECTED)
                             {
-                                background_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected.GetCLR();
-                                text_color = g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Text_Selected.GetCLR();
+                                background_color = g_pUIElements->colors.ddlComboboxSelectedItemBackground.getCOLORREF();
+                                text_color = g_pUIElements->colors.ddlComboboxItemTextSelected.getCOLORREF();
                             }
 
                             SetBkMode(draw_items_struct->hDC, OPAQUE);
@@ -2416,11 +2417,11 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                         rect_dropdownlist_2.top = --rect_dropdownlist_2.bottom - 1;
                         FillRect(hdc, &rect_dropdownlist_2,
                                  (current_selected_combobox_item == (total_combobox_items - 1)
-                                      ? g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected.GetHBRRef()
-                                      : g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background.GetHBRRef()));
+                                      ? g_pUIElements->colors.ddlComboboxSelectedItemBackground.getHBRUSH()
+                                      : g_pUIElements->colors.ddlComboboxItemBackground.getHBRUSH()));
 
                         // Draw the drop down list borders.
-                        FrameRect(hdc, &rect_dropdownlist, g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Border.GetHBR());
+                        FrameRect(hdc, &rect_dropdownlist, g_pUIElements->colors.ddlComboboxDropdownlistBorder.getHBRUSH());
 
                         // Release the combobox drop down list's device context.
                         if (!ReleaseDC(hwnd_dropdownlist, hdc))

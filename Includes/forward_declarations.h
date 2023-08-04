@@ -1,11 +1,12 @@
-#pragma once
+#ifndef FORWARD_DECLARATIONS_H
+#define FORWARD_DECLARATIONS_H
 
 // Enums:
 enum class MyTheme;
 enum class MyLogType;
 enum class MyWindowType;
 enum class MyEditboxType;
-enum class ImageFormat;
+enum class MyImageFormat;
 // Structs:
 struct MyStandardButtonInitializeConfig;
 struct MyStandardButtonSharedPropertiesConfig;
@@ -64,3 +65,5 @@ using nApp::File::Log::WriteLog;
 using nApp::File::Log::WriteLogEx;
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+#endif // FORWARD_DECLARATIONS_H

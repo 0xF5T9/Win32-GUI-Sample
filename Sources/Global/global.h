@@ -3,10 +3,11 @@
  * @brief The distribution header of the global variables, forward declarations and my class declarations.
  */
 
-#pragma once
+#ifndef GLOBAL_H
+#define GLOBAL_H
 
 #include "../../Includes/my_includes.h" // My class declarations.
-#include "../../Includes/my_enums.h"    // My enum declarations.
+#include "../../Includes/my_enums.h"    // My enum definitions.
 
 /*****************************
  * GLOBAL VARIABLE EXTERNALS *
@@ -24,7 +25,7 @@ extern INT g_CurrentWindowHeight;
 extern INT g_AppLogLevel;
 extern MyTheme g_CurrentAppTheme;
 extern std::filesystem::path g_AppDirectoryPath;
-extern UIObjectManager *g_AppUIObjectManager;
+extern UIElements *g_pUIElements;
 
 // Application states:
 extern bool g_IsWindowReady;
@@ -54,3 +55,5 @@ extern ULONG_PTR g_APIGDIToken;
 extern IUIAnimationManager* g_pAnimationManager;
 extern IUIAnimationTimer *g_pAnimationTimer;
 extern IUIAnimationTransitionLibrary* g_pTransitionLibrary;
+
+#endif // GLOBAL_H

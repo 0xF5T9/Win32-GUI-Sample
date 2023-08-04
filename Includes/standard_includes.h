@@ -1,4 +1,6 @@
-#pragma once
+#ifndef STANDARD_INCLUDES_H
+#define STANDARD_INCLUDES_H
+
 #include "../Resource/c_resources.h" // Includes my constants and project resource header.
 #include <exception>                 // Exception handling.
 #include <string>                    // String handling.
@@ -6,6 +8,8 @@
 #include <regex>                     // Regular expressions (String conversions).
 #include <limits>                    // Numeric limits.
 #include <locale>                    // Localization.
+#include <exception>                 // Exception handling.
+#include <memory>                    // Memory management utilities.
 #include <fstream>                   // File input/output.
 #include <filesystem>                // Filesystem operations (File paths).
 #include <map>                       // Associative containers (Animations).
@@ -21,3 +25,5 @@
 #include <UIAnimation.h>             // Windows API: Windows Animation Manager (WAM).
 #include <comdef.h>                  // Windows API: Component Object Model (COM) error handling.
 #include <Powrprof.h>                // Windows API: Power management functions and settings.
+
+#endif // STANDARD_INCLUDES_H

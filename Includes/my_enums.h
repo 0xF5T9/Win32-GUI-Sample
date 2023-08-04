@@ -1,3 +1,6 @@
+#ifndef MY_ENUMS_H
+#define MY_ENUMS_H
+
 enum class MyTheme
 {
     Light,
@@ -30,7 +33,7 @@ enum class MyEditboxType
     SinglelinePassword,
     Multiline
 };
-enum class ImageFormat
+enum class MyImageFormat
 {
     Unknown,
     JPG,
@@ -38,4 +41,4 @@ enum class ImageFormat
     ICO
 };
 
-/// CONVERT ENUM TO ENUM CLASS
+#endif // MY_ENUMS_H

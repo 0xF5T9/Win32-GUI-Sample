@@ -3,7 +3,8 @@
  * @brief Header file containing classes that related to WinAPI.
  */
 
-#pragma once
+#ifndef MY_WINAPI_H
+#define MY_WINAPI_H
 
 /**
  * @class MyWindow
@@ -354,14 +355,14 @@ public:
  *
  * - If the container needs scrolling functionality, scrollbars can be created using the provided handles.
  *   Use the class scroll functions to manage the scroll information.
- * 
+ *
  * Usage:
  * 1. Create the container:
  *    - Create a MyContainer object.
  *      If the container intends to use scrolling functionality provided by the internal scroll manager, specify the padding values in the constructor.
  *    - Create the container window using the createContainerWindow() function.
  *      If the container wishes to use builtin scrollbars, create the scrollbars using the createVerticalScrollbarWindow() function.
- * 
+ *
  * 2. Create and add windows to the container:
  *   - Create windows (MyWindow) that will be added to the container.
  *   - Use the addWindow() function to add windows (MyWindow) to the container.
@@ -599,3 +600,5 @@ public:
      */
     void registerNewHorizontalLine(HWND hWnd);
 };
+
+#endif // MY_WINAPI_H

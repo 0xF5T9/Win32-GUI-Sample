@@ -3,7 +3,9 @@
  * @brief Include libraries and define application functions.
  */
 
-#pragma once
+#ifndef FUNC_H
+#define FUNC_H
+
 #include "../../Includes/standard_includes.h"     // Standard libraries, project resources and global constant includes.
 #include "../../Includes/Externals/Ex_DarkMode.h" // External: Reverse and access to undocumented window "Dark Mode" API.
 #include "../Global/global.h"                     // The distribution header of the global variables, forward declarations and my class declarations.
@@ -2435,9 +2437,9 @@ namespace nApp
                     // Update container positions and dimensions.
                     SetWindowPos(g_Container_MainContent->pContainerWindow->hWnd, NULL,
                                  WINDOW_BORDER_DEFAULTWIDTH,                                                                                                                              // PosX
-                                 g_AppUIObjectManager->Miscs.RECT_Caption.bottom,                                                                                                         // PosY
-                                 g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2) - WINDOW_SCROLLBAR_DEFAULTWIDTH,                                                                     // Width
-                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_AppUIObjectManager->Miscs.RECT_Caption.bottom - g_AppUIObjectManager->Miscs.RECT_Caption.top), // Height
+                                 g_pUIElements->rectangles.rectCaption.bottom,                                                                                                         // PosY
+                                 g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2) - WINDOW_SCROLLBAR_DEFAULTWIDTH,                                                               // Width
+                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), // Height
                                  SWP_NOZORDER);
 
                     // Check if the container scrollbar exists and if the current container dimensions need the scrollbar to be visible.
@@ -2493,9 +2495,9 @@ namespace nApp
                     // Update container positions and dimensions.
                     SetWindowPos(g_Container_MainContent->pContainerWindow->hWnd, NULL,
                                  WINDOW_BORDER_DEFAULTWIDTH,                                                                                                                              // PosX
-                                 g_AppUIObjectManager->Miscs.RECT_Caption.bottom,                                                                                                         // PosY
+                                 g_pUIElements->rectangles.rectCaption.bottom,                                                                                                         // PosY
                                  g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2) - WINDOW_SCROLLBAR_DEFAULTWIDTH,                                                                     // Width
-                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_AppUIObjectManager->Miscs.RECT_Caption.bottom - g_AppUIObjectManager->Miscs.RECT_Caption.top), // Height
+                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), // Height
                                  SWP_NOZORDER);
 
                     // Check if the container scrollbar exists and if the current container dimensions require the scrollbar to be visible.
@@ -2555,9 +2557,9 @@ namespace nApp
                     // Update container positions and dimensions.
                     SetWindowPos(g_Container_MainContent->pContainerWindow->hWnd, NULL,
                                  WINDOW_BORDER_DEFAULTWIDTH,                                                                                                                              // PosX
-                                 g_AppUIObjectManager->Miscs.RECT_Caption.bottom,                                                                                                         // PosY
+                                 g_pUIElements->rectangles.rectCaption.bottom,                                                                                                         // PosY
                                  g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),                                                                                                     // Width
-                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_AppUIObjectManager->Miscs.RECT_Caption.bottom - g_AppUIObjectManager->Miscs.RECT_Caption.top), // Height
+                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), // Height
                                  SWP_NOZORDER);
 
                     // Update the container contents class name to match the theme.
@@ -2673,10 +2675,10 @@ namespace nApp
             }
 
             // Update application border brush.
-            g_AppUIObjectManager->Pointers.pCurrentBorderBrush = &g_AppUIObjectManager->Colors.Border.GetHBRRef();
+            g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderActive.getHBRUSH();
             if (g_IsWindows11BorderAttributeSupported)
             {
-                COLORREF border_color = g_AppUIObjectManager->Colors.Border.GetCLR();
+                COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
                 HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
                 if (FAILED(hr))
                 {
@@ -2714,100 +2716,141 @@ namespace nApp
             {
             case MyTheme::Light:
             {
-                g_AppUIObjectManager->Colors.UpdateMainColors(MyColor(255, 255, 255), MyColor(255, 255, 255), MyColor(64, 64, 64), MyColor(192, 192, 192), MyColor(0, 0, 0), MyColor(153, 153, 153), MyColor(0, 162, 237), MyColor(255, 89, 89), MyColor(205, 206, 206), MyColor(255, 89, 89), MyColor(255, 89, 89), MyColor(205, 206, 206), MyColor(205, 206, 206), MyColor(240, 240, 240));
-                g_AppUIObjectManager->Colors.UpdateCaptionColors(MyColor(255, 255, 255), MyColor(0, 0, 0), MyColor(153, 153, 153));
-                g_AppUIObjectManager->Colors.UpdateStandardButtonColors(MyColor(225, 225, 225), MyColor(229, 241, 251), MyColor(204, 228, 247), MyColor(172, 172, 172), MyColor(0, 120, 215), MyColor(0, 84, 153), MyColor(0, 0, 0), MyColor(0, 0, 0));
-                g_AppUIObjectManager->Colors.UpdateRadioButtonColors(MyColor(255, 255, 255), // Radio button primary color.
-                                                                     MyColor(255, 255, 255), // Radio button hover state primary color.
-                                                                     MyColor(204, 228, 247), // Radio button down state primary color.
-                                                                     MyColor(255, 255, 255), // Radio button secondary color.
-                                                                     MyColor(255, 255, 255), // Radio button hover state secondary color.
-                                                                     MyColor(204, 228, 247), // Radio button down state secondary color.
-                                                                     MyColor(51, 51, 51),    // Radio button border color.
-                                                                     MyColor(0, 120, 215),   // Radio button hover state border color.
-                                                                     MyColor(0, 84, 153),    // Radio button down state border color.
-                                                                     MyColor(51, 51, 51),    // Selected radio button primary color.
-                                                                     MyColor(0, 120, 215),   // Selected radio button hover state primary color.
-                                                                     MyColor(0, 84, 153),    // Selected radio button down state primary color.
-                                                                     MyColor(255, 255, 255), // Selected radio button secondary color.
-                                                                     MyColor(255, 255, 255), // Selected radio button hover state secondary color.
-                                                                     MyColor(204, 228, 247), // Selected radio button down state secondary color.
-                                                                     MyColor(51, 51, 51),    // Selected radio button border color.
-                                                                     MyColor(0, 120, 215),   // Selected radio button hover state border color.
-                                                                     MyColor(0, 84, 153),    // Selected radio button down state border color.
-                                                                     MyColor(0, 0, 0),       // Radio button default text color.
-                                                                     MyColor(0, 0, 0));      // Radio button highlight text color.
-                g_AppUIObjectManager->Colors.UpdateEditColors(MyColor(255, 255, 255), MyColor(122, 122, 122), MyColor(0, 120, 215));
-                g_AppUIObjectManager->Colors.UpdateComboboxColors(MyColor(225, 225, 225), MyColor(172, 172, 172), MyColor(255, 255, 255), MyColor(0, 120, 215), MyColor(0, 120, 215), MyColor(0, 0, 0), MyColor(255, 255, 255));
-                g_AppUIObjectManager->Images.UpdateNonClientButtonImages(g_AppUIObjectManager->Images.Cross_Black, g_AppUIObjectManager->Images.Cross_White, g_AppUIObjectManager->Images.Cross_White,
-                g_AppUIObjectManager->Images.Minus_Black, g_AppUIObjectManager->Images.Minus_Black, g_AppUIObjectManager->Images.Minus_Black);
+                g_pUIElements->colors.updateMainColors(RGBA(255, 255, 255),  // Primary color.
+                                                       RGBA(255, 255, 255),  // Secondary color.
+                                                       RGBA(64, 64, 64),     // Border active color.
+                                                       RGBA(192, 192, 192),  // Border inactive color.
+                                                       RGBA(0, 0, 0),        // Text active color.
+                                                       RGBA(153, 153, 153),  // Text inactive color.
+                                                       RGBA(0, 0, 0),        // Text highlight color.
+                                                       RGBA(0, 162, 237),    // Focus color.
+                                                       RGBA(240, 240, 240)); // Background color.
 
-                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig = 
-                { 
-                    &g_AppUIObjectManager->Colors.RadioPrimary,
-                    &g_AppUIObjectManager->Colors.RadioPrimary_OnHover,
-                    &g_AppUIObjectManager->Colors.RadioPrimary_OnDown,
-                    &g_AppUIObjectManager->Colors.RadioSecondary,
-                    &g_AppUIObjectManager->Colors.RadioSecondary_OnHover,
-                    &g_AppUIObjectManager->Colors.RadioSecondary_OnDown,
-                    &g_AppUIObjectManager->Colors.Radio_Border,
-                    &g_AppUIObjectManager->Colors.Radio_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.Radio_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.Radio_Text_Default,
-                    &g_AppUIObjectManager->Colors.Radio_Text_Highlight,
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Default
-                };
-                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
-                    return false;
+                g_pUIElements->colors.updateCaptionColors(RGBA(255, 255, 255),  // Caption background color.
+                                                          RGBA(0, 0, 0),        // Caption text active color.
+                                                          RGBA(153, 153, 153),  // Caption text inactive color.
+                                                          RGBA(255, 89, 89),    // Caption close button hover background color.
+                                                          RGBA(255, 89, 89),    // Caption close button down background color.
+                                                          RGBA(205, 206, 206),  // Caption maximize button hover background color.
+                                                          RGBA(205, 206, 206),  // Caption maximize button down background color.
+                                                          RGBA(205, 206, 206),  // Caption minimize button hover background color.
+                                                          RGBA(205, 206, 206)); // Caption minimize button down background color.
 
-                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
-                {
-                    &g_AppUIObjectManager->Colors.Combobox,             
-                    &g_AppUIObjectManager->Colors.Combobox_Border,                        
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background,        
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected, 
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Border,   
-                    &g_AppUIObjectManager->Colors.Text,                                 
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Combobox
-                };
-                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
-                    return false;
+                g_pUIElements->colors.updateStandardButtonColors(RGBA(225, 225, 225), // Standard button default color.
+                                                                 RGBA(229, 241, 251), // Standard button hover color.
+                                                                 RGBA(204, 228, 247), // Standard button down color.
+                                                                 RGBA(172, 172, 172), // Standard button border default color.
+                                                                 RGBA(0, 120, 215),   // Standard button border hover color.
+                                                                 RGBA(0, 84, 153));   // Standard button border down color.
 
+                g_pUIElements->colors.updateRadioButtonColors(RGBA(255, 255, 255), // Radio button primary color.
+                                                              RGBA(255, 255, 255), // Radio button hover state primary color.
+                                                              RGBA(204, 228, 247), // Radio button down state primary color.
+                                                              RGBA(255, 255, 255), // Radio button secondary color.
+                                                              RGBA(255, 255, 255), // Radio button hover state secondary color.
+                                                              RGBA(204, 228, 247), // Radio button down state secondary color.
+                                                              RGBA(51, 51, 51),    // Radio button border color.
+                                                              RGBA(0, 120, 215),   // Radio button hover state border color.
+                                                              RGBA(0, 84, 153),    // Radio button down state border color.
+                                                              RGBA(51, 51, 51),    // Selected radio button primary color.
+                                                              RGBA(0, 120, 215),   // Selected radio button hover state primary color.
+                                                              RGBA(0, 84, 153),    // Selected radio button down state primary color.
+                                                              RGBA(255, 255, 255), // Selected radio button secondary color.
+                                                              RGBA(255, 255, 255), // Selected radio button hover state secondary color.
+                                                              RGBA(204, 228, 247), // Selected radio button down state secondary color.
+                                                              RGBA(51, 51, 51),    // Selected radio button border color.
+                                                              RGBA(0, 120, 215),   // Selected radio button hover state border color.
+                                                              RGBA(0, 84, 153));   // Selected radio button down state border color.
+
+                g_pUIElements->colors.updateEditboxColors(RGBA(255, 255, 255), // Editbox color.
+                                                          RGBA(122, 122, 122), // Editbox border default color.
+                                                          RGBA(0, 120, 215));  // Editbox border selected color.
+
+                g_pUIElements->colors.updateDDLComboboxColors(RGBA(225, 225, 225),  // DDL combobox color.
+                                                              RGBA(172, 172, 172),  // DDL combobox border color.
+                                                              RGBA(255, 255, 255),  // DDL combobox default item background color.
+                                                              RGBA(0, 120, 215),    // DDL combobox selected item background color.
+                                                              RGBA(0, 120, 215),    // DDL combobox drop-down list window border color.
+                                                              RGBA(0, 0, 0),        // DDL combobox default item text color.
+                                                              RGBA(255, 255, 255)); // DDL combobox selected item text color.
+
+                g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossBlack,  // Close button default image.
+                                                                  *g_pUIElements->images.pCrossWhite,  // Close button hover image.
+                                                                  *g_pUIElements->images.pCrossWhite,  // Close button down image.
+                                                                  *g_pUIElements->images.pMinusBlack,  // Minimize button default image.
+                                                                  *g_pUIElements->images.pMinusBlack,  // Minimize button hover image.
+                                                                  *g_pUIElements->images.pMinusBlack); // Minimize button down image.
+
+                // Update standard button class.
                 MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig = 
                 { 
-                    &g_AppUIObjectManager->Colors.StandardButton,
-                    &g_AppUIObjectManager->Colors.StandardButton_OnHover,
-                    &g_AppUIObjectManager->Colors.StandardButton_OnDown,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.StandardButton_Text_Default,
-                    &g_AppUIObjectManager->Colors.StandardButton_Text_Highlight,
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Default
+                    &g_pUIElements->colors.standardButtonDefault,
+                    &g_pUIElements->colors.standardButtonHover,
+                    &g_pUIElements->colors.standardButtonDown,
+                    &g_pUIElements->colors.standardButtonBorderDefault,
+                    &g_pUIElements->colors.standardButtonBorderHover,
+                    &g_pUIElements->colors.standardButtonBorderDown,
+                    &g_pUIElements->colors.textActive,
+                    &g_pUIElements->colors.textHighlight,
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.button
                 };
                 if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     return false;
 
+                // Update image button class.
                 MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig = 
                 { 
-                    &g_AppUIObjectManager->Colors.Focus // Image button focus color.
+                    &g_pUIElements->colors.focus // Image button focus color.
                 };
                 if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    return false;
+
+                // Update radio button class.
+                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig = 
+                { 
+                    &g_pUIElements->colors.radioButtonPrimaryDefault,
+                    &g_pUIElements->colors.radioButtonPrimaryHover,
+                    &g_pUIElements->colors.radioButtonPrimaryDown,
+                    &g_pUIElements->colors.radioButtonSecondaryDefault,
+                    &g_pUIElements->colors.radioButtonSecondaryHover,
+                    &g_pUIElements->colors.radioButtonSecondaryDown,
+                    &g_pUIElements->colors.radioButtonBorderDefault,
+                    &g_pUIElements->colors.radioButtonBorderHover,
+                    &g_pUIElements->colors.radioButtonBorderDown,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                    &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                    &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                    &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                    &g_pUIElements->colors.textActive,
+                    &g_pUIElements->colors.textHighlight,
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.button
+                };
+                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    return false;
+
+                // Update ddl combobox class.
+                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                {
+                    &g_pUIElements->colors.ddlCombobox,             
+                    &g_pUIElements->colors.ddlComboboxBorder,                        
+                    &g_pUIElements->colors.ddlComboboxItemBackground,        
+                    &g_pUIElements->colors.ddlComboboxSelectedItemBackground, 
+                    &g_pUIElements->colors.ddlComboboxDropdownlistBorder,   
+                    &g_pUIElements->colors.textActive,                                 
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.ddlCombobox
+                };
+                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
                     return false;
 
                 // Update global variables.
@@ -2819,100 +2862,141 @@ namespace nApp
 
             case MyTheme::Dark:
             {
-                g_AppUIObjectManager->Colors.UpdateMainColors(MyColor(0, 0, 0), MyColor(32, 32, 32), MyColor(48, 48, 48), MyColor(57, 57, 57), MyColor(216, 222, 233), MyColor(162, 162, 162), MyColor(0, 162, 237), MyColor(232, 17, 35), MyColor(57, 57, 57), MyColor(232, 17, 35), MyColor(232, 17, 35), MyColor(57, 57, 57), MyColor(57, 57, 57), MyColor(32, 32, 32));
-                g_AppUIObjectManager->Colors.UpdateCaptionColors(MyColor(0, 0, 0), MyColor(216, 222, 233), MyColor(162, 162, 162));
-                g_AppUIObjectManager->Colors.UpdateStandardButtonColors(MyColor(51, 51, 51), MyColor(69, 69, 69), MyColor(102, 102, 102), MyColor(155, 155, 155), MyColor(155, 155, 155), MyColor(155, 155, 155), MyColor(255, 255, 255), MyColor(255, 255, 255));
-                g_AppUIObjectManager->Colors.UpdateRadioButtonColors(MyColor(51, 51, 51),     // Radio button primary color.
-                                                                     MyColor(69, 69, 69),     // Radio button hover state primary color.
-                                                                     MyColor(87, 87, 87),     // Radio button down state primary color.
-                                                                     MyColor(51, 51, 51),     // Radio button secondary color.
-                                                                     MyColor(69, 69, 69),     // Radio button hover state secondary color.
-                                                                     MyColor(87, 87, 87),     // Radio button down state secondary color.
-                                                                     MyColor(155, 155, 155),  // Radio button border color.
-                                                                     MyColor(155, 155, 155),  // Radio button hover state border color.
-                                                                     MyColor(155, 155, 155),  // Radio button down state border color.
-                                                                     MyColor(207, 207, 207),  // Selected radio button primary color.
-                                                                     MyColor(225, 225, 225),  // Selected radio button hover state primary color.
-                                                                     MyColor(250, 250, 250),  // Selected radio button down state primary color.
-                                                                     MyColor(51, 51, 51),     // Selected radio button secondary color.
-                                                                     MyColor(51, 51, 51),     // Selected radio button hover state secondary color.
-                                                                     MyColor(51, 51, 51),     // Selected radio button down state secondary color.
-                                                                     MyColor(155, 155, 155),  // Selected radio button border color.
-                                                                     MyColor(155, 155, 155),  // Selected radio button hover state border color.
-                                                                     MyColor(155, 155, 155),  // Selected radio button down state border color.
-                                                                     MyColor(255, 255, 255),  // Radio button default text color.
-                                                                     MyColor(255, 255, 255)); // Radio button highlight text color.
-                g_AppUIObjectManager->Colors.UpdateEditColors(MyColor(48, 48, 48), MyColor(79, 79, 79), MyColor(100, 100, 100));
-                g_AppUIObjectManager->Colors.UpdateComboboxColors(MyColor(51, 51, 51), MyColor(155, 155, 155), MyColor(32, 32, 32), MyColor(44, 44, 44), MyColor(44, 44, 44), MyColor(162, 162, 162), MyColor(255, 255, 255));
-                g_AppUIObjectManager->Images.UpdateNonClientButtonImages(g_AppUIObjectManager->Images.Cross_Grey, g_AppUIObjectManager->Images.Cross_White, g_AppUIObjectManager->Images.Cross_White,
-                g_AppUIObjectManager->Images.Minus_Grey, g_AppUIObjectManager->Images.Minus_White, g_AppUIObjectManager->Images.Minus_White);
+                g_pUIElements->colors.updateMainColors(RGBA(0, 0, 0),       // Primary color.
+                                                       RGBA(32, 32, 32),    // Secondary color.
+                                                       RGBA(48, 48, 48),    // Border active color.
+                                                       RGBA(57, 57, 57),    // Border inactive color.
+                                                       RGBA(216, 222, 233), // Text active color.
+                                                       RGBA(162, 162, 162), // Text inactive color.
+                                                       RGBA(216, 222, 233), // Text highlight color.
+                                                       RGBA(0, 162, 237),   // Focus color.
+                                                       RGBA(32, 32, 32));   // Background color.
 
-                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig = 
-                { 
-                    &g_AppUIObjectManager->Colors.RadioPrimary,
-                    &g_AppUIObjectManager->Colors.RadioPrimary_OnHover,
-                    &g_AppUIObjectManager->Colors.RadioPrimary_OnDown,
-                    &g_AppUIObjectManager->Colors.RadioSecondary,
-                    &g_AppUIObjectManager->Colors.RadioSecondary_OnHover,
-                    &g_AppUIObjectManager->Colors.RadioSecondary_OnDown,
-                    &g_AppUIObjectManager->Colors.Radio_Border,
-                    &g_AppUIObjectManager->Colors.Radio_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.Radio_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.Radio_Text_Default,
-                    &g_AppUIObjectManager->Colors.Radio_Text_Highlight,
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Default
-                };
-                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
-                    return false;
+                g_pUIElements->colors.updateCaptionColors(RGBA(0, 0, 0),       // Caption background color.
+                                                          RGBA(216, 222, 233), // Caption text active color.
+                                                          RGBA(162, 162, 162), // Caption text inactive color.
+                                                          RGBA(232, 17, 35),   // Caption close button hover background color.
+                                                          RGBA(232, 17, 35),   // Caption close button down background color.
+                                                          RGBA(57, 57, 57),    // Caption maximize button hover background color.
+                                                          RGBA(57, 57, 57),    // Caption maximize button down background color.
+                                                          RGBA(57, 57, 57),    // Caption minimize button hover background color.
+                                                          RGBA(57, 57, 57));   // Caption minimize button down background color.
 
-                MyDDLComboboxSharedPropertiesConfig MyComboboxSharedPropertiesConfig =
-                {
-                    &g_AppUIObjectManager->Colors.Combobox,             
-                    &g_AppUIObjectManager->Colors.Combobox_Border,                        
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background,        
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected, 
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Border,   
-                    &g_AppUIObjectManager->Colors.Text,                                 
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Combobox
-                };
-                if (!MyDDLCombobox::setSharedProperties(MyComboboxSharedPropertiesConfig))
-                    return false;
+                g_pUIElements->colors.updateStandardButtonColors(RGBA(51, 51, 51),     // Standard button default color.
+                                                                 RGBA(69, 69, 69),     // Standard button hover color.
+                                                                 RGBA(102, 102, 102),  // Standard button down color.
+                                                                 RGBA(155, 155, 155),  // Standard button border default color.
+                                                                 RGBA(155, 155, 155),  // Standard button border hover color.
+                                                                 RGBA(155, 155, 155)); // Standard button border down color.
 
+                g_pUIElements->colors.updateRadioButtonColors(RGBA(51, 51, 51),     // Radio button primary color.
+                                                              RGBA(69, 69, 69),     // Radio button hover state primary color.
+                                                              RGBA(87, 87, 87),     // Radio button down state primary color.
+                                                              RGBA(51, 51, 51),     // Radio button secondary color.
+                                                              RGBA(69, 69, 69),     // Radio button hover state secondary color.
+                                                              RGBA(87, 87, 87),     // Radio button down state secondary color.
+                                                              RGBA(155, 155, 155),  // Radio button border color.
+                                                              RGBA(155, 155, 155),  // Radio button hover state border color.
+                                                              RGBA(155, 155, 155),  // Radio button down state border color.
+                                                              RGBA(207, 207, 207),  // Selected radio button primary color.
+                                                              RGBA(225, 225, 225),  // Selected radio button hover state primary color.
+                                                              RGBA(250, 250, 250),  // Selected radio button down state primary color.
+                                                              RGBA(51, 51, 51),     // Selected radio button secondary color.
+                                                              RGBA(51, 51, 51),     // Selected radio button hover state secondary color.
+                                                              RGBA(51, 51, 51),     // Selected radio button down state secondary color.
+                                                              RGBA(155, 155, 155),  // Selected radio button border color.
+                                                              RGBA(155, 155, 155),  // Selected radio button hover state border color.
+                                                              RGBA(155, 155, 155)); // Selected radio button down state border color.
+
+                g_pUIElements->colors.updateEditboxColors(RGBA(48, 48, 48),     // Editbox color.
+                                                          RGBA(79, 79, 79),     // Editbox border default color.
+                                                          RGBA(100, 100, 100)); // Editbox border selected color.
+
+                g_pUIElements->colors.updateDDLComboboxColors(RGBA(51, 51, 51),     // DDL combobox color.
+                                                              RGBA(155, 155, 155),  // DDL combobox border color.
+                                                              RGBA(32, 32, 32),     // DDL combobox default item background color.
+                                                              RGBA(44, 44, 44),     // DDL combobox selected item background color.
+                                                              RGBA(44, 44, 44),     // DDL combobox drop-down list window border color.
+                                                              RGBA(162, 162, 162),  // DDL combobox default item text color.
+                                                              RGBA(255, 255, 255)); // DDL combobox selected item text color.
+
+                g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
+                                                                  *g_pUIElements->images.pCrossWhite,  // Close button hover image.
+                                                                  *g_pUIElements->images.pCrossWhite,  // Close button down image.
+                                                                  *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
+                                                                  *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
+                                                                  *g_pUIElements->images.pMinusWhite); // Minimize button down image.
+
+                // Update standard button class.
                 MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig = 
                 { 
-                    &g_AppUIObjectManager->Colors.StandardButton,
-                    &g_AppUIObjectManager->Colors.StandardButton_OnHover,
-                    &g_AppUIObjectManager->Colors.StandardButton_OnDown,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.StandardButton_Text_Default,
-                    &g_AppUIObjectManager->Colors.StandardButton_Text_Highlight,
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Default
+                    &g_pUIElements->colors.standardButtonDefault,
+                    &g_pUIElements->colors.standardButtonHover,
+                    &g_pUIElements->colors.standardButtonDown,
+                    &g_pUIElements->colors.standardButtonBorderDefault,
+                    &g_pUIElements->colors.standardButtonBorderHover,
+                    &g_pUIElements->colors.standardButtonBorderDown,
+                    &g_pUIElements->colors.textActive,
+                    &g_pUIElements->colors.textHighlight,
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.button
                 };
                 if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     return false;
 
-                MyImageButtonSharedPropertiesConfig MyImageButton_DrawingObjectPointersConfig = 
+                // Update image button class.
+                MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig = 
                 { 
-                    &g_AppUIObjectManager->Colors.Focus // Image button focus color.
+                    &g_pUIElements->colors.focus // Image button focus color.
                 };
-                if (!MyImageButton::setSharedProperties(MyImageButton_DrawingObjectPointersConfig))
+                if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    return false;
+
+                // Update radio button class.
+                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig = 
+                { 
+                    &g_pUIElements->colors.radioButtonPrimaryDefault,
+                    &g_pUIElements->colors.radioButtonPrimaryHover,
+                    &g_pUIElements->colors.radioButtonPrimaryDown,
+                    &g_pUIElements->colors.radioButtonSecondaryDefault,
+                    &g_pUIElements->colors.radioButtonSecondaryHover,
+                    &g_pUIElements->colors.radioButtonSecondaryDown,
+                    &g_pUIElements->colors.radioButtonBorderDefault,
+                    &g_pUIElements->colors.radioButtonBorderHover,
+                    &g_pUIElements->colors.radioButtonBorderDown,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                    &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                    &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                    &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                    &g_pUIElements->colors.textActive,
+                    &g_pUIElements->colors.textHighlight,
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.button
+                };
+                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    return false;
+
+                // Update ddl combobox class.
+                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                {
+                    &g_pUIElements->colors.ddlCombobox,             
+                    &g_pUIElements->colors.ddlComboboxBorder,                        
+                    &g_pUIElements->colors.ddlComboboxItemBackground,        
+                    &g_pUIElements->colors.ddlComboboxSelectedItemBackground, 
+                    &g_pUIElements->colors.ddlComboboxDropdownlistBorder,   
+                    &g_pUIElements->colors.textActive,                                 
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.ddlCombobox
+                };
+                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
                     return false;
 
                 // Update global variables.
@@ -2924,100 +3008,141 @@ namespace nApp
 
             case MyTheme::Monokai:
             {
-                g_AppUIObjectManager->Colors.UpdateMainColors(MyColor(34, 31, 34), MyColor(45, 42, 46), MyColor(25, 24, 26), MyColor(49, 47, 51), MyColor(231, 230, 229), MyColor(82, 76, 83), MyColor(169, 220, 118), MyColor(232, 17, 35), MyColor(63, 61, 63), MyColor(232, 17, 35), MyColor(232, 17, 35), MyColor(63, 61, 63), MyColor(63, 61, 63), MyColor(45, 42, 46));
-                g_AppUIObjectManager->Colors.UpdateCaptionColors(MyColor(34, 31, 34), MyColor(147, 146, 147), MyColor(91, 89, 92));
-                g_AppUIObjectManager->Colors.UpdateStandardButtonColors(MyColor(64, 62, 65), MyColor(91, 89, 92), MyColor(101, 99, 102), MyColor(114, 112, 114), MyColor(114, 112, 114), MyColor(114, 112, 114), MyColor(231, 230, 229), MyColor(255, 255, 255));
-                g_AppUIObjectManager->Colors.UpdateRadioButtonColors(MyColor(64, 62, 65),     // Radio button primary color.
-                                                                     MyColor(91, 89, 92),     // Radio button hover state primary color.
-                                                                     MyColor(101, 99, 102),   // Radio button down state primary color.
-                                                                     MyColor(64, 62, 65),     // Radio button secondary color.
-                                                                     MyColor(91, 89, 92),     // Radio button hover state secondary color.
-                                                                     MyColor(101, 99, 102),   // Radio button down state secondary color.
-                                                                     MyColor(114, 112, 114),  // Radio button border color.
-                                                                     MyColor(114, 112, 114),  // Radio button hover state border color.
-                                                                     MyColor(114, 112, 114),  // Radio button down state border color.
-                                                                     MyColor(231, 230, 229),  // Selected radio button primary color.
-                                                                     MyColor(242, 241, 240),  // Selected radio button hover state primary color.
-                                                                     MyColor(255, 255, 255),  // Selected radio button down state primary color.
-                                                                     MyColor(64, 62, 65),     // Selected radio button secondary color.
-                                                                     MyColor(64, 62, 65),     // Selected radio button hover state secondary color.
-                                                                     MyColor(64, 62, 65),     // Selected radio button down state secondary color.
-                                                                     MyColor(114, 112, 114),  // Selected radio button border color.
-                                                                     MyColor(114, 112, 114),  // Selected radio button hover state border color.
-                                                                     MyColor(114, 112, 114),  // Selected radio button down state border color.
-                                                                     MyColor(231, 230, 229),  // Radio button default text color.
-                                                                     MyColor(231, 230, 229)); // Radio button highlight text color.
-                g_AppUIObjectManager->Colors.UpdateEditColors(MyColor(64, 62, 65), MyColor(64, 62, 65), MyColor(114, 112, 114));
-                g_AppUIObjectManager->Colors.UpdateComboboxColors(MyColor(64, 62, 65), MyColor(64, 62, 65), MyColor(64, 62, 65), MyColor(74, 72, 75), MyColor(114, 112, 114), MyColor(237, 237, 235), MyColor(225, 216, 102));
-                g_AppUIObjectManager->Images.UpdateNonClientButtonImages(g_AppUIObjectManager->Images.Cross_Grey, g_AppUIObjectManager->Images.Cross_White, g_AppUIObjectManager->Images.Cross_White,
-                g_AppUIObjectManager->Images.Minus_Grey, g_AppUIObjectManager->Images.Minus_White, g_AppUIObjectManager->Images.Minus_White);
+                g_pUIElements->colors.updateMainColors(RGBA(34, 31, 34),       // Primary color.
+                                                       RGBA(45, 42, 46),    // Secondary color.
+                                                       RGBA(25, 24, 26),    // Border active color.
+                                                       RGBA(49, 47, 51),    // Border inactive color.
+                                                       RGBA(231, 230, 229), // Text active color.
+                                                       RGBA(82, 76, 83), // Text inactive color.
+                                                       RGBA(231, 230, 229), // Text highlight color.
+                                                       RGBA(169, 220, 118),   // Focus color.
+                                                       RGBA(45, 42, 46));   // Background color.
 
-                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig = 
-                { 
-                    &g_AppUIObjectManager->Colors.RadioPrimary,
-                    &g_AppUIObjectManager->Colors.RadioPrimary_OnHover,
-                    &g_AppUIObjectManager->Colors.RadioPrimary_OnDown,
-                    &g_AppUIObjectManager->Colors.RadioSecondary,
-                    &g_AppUIObjectManager->Colors.RadioSecondary_OnHover,
-                    &g_AppUIObjectManager->Colors.RadioSecondary_OnDown,
-                    &g_AppUIObjectManager->Colors.Radio_Border,
-                    &g_AppUIObjectManager->Colors.Radio_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.Radio_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadioPrimary_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadioSecondary_OnDown,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.SelectedRadio_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.Radio_Text_Default,
-                    &g_AppUIObjectManager->Colors.Radio_Text_Highlight,
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Default
-                };
-                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
-                    return false;
+                g_pUIElements->colors.updateCaptionColors(RGBA(34, 31, 34),       // Caption background color.
+                                                          RGBA(147, 146, 147), // Caption text active color.
+                                                          RGBA(91, 89, 92), // Caption text inactive color.
+                                                          RGBA(232, 17, 35),   // Caption close button hover background color.
+                                                          RGBA(232, 17, 35),   // Caption close button down background color.
+                                                          RGBA(63, 61, 63),    // Caption maximize button hover background color.
+                                                          RGBA(63, 61, 63),    // Caption maximize button down background color.
+                                                          RGBA(63, 61, 63),    // Caption minimize button hover background color.
+                                                          RGBA(63, 61, 63));   // Caption minimize button down background color.
 
-                MyDDLComboboxSharedPropertiesConfig MyComboboxSharedPropertiesConfig =
-                {
-                    &g_AppUIObjectManager->Colors.Combobox,             
-                    &g_AppUIObjectManager->Colors.Combobox_Border,                        
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background,        
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Background_Selected, 
-                    &g_AppUIObjectManager->Colors.Combobox_Dropdownlist_Border,   
-                    &g_AppUIObjectManager->Colors.Text,                                 
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Combobox
-                };
-                if (!MyDDLCombobox::setSharedProperties(MyComboboxSharedPropertiesConfig))
-                    return false;
+                g_pUIElements->colors.updateStandardButtonColors(RGBA(64, 62, 65),     // Standard button default color.
+                                                                 RGBA(91, 89, 92),     // Standard button hover color.
+                                                                 RGBA(101, 99, 102),   // Standard button down color.
+                                                                 RGBA(114, 112, 114),  // Standard button border default color.
+                                                                 RGBA(114, 112, 114),  // Standard button border hover color.
+                                                                 RGBA(114, 112, 114)); // Standard button border down color.
 
+                g_pUIElements->colors.updateRadioButtonColors(RGBA(64, 62, 65),     // Radio button primary color.
+                                                              RGBA(91, 89, 92),     // Radio button hover state primary color.
+                                                              RGBA(101, 99, 102),   // Radio button down state primary color.
+                                                              RGBA(64, 62, 65),     // Radio button secondary color.
+                                                              RGBA(91, 89, 92),     // Radio button hover state secondary color.
+                                                              RGBA(101, 99, 102),   // Radio button down state secondary color.
+                                                              RGBA(114, 112, 114),  // Radio button border color.
+                                                              RGBA(114, 112, 114),  // Radio button hover state border color.
+                                                              RGBA(114, 112, 114),  // Radio button down state border color.
+                                                              RGBA(231, 230, 229),  // Selected radio button primary color.
+                                                              RGBA(242, 241, 240),  // Selected radio button hover state primary color.
+                                                              RGBA(255, 255, 255),  // Selected radio button down state primary color.
+                                                              RGBA(64, 62, 65),     // Selected radio button secondary color.
+                                                              RGBA(64, 62, 65),     // Selected radio button hover state secondary color.
+                                                              RGBA(64, 62, 65),     // Selected radio button down state secondary color.
+                                                              RGBA(114, 112, 114),  // Selected radio button border color.
+                                                              RGBA(114, 112, 114),  // Selected radio button hover state border color.
+                                                              RGBA(114, 112, 114)); // Selected radio button down state border color.
+
+                g_pUIElements->colors.updateEditboxColors(RGBA(64, 62, 65),     // Editbox color.
+                                                          RGBA(64, 62, 65),     // Editbox border default color.
+                                                          RGBA(114, 112, 114)); // Editbox border selected color.
+
+                g_pUIElements->colors.updateDDLComboboxColors(RGBA(64, 62, 65),     // DDL combobox color.
+                                                              RGBA(64, 62, 65),  // DDL combobox border color.
+                                                              RGBA(64, 62, 65),     // DDL combobox default item background color.
+                                                              RGBA(74, 72, 75),     // DDL combobox selected item background color.
+                                                              RGBA(114, 112, 114),     // DDL combobox drop-down list window border color.
+                                                              RGBA(237, 237, 235),  // DDL combobox default item text color.
+                                                              RGBA(225, 216, 102)); // DDL combobox selected item text color.
+
+                g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
+                                                                  *g_pUIElements->images.pCrossWhite,  // Close button hover image.
+                                                                  *g_pUIElements->images.pCrossWhite,  // Close button down image.
+                                                                  *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
+                                                                  *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
+                                                                  *g_pUIElements->images.pMinusWhite); // Minimize button down image.
+
+                // Update standard button class.
                 MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig = 
                 { 
-                    &g_AppUIObjectManager->Colors.StandardButton,
-                    &g_AppUIObjectManager->Colors.StandardButton_OnHover,
-                    &g_AppUIObjectManager->Colors.StandardButton_OnDown,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border_OnHover,
-                    &g_AppUIObjectManager->Colors.StandardButton_Border_OnDown,
-                    &g_AppUIObjectManager->Colors.StandardButton_Text_Default,
-                    &g_AppUIObjectManager->Colors.StandardButton_Text_Highlight,
-                    &g_AppUIObjectManager->Colors.Background,
-                    &g_AppUIObjectManager->Colors.Focus,
-                    &g_AppUIObjectManager->Fonts.Default
+                    &g_pUIElements->colors.standardButtonDefault,
+                    &g_pUIElements->colors.standardButtonHover,
+                    &g_pUIElements->colors.standardButtonDown,
+                    &g_pUIElements->colors.standardButtonBorderDefault,
+                    &g_pUIElements->colors.standardButtonBorderHover,
+                    &g_pUIElements->colors.standardButtonBorderDown,
+                    &g_pUIElements->colors.textActive,
+                    &g_pUIElements->colors.textHighlight,
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.button
                 };
                 if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     return false;
 
-                MyImageButtonSharedPropertiesConfig MyImageButton_DrawingObjectPointersConfig = 
+                // Update image button class.
+                MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig = 
                 { 
-                    &g_AppUIObjectManager->Colors.Focus // Image button focus color.
+                    &g_pUIElements->colors.focus // Image button focus color.
                 };
-                if (!MyImageButton::setSharedProperties(MyImageButton_DrawingObjectPointersConfig))
+                if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    return false;
+
+                // Update radio button class.
+                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig = 
+                { 
+                    &g_pUIElements->colors.radioButtonPrimaryDefault,
+                    &g_pUIElements->colors.radioButtonPrimaryHover,
+                    &g_pUIElements->colors.radioButtonPrimaryDown,
+                    &g_pUIElements->colors.radioButtonSecondaryDefault,
+                    &g_pUIElements->colors.radioButtonSecondaryHover,
+                    &g_pUIElements->colors.radioButtonSecondaryDown,
+                    &g_pUIElements->colors.radioButtonBorderDefault,
+                    &g_pUIElements->colors.radioButtonBorderHover,
+                    &g_pUIElements->colors.radioButtonBorderDown,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                    &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                    &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                    &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                    &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                    &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                    &g_pUIElements->colors.textActive,
+                    &g_pUIElements->colors.textHighlight,
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.button
+                };
+                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    return false;
+
+                // Update ddl combobox class.
+                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                {
+                    &g_pUIElements->colors.ddlCombobox,             
+                    &g_pUIElements->colors.ddlComboboxBorder,                        
+                    &g_pUIElements->colors.ddlComboboxItemBackground,        
+                    &g_pUIElements->colors.ddlComboboxSelectedItemBackground, 
+                    &g_pUIElements->colors.ddlComboboxDropdownlistBorder,   
+                    &g_pUIElements->colors.textActive,                                 
+                    &g_pUIElements->colors.background,
+                    &g_pUIElements->colors.focus,
+                    &g_pUIElements->fonts.ddlCombobox
+                };
+                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
                     return false;
 
                 // Update global variables.
@@ -3461,6 +3586,10 @@ namespace nApp
                 else
                     WriteLog(L"Extended the window frames into client area (MARGINS: 1,1,1,1).", L"", MyLogType::Debug);
 
+                hr = DwmEnableMMCSS(TRUE);
+                if (FAILED(hr))
+                    return false;
+
                 // Set the minimum resolution for periodic timers to increase the precision of application timers (WM_TIMER).
                 if (timeBeginPeriod(15) != TIMERR_NOERROR)
                 {
@@ -3478,9 +3607,9 @@ namespace nApp
 
                 // Initialize global objects.
                 WriteLog(L"Initializing global objects ...", L"", MyLogType::Debug);
-                g_AppUIObjectManager = new UIObjectManager(hInstance);
+                g_pUIElements = new UIElements();
                 g_Container_MainContent = new MyContainer(WINDOW_CONTAINER_DEFAULTPADDING, false, WINDOW_CONTAINER_DEFAULTPADDING, true);
-                if (!g_AppUIObjectManager || !g_Container_MainContent)
+                if (!g_pUIElements || !g_Container_MainContent)
                 {
                     std::wstring error_message = L"";
                     error_message.append(L"Error occurred!\n");
@@ -3537,37 +3666,37 @@ namespace nApp
                     MyWindow *pButton_Close = new MyWindow(true);
                     MyImageButtonNonSharedPropertiesConfig Button_Close_NonSharedPropertiesConfig =
                     {
-                        &g_AppUIObjectManager->Images.NonClient_CloseButton_Default,
-                        &g_AppUIObjectManager->Images.NonClient_CloseButton_Hover,
-                        &g_AppUIObjectManager->Images.NonClient_CloseButton_Down,
-                        &g_AppUIObjectManager->Colors.Caption_Background,
-                        &g_AppUIObjectManager->Colors.NonClient_CloseButton_Background_OnHover,
-                        &g_AppUIObjectManager->Colors.NonClient_CloseButton_Background_OnDown,
+                        &g_pUIElements->images.pNonClientCloseButtonDefault,
+                        &g_pUIElements->images.pNonClientCloseButtonHover,
+                        &g_pUIElements->images.pNonClientCloseButtonDown,
+                        &g_pUIElements->colors.captionBackground,
+                        &g_pUIElements->colors.closeButtonBackgroundOnHover,
+                        &g_pUIElements->colors.closeButtonBackgroundOnDown,
                         0, 0, 20, 20, true, false, true
                     };
                     if (!pButton_Close->createImageButton(hWnd, L"", false, true, Button_Close_NonSharedPropertiesConfig,
                     0, 0, 58, 37, (HMENU)IDC_NONCLIENT_CLOSE_BUTTON))
                         return false;
                     g_VectorMyWindow_NonClient.push_back(pButton_Close);
-                    g_AppUIObjectManager->Miscs.hWndNonClientCloseButton = pButton_Close->hWnd;
+                    g_pUIElements->miscs.hWndNonClientCloseButton = pButton_Close->hWnd;
 
                     // Minimize button
                     MyWindow *pButton_Minimize = new MyWindow(true);
                     MyImageButtonNonSharedPropertiesConfig Button_Minimize_NonSharedPropertiesConfig =
                     {
-                        &g_AppUIObjectManager->Images.NonClient_MinimizeButton_Default,
-                        &g_AppUIObjectManager->Images.NonClient_MinimizeButton_Hover,
-                        &g_AppUIObjectManager->Images.NonClient_MinimizeButton_Down,
-                        &g_AppUIObjectManager->Colors.Caption_Background,
-                        &g_AppUIObjectManager->Colors.NonClient_MinimizeButton_Background_OnHover,
-                        &g_AppUIObjectManager->Colors.NonClient_MinimizeButton_Background_OnDown,
+                        &g_pUIElements->images.pNonClientMinimizeButtonDefault,
+                        &g_pUIElements->images.pNonClientMinimizeButtonHover,
+                        &g_pUIElements->images.pNonClientMinimizeButtonDown,
+                        &g_pUIElements->colors.captionBackground,
+                        &g_pUIElements->colors.minimizeButtonBackgroundOnHover,
+                        &g_pUIElements->colors.minimizeButtonBackgroundOnDown,
                         0, 0, 20, 20, true, false, true
                     };
                     if (!pButton_Minimize->createImageButton(hWnd, L"", false, true, Button_Minimize_NonSharedPropertiesConfig,
                     0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MINIMIZE_BUTTON))
                         return false;
                     g_VectorMyWindow_NonClient.push_back(pButton_Minimize);
-                    g_AppUIObjectManager->Miscs.hWndNonClientMinimizeButton = pButton_Minimize->hWnd;
+                    g_pUIElements->miscs.hWndNonClientMinimizeButton = pButton_Minimize->hWnd;
 
                     // Window title
                     size_t TextLength_AppTitle = static_cast<size_t>(GetWindowTextLengthW(hWnd)) + static_cast<size_t>(1);
@@ -3852,29 +3981,29 @@ namespace nApp
             bool InitEnd(HWND hWnd)
             {
                 // Set the default font for all existing window objects.
-                //EnumChildWindows(hWnd, (WNDENUMPROC)nApp::Window::Utility::SetFontOnChild, (LPARAM)g_AppUIObjectManager->Fonts.Default.GetHFORef());
+                //EnumChildWindows(hWnd, (WNDENUMPROC)nApp::Window::Utility::SetFontOnChild, (LPARAM)g_pUIElements->fonts.Default.GetHFORef());
 
                 // Set font for non-client window objects.
-                SendMessageW(MyWindow::findWindowInVectorP(g_VectorMyWindow_NonClient, IDC_NONCLIENT_CAPTIONTITLE_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Caption.GetHFORef(), TRUE);
+                SendMessageW(MyWindow::findWindowInVectorP(g_VectorMyWindow_NonClient, IDC_NONCLIENT_CAPTIONTITLE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.caption.getHFONT(), TRUE);
 
                 // Set font for client window objects.
                 {
                     // Static texts (Heading).
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Heading.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Heading.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Heading.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_TESTZONE_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Heading.GetHFO(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_TESTZONE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
 
                     // Static texts (Note).
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Note.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Note.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Note.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Note.GetHFO(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
 
                     // Editboxes.
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Edit.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Edit.GetHFO(), TRUE);
-                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_AppUIObjectManager->Fonts.Edit.GetHFO(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
+                    SendMessageW(g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
                 }
 
                 // Modify standard class (BUTTON) style.
@@ -3984,7 +4113,7 @@ namespace nApp
                 }
 
                 // Destroy global objects.
-                delete g_AppUIObjectManager;
+                delete g_pUIElements;
                 WriteLog(L"Global object(s) destroyed.", L"", MyLogType::Debug);
 
                 // Deinitialize APIs.
@@ -4033,3 +4162,5 @@ namespace nApp
         }
     }
 }
+
+#endif // FUNC_H

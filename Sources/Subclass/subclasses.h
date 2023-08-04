@@ -3,7 +3,8 @@
  * @brief Header file containing classes that subclass WinAPI controls for custom drawing or enhance the control message response.
  */
 
-#pragma once
+#ifndef SUBCLASSES_H
+#define SUBCLASSES_H
 
 /**
  * @class KeyToggle
@@ -317,19 +318,19 @@ struct MyImageButtonSharedPropertiesConfig
  */
 struct MyImageButtonNonSharedPropertiesConfig
 {
-    MyImage *pImageDefault = nullptr;           // Pointer to the image button default state image.
-    MyImage *pImageHover = nullptr;             // Pointer to the image button hover state image.
-    MyImage *pImageDown = nullptr;              // Pointer to the image button down state image.
-    MyColor *pColorBackgroundDefault = nullptr; // Pointer to the image button default state background color.
-    MyColor *pColorBackgroundHover = nullptr;   // Pointer to the image button hover state background color.
-    MyColor *pColorBackgroundDown = nullptr;    // Pointer to the image button down state background color.
-    INT imagePosX = 0;                          // The image relative x position.
-    INT imagePosY = 0;                          // The image relative y position.
-    INT imageWidth = 0;                         // The image width.
-    INT imageHeight = 0;                        // The image height.
-    bool centering = false;                     // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;       // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;        // Indicate whether to skip the down state animation.
+    std::unique_ptr<MyImage> *pImageDefault = nullptr; // Pointer to the image button default state image.
+    std::unique_ptr<MyImage> *pImageHover = nullptr;   // Pointer to the image button hover state image.
+    std::unique_ptr<MyImage> *pImageDown = nullptr;    // Pointer to the image button down state image.
+    MyColor *pColorBackgroundDefault = nullptr;        // Pointer to the image button default state background color.
+    MyColor *pColorBackgroundHover = nullptr;          // Pointer to the image button hover state background color.
+    MyColor *pColorBackgroundDown = nullptr;           // Pointer to the image button down state background color.
+    INT imagePosX = 0;                                   // The image relative x position.
+    INT imagePosY = 0;                                   // The image relative y position.
+    INT imageWidth = 0;                                  // The image width.
+    INT imageHeight = 0;                                 // The image height.
+    bool centering = false;                              // Indicate whether to centering the image.
+    bool skipHoverAnimationState = false;                // Indicate whether to skip the hover state animation.
+    bool skipDownAnimationState = false;                 // Indicate whether to skip the down state animation.
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -386,19 +387,19 @@ private:
     inline static MyColor *pColorFocus = nullptr; // Pointer to the image button focus color.
 
     // Non-shared properties.
-    MyImage *pImageDefault = nullptr;           // Pointer to the image button default state image.
-    MyImage *pImageHover = nullptr;             // Pointer to the image button hover state image.
-    MyImage *pImageDown = nullptr;              // Pointer to the image button down state image.
-    MyColor *pColorBackgroundDefault = nullptr; // Pointer to the image button default state background color.
-    MyColor *pColorBackgroundHover = nullptr;   // Pointer to the image button hover state background color.
-    MyColor *pColorBackgroundDown = nullptr;    // Pointer to the image button down state background color.
-    INT imagePosX = 0;                          // The image relative x position.
-    INT imagePosY = 0;                          // The image relative y position.
-    INT imageWidth = 0;                         // The image width.
-    INT imageHeight = 0;                        // The image height.
-    bool isCentering = false;                   // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;       // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;        // Indicate whether to skip the down state animation.
+    std::unique_ptr<MyImage> *pImageDefault = nullptr; // Pointer to the image button default state image.
+    std::unique_ptr<MyImage> *pImageHover = nullptr;   // Pointer to the image button hover state image.
+    std::unique_ptr<MyImage> *pImageDown = nullptr;    // Pointer to the image button down state image.
+    MyColor *pColorBackgroundDefault = nullptr;        // Pointer to the image button default state background color.
+    MyColor *pColorBackgroundHover = nullptr;          // Pointer to the image button hover state background color.
+    MyColor *pColorBackgroundDown = nullptr;           // Pointer to the image button down state background color.
+    INT imagePosX = 0;                                   // The image relative x position.
+    INT imagePosY = 0;                                   // The image relative y position.
+    INT imageWidth = 0;                                  // The image width.
+    INT imageHeight = 0;                                 // The image height.
+    bool isCentering = false;                            // Indicate whether to centering the image.
+    bool skipHoverAnimationState = false;                // Indicate whether to skip the hover state animation.
+    bool skipDownAnimationState = false;                 // Indicate whether to skip the down state animation.
 
     // Animation variables.
     inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
@@ -1196,3 +1197,5 @@ public:
      */
     bool setSubclass(HWND hWnd, INT comboboxHeight);
 };
+
+#endif // SUBCLASSES_H

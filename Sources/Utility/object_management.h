@@ -3,45 +3,48 @@
  * @brief Header file containing classes that related to object management.
  */
 
-#pragma once
+#ifndef OBJECT_MANAGEMENT_H
+#define OBJECT_MANAGEMENT_H
+#include "../../Includes/my_enums.h" // My enum definitions.
 
 /**
- * @struct MyColor
- * @brief Represents a color with various variant datatypes.
+ * @struct RGBA
+ * @brief A simple struct that represents a color with RGBA values.
  */
-struct MyColor
+struct RGBA
 {
-private:
-    inline static UINT TotalInstances = 0;            // Tracks the total number of instances.
-    inline static UINT TotalInitializedInstances = 0; // Tracks the total number of initialized instances.
-    INT ID;                                           // The instance ID. (May coincide with other instances)
-    bool isInitialized = false;                       // Indicate whether the instance is initialized.
+    BYTE red;
+    BYTE green;
+    BYTE blue;
+    BYTE alpha = 255;
 
-private:
-    BYTE Red = 0;                  // Red value of the color.
-    BYTE Green = 0;                // Green value of the color.
-    BYTE Blue = 0;                 // Blue value of the color.
-    BYTE Alpha = 0;                // Alpha value of the color.
-    COLORREF CLR = NULL;           // COLORREF variant of the color.
-    Gdiplus::Color GDIP_CL = NULL; // Gdiplus::Color variant of the color.
-    HBRUSH HBR = nullptr;          // HBRUSH variant of the color. (Unmanaged object)
+    RGBA(BYTE red, BYTE green, BYTE blue, BYTE alpha = 255) : red(red), green(green), blue(blue), alpha(alpha) {}
+};
 
+/**
+ * @class MyColor
+ * 
+ * @brief Represents a color. (Wrapped COLORREF, Gdiplus::Color, HBRUSH)
+ */
+class MyColor
+{
 public:
     /**
-     * @brief Default constructor. (Uninitialized state)
+     * @brief Constructor 1.
+     *
+     * @param red   The red value of the color.
+     * @param green The green value of the color.
+     * @param blue  The blue value of the color.
+     * @param alpha The alpha value of the color.
      */
-    MyColor();
+    MyColor(BYTE red, BYTE green, BYTE blue, BYTE alpha = 255);
 
     /**
-     * @brief Default constructor.
+     * @brief Constructor 2.
      *
-     * @param Red   The red value of the color.
-     * @param Green The green value of the color.
-     * @param Blue  The blue value of the color.
-     * @param Alpha The alpha value of the color.
-     * @param ID    The instance ID. (Default: 0)
+     * @param colors The RGBA struct containing the color values.
      */
-    MyColor(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255, INT ID = 0);
+    MyColor(RGBA colors);
 
     /**
      * @brief Copy constructor.
@@ -54,8 +57,6 @@ public:
      * @brief Assignment operator.
      *
      * @param other The MyColor object to be assigned.
-     *
-     * @return Reference to the assigned MyColor object.
      */
     MyColor &operator=(const MyColor &other);
 
@@ -65,154 +66,104 @@ public:
     ~MyColor();
 
 private:
-    /**
-     * @brief Destroys the unmanaged object(s).
-     *
-     * @return Returns true if the object(s) was successfully destroyed, false otherwise.
-     */
-    bool DestroyUnmanagedObjects();
+    inline static UINT totalInstances = 0; // Tracks the total number of instances.
+
+    // Allocation variable(s).
+    BYTE red, green, blue, alpha; // Color values.
+
+    // Variant(s).
+    COLORREF clr;             // COLORREF variant of the color.
+    Gdiplus::Color gdipColor; // Gdiplus::Color variant of the color.
+    HBRUSH hBrush;            // HBRUSH variant of the color.
 
 public:
-    /**
-     * @brief Get the total number of existing MyColor instances.
-     *
-     * @return Returns the total number of existing MyColor instances.
-     */
-    static UINT GetTotalInstances();
+    /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Get the total number of existing initialized MyColor instances.
+     * @brief Get the total instances of MyColor.
      *
-     * @return Returns the total number of existing initialized MyColor instances.
+     * @return Returns the total instances of MyColor.
      */
-    static UINT GetTotalInitializedInstances();
+    inline static UINT getTotalInstances();
 
 public:
-    /**
-     * @brief Get the instance ID.
-     *
-     * @return Returns the instance ID.
-     */
-    INT GetInstanceID();
-
-    /**
-     * @brief Set the new instance ID.
-     *
-     * @param ID The new instance ID.
-     */
-    void SetInstanceID(INT ID);
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Get the red value of the color.
      *
      * @return Returns the red value of the color.
      */
-    BYTE GetRed();
+    BYTE getRed() const;
 
     /**
      * @brief Get the green value of the color.
      *
      * @return Returns the green value of the color.
      */
-    BYTE GetGreen();
+    BYTE getGreen() const;
 
     /**
      * @brief Get the blue value of the color.
      *
      * @return Returns the blue value of the color.
      */
-    BYTE GetBlue();
+    BYTE getBlue() const;
 
     /**
      * @brief Get the alpha value of the color.
      *
      * @return Returns the alpha value of the color.
      */
-    BYTE GetAlpha();
+    BYTE getAlpha() const;
 
     /**
-     * @brief Get the COLORREF variant of the color.
+     * @brief Get the COLORREF variant (reference) of the color.
      *
      * @return Returns the COLORREF variant of the color.
      */
-    COLORREF GetCLR();
-
-    /**
-     * @brief Get the Gdiplus::Color variant of the color.
-     *
-     * @return Returns the Gdiplus::Color variant of the color.
-     */
-    Gdiplus::Color GetGDIPColor();
+    const COLORREF &getCOLORREF() const;
 
     /**
      * @brief Get the Gdiplus::Color variant (reference) of the color.
-     *
-     * @return Returns the Gdiplus::Color variant (reference) of the color.
      */
-    Gdiplus::Color &GetGDIPColorRef();
-
-    /**
-     * @brief Get the HBRUSH variant of the color.
-     *
-     * @return Returns the HBRUSH variant of the color.
-     */
-    HBRUSH GetHBR();
+    Gdiplus::Color &getGDIPColor();
 
     /**
      * @brief Get the HBRUSH variant (reference) of the color.
-     *
-     * @return Returns the HBRUSH variant (reference) of the color.
      */
-    HBRUSH &GetHBRRef();
+    HBRUSH &getHBRUSH();
 
     /**
-     * @brief Updates the MyColor object with new color values.
+     * @brief Update the color values.
      *
-     * @param Red   The red value of the color.
-     * @param Green The green value of the color.
-     * @param Blue  The blue value of the color.
-     * @param Alpha The alpha value of the color.
+     * @param red   The red value of the color.
+     * @param green The green value of the color.
+     * @param blue  The blue value of the color.
+     * @param alpha The alpha value of the color.
      *
-     * @return Returns true if successfully updated the object, false otherwise.
+     * @return Returns true if the color values were successfully updated, false otherwise.
      */
-    bool Update(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255);
+    bool update(BYTE red, BYTE green, BYTE blue, BYTE alpha = 255);
 };
 
 /**
- * @struct MyFont
- * @brief Represents a font with various variant datatypes.
+ * @class MyFont
+ * 
+ * @brief Represents a font. (Wrapped HFONT)
  */
-struct MyFont
+class MyFont
 {
-private:
-    inline static UINT TotalInstances = 0;            // Tracks the total number of instances.
-    inline static UINT TotalInitializedInstances = 0; // Tracks the total number of initialized instances.
-    INT ID;                                           // The instance ID. (May coincide with other instances)
-    bool isInitialized = false;                       // Indicate whether the instance is initialized.
-
-private:
-    std::wstring Name;   // The font name.
-    USHORT Size;         // The font size.
-    USHORT Weight;       // The font weight.
-    DWORD Quality;       // The font quality.
-    HFONT HFO = nullptr; // HFONT variant of the font. (Unmanaged object)
-
 public:
-    /**
-     * @brief Default constructor. (Uninitialized state)
-     */
-    MyFont();
-
     /**
      * @brief Default constructor.
      *
-     * @param Name    The name of the font.
-     * @param Size    The size of the font.
-     * @param Weight  The weight of the font.
-     * @param Quality The quality of the font.
-     * @param ID      The instance ID. (Default: 0)
+     * @param name    The name of the font.
+     * @param size    The size of the font.
+     * @param weight  The weight of the font.
+     * @param quality The quality of the font.
      */
-    MyFont(std::wstring Name, USHORT Size, USHORT Weight = FW_NORMAL, DWORD Quality = DEFAULT_QUALITY, INT ID = 0);
+    MyFont(std::wstring name, USHORT size, USHORT weight = FW_NORMAL, DWORD quality = DEFAULT_QUALITY);
 
     /**
      * @brief Copy constructor.
@@ -225,8 +176,6 @@ public:
      * @brief Assignment operator.
      *
      * @param other The MyFont object to be assigned.
-     *
-     * @return Reference to the assigned MyFont object.
      */
     MyFont &operator=(const MyFont &other);
 
@@ -236,135 +185,96 @@ public:
     ~MyFont();
 
 private:
-    /**
-     * @brief Destroys the unmanaged object(s).
-     *
-     * @return Returns true if the object(s) was successfully destroyed, false otherwise.
-     */
-    bool DestroyUnmanagedObjects();
+    inline static UINT totalInstances = 0; // Tracks the total number of instances.
+
+    // Allocation variable(s).
+    std::wstring name; // Name of the font.
+    USHORT size;       // Size of the font.
+    USHORT weight;     // Weight of the font.
+    DWORD quality;     // Quality of the font.
+
+    // Variant(s).
+    HFONT hFont; // HFONT variant of the font.
 
 public:
-    /**
-     * @brief Get the total number of existing MyFont instances.
-     *
-     * @return Returns the total number of existing MyFont instances.
-     */
-    static UINT GetTotalInstances();
+    /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Get the total number of existing initialized MyFont instances.
+     * @brief Get the total instances of MyFont.
      *
-     * @return Returns the total number of existing initialized MyFont instances.
+     * @return Returns the total instances of MyFont.
      */
-    static UINT GetTotalInitializedInstances();
+    inline static UINT getTotalInstances();
 
 public:
-    /**
-     * @brief Get the instance ID.
-     *
-     * @return Returns the instance ID.
-     */
-    INT GetInstanceID();
+    /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Set the new instance ID.
+     * @bried Get the name of the font.
      *
-     * @param ID The new instance ID.
+     * @return Returns the name of the font.
      */
-    void SetInstanceID(INT ID);
+    std::wstring getName() const;
 
     /**
-     * @brief Get the font name.
+     * @brief Get the size of the font.
      *
-     * @return Returns the font name.
+     * @return Returns the size of the font.
      */
-    std::wstring GetName();
+    USHORT getSize() const;
 
     /**
-     * @brief Get the font size.
+     * @brief Get the weight of the font.
      *
-     * @return Returns the font size.
+     * @return Returns the weight of the font.
      */
-    USHORT GetSize();
+    USHORT getWeight() const;
 
     /**
-     * @brief Get the font weight.
+     * @brief Get the quality of the font.
      *
-     * @return Returns the font weight.
+     * @return Returns the quality of the font.
      */
-    USHORT GetWeight();
-
-    /**
-     * @brief Get the font quality.
-     *
-     * @return Returns the font quality.
-     */
-    DWORD GetQuality();
-
-    /**
-     * @brief Get the HFONT variant of the font.
-     *
-     * @return Returns the HFONT variant of the font.
-     */
-    HFONT GetHFO();
+    DWORD getQuality() const;
 
     /**
      * @brief Get the HFONT variant (reference) of the font.
      *
-     * @return Returns the HFONT variant (reference) of the font.
+     * @returns Returns the HFONT variant (reference) of the font.
      */
-    HFONT &GetHFORef();
+    HFONT &getHFONT();
 
     /**
-     * @brief Updates the MyFont object with new font values.
+     * @brief Update the font values.
      *
-     * @param Name    The font name.
-     * @param Size    The font size.
-     * @param Weight  The font weight.
-     * @param Quality The font quality.
+     * @param name    The name of the font.
+     * @param size    The size of the font.
+     * @param weight  The weight of the font.
+     * @param quality The quality of the font.
      *
-     * @return Returns true if successfully updated the object, false otherwise.
+     * @return Returns true if the font values were successfully updated, false otherwise.
      */
-    bool Update(std::wstring Name, USHORT Size, USHORT Weight = FW_NORMAL, DWORD Quality = DEFAULT_QUALITY);
+    bool update(std::wstring name, USHORT size, USHORT weight = FW_NORMAL, DWORD quality = DEFAULT_QUALITY);
 };
 
 /**
- * @struct MyIcon
- * @brief Represents an icon with various variant datatypes.
+ * @class MyIcon
+ * 
+ * @brief Represents a icon. (Wrapped HICON)
  */
-struct MyIcon
+class MyIcon
 {
-private:
-    inline static UINT TotalInstances = 0;            // Tracks the total number of instances.
-    inline static UINT TotalInitializedInstances = 0; // Tracks the total number of initialized instances.
-    INT ID;                                           // The instance ID. (May coincide with other instances)
-    bool isInitialized = false;                       // Indicate whether the instance is initialized.
-
-private:
-    HINSTANCE hInstance;  // Handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-    INT Width;            // The width of the icon.
-    INT Height;           // The height of the icon.
-    INT ResourceID;       // The resource ID of the icon.
-    UINT HICON_fuLoad;    // Extra fuLoad flag(s) for the LoadImage() function.
-    HICON HICO = nullptr; // HICON variant of the icon. (Unmanaged object)
-
 public:
-    /**
-     * @brief Default constructor. (Uninitialized state)
-     */
-    MyIcon();
-
     /**
      * @brief Default constructor.
      *
-     * @param hInstance    Handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     * @param Width        The width of the icon.
-     * @param Height       The height of the icon.
-     * @param ResourceID   The resource ID of the icon.
-     * @param HICON_fuLoad Extra fuLoad flag(s) for the LoadImage() function.
-     * @param ID           The instance ID. (Default: 0)
+     * @param hInstance      The handle to the instance of the module whose executable file contains the icon to be loaded.
+     * @param width          The width of the icon.
+     * @param height         The height of the icon.
+     * @param resourceID     The resource ID of the icon.
+     * @param loadImageFlags Flags that specify how the icon is to be loaded.
      */
-    MyIcon(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad = NULL, INT ID = 0);
+    MyIcon(HINSTANCE hInstance, INT width, INT height, INT resourceID, UINT loadImageFlags = NULL);
 
     /**
      * @brief Copy constructor.
@@ -377,8 +287,6 @@ public:
      * @brief Assignment operator.
      *
      * @param other The MyIcon object to be assigned.
-     *
-     * @return Reference to the assigned MyIcon object.
      */
     MyIcon &operator=(const MyIcon &other);
 
@@ -388,138 +296,102 @@ public:
     ~MyIcon();
 
 private:
-    /**
-     * @brief Destroys the unmanaged object(s).
-     *
-     * @return Returns true if the object(s) was successfully destroyed, false otherwise.
-     */
-    bool DestroyUnmanagedObjects();
+    inline static UINT totalInstances = 0; // Tracks the total number of instances.
+
+    // Allocation variable(s).
+    HINSTANCE hInstance; // Handle to the instance of the module whose executable file contains the icon to be loaded.
+    INT width;           // Width of the icon.
+    INT height;          // Height of the icon.
+    INT resourceID;      // Resource ID of the icon.
+    UINT loadImageFlags; // Flags that specify how the icon is to be loaded.
+
+    // Variant(s).
+    HICON hIcon; // HICON variant of the icon.
 
 public:
-    /**
-     * @brief Get the total number of existing MyIcon instances.
-     *
-     * @return Returns the total number of existing MyIcon instances.
-     */
-    static UINT GetTotalInstances();
+    /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Get the total number of existing initialized MyIcon instances.
+     * @brief Get the total instances of MyIcon.
      *
-     * @return Returns the total number of existing initialized MyIcon instances.
+     * @return Returns the total instances of MyIcon.
      */
-    static UINT GetTotalInitializedInstances();
+    inline static UINT getTotalInstances();
 
 public:
-    /**
-     * @brief Get the instance ID.
-     *
-     * @return Returns the instance ID.
-     */
-    INT GetInstanceID();
+    /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Set the new instance ID.
+     * @brief Get the handle to the instance of the module whose executable file contains the icon to be loaded.
      *
-     * @param ID The new instance ID.
+     * @return Returns the handle to the instance of the module whose executable file contains the icon to be loaded.
      */
-    void SetInstanceID(INT ID);
-
-    /**
-     * @brief Get handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     *
-     * @return Returns the handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     */
-    HINSTANCE GetHINSTANCE();
+    HINSTANCE getHINSTANCE() const;
 
     /**
      * @brief Get the width of the icon.
      *
      * @return Returns the width of the icon.
      */
-    INT GetWidth();
+    INT getWidth() const;
 
     /**
      * @brief Get the height of the icon.
      *
      * @return Returns the height of the icon.
      */
-    INT GetHeight();
+    INT getHeight() const;
 
     /**
-     * @brief Get the resource ID of the icon.
+     * @brief Get the resource ID of the image.
      *
-     * @return Returns the resource ID of the icon.
+     * @return Returns the resource ID of the image.
      */
-    INT GetResourceID();
+    INT getResourceID() const;
 
     /**
-     * @brief Get the load image flags of the icon.
+     * @brief Get the flags that specify how the icon is to be loaded.
      *
-     * @return Returns the load image flags of the icon.
+     * @return Returns the flags that specify how the icon is to be loaded.
      */
-    UINT GetLoadImageFlag();
-
-    /**
-     * @brief Get the HICON variant of the icon.
-     *
-     * @return Returns the HICON variant of the icon.
-     */
-    HICON GetHICO();
+    UINT getLoadImageFlags() const;
 
     /**
      * @brief Get the HICON variant (reference) of the icon.
      *
      * @return Returns the HICON variant (reference) of the icon.
      */
-    HICON &GetHICORef();
+    HICON &getHICON();
 
     /**
-     * @brief Updates the MyIcon object with new icon values.
+     * @brief Update the icon values.
      *
-     * @param hInstance    The new handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     * @param Width        The new width of the icon.
-     * @param Height       The new height of the icon.
-     * @param ResourceID   The new resource ID of the icon.
-     * @param HICON_fuLoad Extra fuLoad flag(s) for the LoadImage() function.
+     * @param hInstance      The handle to the instance of the module whose executable file contains the icon to be loaded.
+     * @param width          The width of the icon.
+     * @param height         The height of the icon.
+     * @param resourceID     The resource ID of the icon.
+     * @param loadImageFlags Flags that specify how the icon is to be loaded.
      *
-     * @return Returns true if successfully updated the object, false otherwise.
+     * @return Returns true if the icon values were successfully updated, false otherwise.
      */
-    bool Update(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad = NULL);
+    bool update(HINSTANCE hInstance, INT width, INT height, INT resourceID, UINT loadImageFlags = NULL);
 };
 
 /**
- * @struct MyImage
- * @brief Represents an image with various variant datatypes.
+ * @class MyImage
+ * 
+ * @brief Represents a image. (Wrapped Gdiplus::Image)
  */
-struct MyImage
+class MyImage
 {
-private:
-    inline static UINT TotalInstances = 0;            // Tracks the total number of instances.
-    inline static UINT TotalInitializedInstances = 0; // Tracks the total number of initialized instances.
-    INT ID = 0;                                       // The instance ID. (May coincide with other instances)
-    bool isInitialized = false;                       // Indicate whether the instance is initialized.
-
-private:
-    INT ResourceID = 0;               // The resource ID of the icon.
-    ImageFormat Format;               // The image format.
-    IStream *pStream = nullptr;       // Pointer to the resource stream.
-    Gdiplus::Image *pImage = nullptr; // Gdiplus::Image variant of the image. (Unmanaged object)
-
 public:
-    /**
-     * @brief Default constructor. (Uninitialized state)
-     */
-    MyImage();
-
     /**
      * @brief Default constructor.
      *
-     * @param ResourceID The resource ID of the image.
-     * @param Format     The image format.
-     * @param ID         The instance ID. (Default: 0)
+     * @param resourceID The resource ID of the image.
+     * @param format     The format of the image.
      */
-    MyImage(INT ResourceID, ImageFormat Format, INT ID = 0);
+    MyImage(INT resourceID, MyImageFormat format);
 
     /**
      * @brief Copy constructor.
@@ -532,8 +404,6 @@ public:
      * @brief Assignment operator.
      *
      * @param other The MyImage object to be assigned.
-     *
-     * @return Reference to the assigned MyImage object.
      */
     MyImage &operator=(const MyImage &other);
 
@@ -543,659 +413,419 @@ public:
     ~MyImage();
 
 private:
-    /**
-     * @brief Destroys the unmanaged object(s).
-     *
-     * @return Returns true if the object(s) was successfully destroyed, false otherwise.
-     */
-    bool DestroyUnmanagedObjects();
+    inline static UINT totalInstances = 0; // Tracks the total number of instances.
+
+    // Allocation variable(s).
+    IStream *pStream;     // Pointer to the resource stream.
+    INT resourceID;       // Resource ID of the image.
+    MyImageFormat format; // Format of the image.
+
+    // Variant(s).
+    Gdiplus::Image *pImage; // Gdiplus::Image variant of the image.
 
 public:
-    /**
-     * @brief Get the total number of existing MyImage instances.
-     *
-     * @return Returns the total number of existing MyImage instances.
-     */
-    static UINT GetTotalInstances();
+    /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Get the total number of existing initialized MyImage instances.
+     * @brief Get the total instances of MyImage.
      *
-     * @return Returns the total number of existing initialized MyImage instances.
+     * @return Returns the total instances of MyImage.
      */
-    static UINT GetTotalInitializedInstances();
+    inline static UINT getTotalInstances();
 
 public:
-    /**
-     * @brief Get the instance ID.
-     *
-     * @return Returns the instance ID.
-     */
-    INT GetInstanceID();
-
-    /**
-     * @brief Set the new instance ID.
-     *
-     * @param ID The new instance ID.
-     */
-    void SetInstanceID(INT ID);
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Get the resource ID of the image.
      *
      * @return Returns the resource ID of the image.
      */
-    INT GetResourceID();
+    INT getResourceID() const;
 
     /**
      * @brief Get the format of the image.
      *
      * @return Returns the format of the image.
      */
-    ImageFormat GetFormat();
+    MyImageFormat getFormat() const;
 
     /**
      * @brief Get the Gdiplus::Image variant of the image.
      *
-     * @return Returns the Gdiplus::Image variant of the image.
+     * @returns Returns the Gdiplus::Image variant of the image.
      */
-    Gdiplus::Image *GetImage();
+    Gdiplus::Image *getGDIPImage() const;
 
     /**
-     * @brief Get the Gdiplus::Image variant (reference) of the image.
+     * @brief Update the image values.
      *
-     * @return Returns the Gdiplus::Image variant (reference) of the image.
+     * @param resourceID  The resource ID of the image.
+     * @param format      The format of the image.
+     *
+     * @return Returns true if the color values were successfully updated, false otherwise.
      */
-    Gdiplus::Image *&GetImageRef();
-
-    /**
-     * @brief Updates the MyImage object with new image values.
-     *
-     * @param ResourceID The resource ID of the image.
-     * @param Format     The image format.
-     *
-     * @return Returns true if successfully updated the object, false otherwise.
-     */
-    bool Update(INT ResourceID, ImageFormat Format);
+    bool update(INT resourceID, MyImageFormat format);
 };
 
 /**
- * @class UIObjectManager_Colors
- * @brief This class provides an interface to access the default color objects and serves as an container for custom color objects.
- * @note This is an internal class of the UIObjectManager class.
+ * @class UIColors
+ * 
+ * @brief Singleton class encapsulating and managing the UI color objects.
+ * 
+ * @note This class is used by UIElements class.
  */
-class UIObjectManager_Colors
+class UIColors
 {
-private:
-    std::vector<MyColor> Container; // Container for custom color objects.
-
 public:
-    /// [DEFAULT APPLICATION COLORS]
-    MyColor Primary = MyColor();         // Primary color.
-    MyColor Secondary = MyColor();       // Secondary color.
-    MyColor Border = MyColor();          // Border color.
-    MyColor Border_Inactive = MyColor(); // Inactive border color.
-    MyColor Text = MyColor();            // Text color.
-    MyColor Text_Inactive = MyColor();   // Inactive text color.
-    MyColor Focus = MyColor();           // Focus color.
-    MyColor CloseHover = MyColor();      // Close button hover state color.
-    MyColor MinimizeHover = MyColor();   // Minimize button hover state color.
-    MyColor NonClient_CloseButton_Background_OnHover = MyColor();    // Non-client close button hover state background color.
-    MyColor NonClient_CloseButton_Background_OnDown = MyColor();     // Non-client close button down state background color.
-    MyColor NonClient_MinimizeButton_Background_OnHover = MyColor(); // Non-client minimize button hover state background color.
-    MyColor NonClient_MinimizeButton_Background_OnDown = MyColor();  // Non-client minimize button down state background color.
-    MyColor Background = MyColor();      // Background color.
+    /// [DEFAULT APPLICATION UI COLORS]
 
-    MyColor Caption_Background = MyColor();    // Caption background color.
-    MyColor Caption_Text = MyColor();          // Caption title text color.
-    MyColor Caption_Text_Inactive = MyColor(); // Caption title inactive text color.
+    // Main colors.
+    MyColor primary = MyColor(0, 0, 0);
+    MyColor secondary = MyColor(0, 0, 0);
+    MyColor borderActive = MyColor(0, 0, 0);
+    MyColor borderInactive = MyColor(0, 0, 0);
+    MyColor textActive = MyColor(0, 0, 0);
+    MyColor textInactive = MyColor(0, 0, 0);
+    MyColor textHighlight = MyColor(0, 0, 0);
+    MyColor focus = MyColor(0, 0, 0);
+    MyColor background = MyColor(0, 0, 0);
 
-    MyColor StandardButton = MyColor();                // Standard button color.
-    MyColor StandardButton_OnHover = MyColor();        // Standard button hover state color.
-    MyColor StandardButton_OnDown = MyColor();         // Standard button down state color.
-    MyColor StandardButton_Border = MyColor();         // Standard button border color.
-    MyColor StandardButton_Border_OnHover = MyColor(); // Standard button hover state border color.
-    MyColor StandardButton_Border_OnDown = MyColor();  // Standard button down state border color.
-    MyColor StandardButton_Text_Default = MyColor();   // Standard button default text color.
-    MyColor StandardButton_Text_Highlight = MyColor(); // Standard button highlight text color.
+    // Caption colors.
+    MyColor captionBackground = MyColor(0, 0, 0);
+    MyColor captionTextActive = MyColor(0, 0, 0);
+    MyColor captionTextInactive = MyColor(0, 0, 0);
+    MyColor closeButtonBackgroundOnHover = MyColor(0, 0, 0);
+    MyColor closeButtonBackgroundOnDown = MyColor(0, 0, 0);
+    MyColor maximizeButtonBackgroundOnHover = MyColor(0, 0, 0);
+    MyColor maximizeButtonBackgroundOnDown = MyColor(0, 0, 0);
+    MyColor minimizeButtonBackgroundOnHover = MyColor(0, 0, 0);
+    MyColor minimizeButtonBackgroundOnDown = MyColor(0, 0, 0);
 
-    MyColor RadioPrimary = MyColor();                   // Radio button primary color.
-    MyColor RadioPrimary_OnHover = MyColor();           // Radio button hover state primary color.
-    MyColor RadioPrimary_OnDown = MyColor();            // Radio button down state primary color.
-    MyColor RadioSecondary = MyColor();                 // Radio button secondary color.
-    MyColor RadioSecondary_OnHover = MyColor();         // Radio button hover state secondary color.
-    MyColor RadioSecondary_OnDown = MyColor();          // Radio button down state secondary color.
-    MyColor Radio_Border = MyColor();                   // Radio button border color.
-    MyColor Radio_Border_OnHover = MyColor();           // Radio button hover state border color.
-    MyColor Radio_Border_OnDown = MyColor();            // Radio button down state border color.
-    MyColor SelectedRadioPrimary = MyColor();           // Selected radio button primary color.
-    MyColor SelectedRadioPrimary_OnHover = MyColor();   // Selected radio button hover state primary color.
-    MyColor SelectedRadioPrimary_OnDown = MyColor();    // Selected radio button down state primary color.
-    MyColor SelectedRadioSecondary = MyColor();         // Selected radio button secondary color.
-    MyColor SelectedRadioSecondary_OnHover = MyColor(); // Selected radio button hover state secondary color.
-    MyColor SelectedRadioSecondary_OnDown = MyColor();  // Selected radio button down state secondary color.
-    MyColor SelectedRadio_Border = MyColor();           // Selected radio button border color.
-    MyColor SelectedRadio_Border_OnHover = MyColor();   // Selected radio button hover state border color.
-    MyColor SelectedRadio_Border_OnDown = MyColor();    // Selected radio button down state border color.
-    MyColor Radio_Text_Default = MyColor();             // Radio button default text color.
-    MyColor Radio_Text_Highlight = MyColor();           // Radio button highlight text color.
+    // Standard button colors.
+    MyColor standardButtonDefault = MyColor(0, 0, 0);
+    MyColor standardButtonHover = MyColor(0, 0, 0);
+    MyColor standardButtonDown = MyColor(0, 0, 0);
+    MyColor standardButtonBorderDefault = MyColor(0, 0, 0);
+    MyColor standardButtonBorderHover = MyColor(0, 0, 0);
+    MyColor standardButtonBorderDown = MyColor(0, 0, 0);
 
-    MyColor Edit = MyColor();                 // Edit color.
-    MyColor Edit_Border = MyColor();          // Edit border color.
-    MyColor Edit_Border_Selected = MyColor(); // Edit selected state border color.
+    // Radio button colors.
+    MyColor radioButtonPrimaryDefault = MyColor(0, 0, 0);
+    MyColor radioButtonPrimaryHover = MyColor(0, 0, 0);
+    MyColor radioButtonPrimaryDown = MyColor(0, 0, 0);
+    MyColor radioButtonSecondaryDefault = MyColor(0, 0, 0);
+    MyColor radioButtonSecondaryHover = MyColor(0, 0, 0);
+    MyColor radioButtonSecondaryDown = MyColor(0, 0, 0);
+    MyColor radioButtonBorderDefault = MyColor(0, 0, 0);
+    MyColor radioButtonBorderHover = MyColor(0, 0, 0);
+    MyColor radioButtonBorderDown = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonPrimaryDefault = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonPrimaryHover = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonPrimaryDown = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonSecondaryDefault = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonSecondaryHover = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonSecondaryDown = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonBorderDefault = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonBorderHover = MyColor(0, 0, 0);
+    MyColor selectedRadioButtonBorderDown = MyColor(0, 0, 0);
 
-    MyColor Combobox = MyColor();                                  // Combobox color.
-    MyColor Combobox_Border = MyColor();                           // Combobox border color.
-    MyColor Combobox_Dropdownlist_Background = MyColor();          // Combobox drop down list background color.
-    MyColor Combobox_Dropdownlist_Background_Selected = MyColor(); // Combobox drop down list selected item background color.
-    MyColor Combobox_Dropdownlist_Border = MyColor();              // Combobox drop down list border color.
-    MyColor Combobox_Dropdownlist_Text_Default = MyColor();        // Combobox drop down list default item text color.
-    MyColor Combobox_Dropdownlist_Text_Selected = MyColor();       // Combobox drop down list selected item text color.
+    // Editbox colors.
+    MyColor editbox = MyColor(0, 0, 0);
+    MyColor editboxBorderDefault = MyColor(0, 0, 0);
+    MyColor editboxBorderSelected = MyColor(0, 0, 0);
 
-    MyColor DEBUG = MyColor(0, 255, 0);                                      // Debug color.
-    HBRUSH NullBrush = reinterpret_cast<HBRUSH>(GetStockObject(NULL_BRUSH)); // Null brush.
+    // Combobox (Drop-down list) colors.
+    MyColor ddlCombobox = MyColor(0, 0, 0);
+    MyColor ddlComboboxBorder = MyColor(0, 0, 0);
+    MyColor ddlComboboxItemBackground = MyColor(0, 0, 0);
+    MyColor ddlComboboxSelectedItemBackground = MyColor(0, 0, 0);
+    MyColor ddlComboboxDropdownlistBorder = MyColor(0, 0, 0);
+    MyColor ddlComboboxItemTextDefault = MyColor(0, 0, 0);
+    MyColor ddlComboboxItemTextSelected = MyColor(0, 0, 0);
+
+    // Misc colors.
+    MyColor debug = MyColor(0, 255, 0);
+    HBRUSH nullBrush = reinterpret_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
 
 public:
     /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Update the new colors for the main UI elements.
+     * @brief Updates the main colors.
      *
-     * @param Primary                                     New primary color.
-     * @param Secondary                                   New secondary color.
-     * @param Border                                      New border color.
-     * @param Border_Inactive                             New inactive border color.
-     * @param Text                                        New default text color.
-     * @param Text_Inactive                               New inactive text color.
-     * @param Focus                                       New focus color.
-     * @param CloseHover                                  New close button hover state background color.
-     * @param MinimizeHover                               New minimize button hover state background color.
-     * @param NonClient_CloseButton_Background_OnHover    New non-client close button hover state background color.
-     * @param NonClient_CloseButton_Background_OnDown     New non-client close button down state background color.
-     * @param NonClient_MinimizeButton_Background_OnHover New non-client minimize button hover state background color.
-     * @param NonClient_MinimizeButton_Background_OnDown  New non-client minimize button down state background color.
-     * @param Background                                  New background color.
+     * @param primary        The primary color.
+     * @param secondary      The secondary color.
+     * @param borderActive   The active border color.
+     * @param borderInactive The inactive border color.
+     * @param textActive     The active text color.
+     * @param textInactive   The inactive text color.
+     * @param textHighlight  The text highlight color.
+     * @param focus          The focus color.
+     * @param background     The background color.
      */
-    void UpdateMainColors(MyColor Primary, MyColor Secondary, MyColor Border, MyColor Border_Inactive,
-                          MyColor Text, MyColor Text_Inactive, MyColor Focus, MyColor CloseHover, MyColor MinimizeHover,
-                          MyColor NonClient_CloseButton_Background_OnHover, MyColor NonClient_CloseButton_Background_OnDown,
-                          MyColor NonClient_MinimizeButton_Background_OnHover, MyColor NonClient_MinimizeButton_Background_OnDown, MyColor Background);
+    void updateMainColors(RGBA primary, RGBA secondary, RGBA borderActive, RGBA borderInactive,
+                          RGBA textActive, RGBA textInactive, RGBA textHighlight, RGBA focus, RGBA background);
 
     /**
-     * @brief Update the new colors for the caption elements.
+     * @brief Updates the caption colors.
      *
-     * @param Caption_Background    New caption background color.
-     * @param Caption_Text          New default caption text color.
-     * @param Caption_Text_Inactive New inactive caption text color.
+     * @param captionBackground               The caption background color.
+     * @param captionTextActive               The caption text color when the window is active.
+     * @param captionTextInactive             The caption text color when the window is inactive.
+     * @param closeButtonBackgroundOnHover    The close button background color when the mouse is hovering over it.
+     * @param closeButtonBackgroundOnDown     The close button background color when the mouse is pressing it.
+     * @param maximizeButtonBackgroundOnHover The maximize button background color when the mouse is hovering over it.
+     * @param maximizeButtonBackgroundOnDown  The maximize button background color when the mouse is pressing it.
+     * @param minimizeButtonBackgroundOnHover The minimize button background color when the mouse is hovering over it.
+     * @param minimizeButtonBackgroundOnDown  The minimize button background color when the mouse is pressing it.
      */
-    void UpdateCaptionColors(MyColor Caption_Background, MyColor Caption_Text, MyColor Caption_Text_Inactive);
+    void updateCaptionColors(RGBA captionBackground, RGBA captionTextActive, RGBA captionTextInactive,
+                             RGBA closeButtonBackgroundOnHover, RGBA closeButtonBackgroundOnDown,
+                             RGBA maximizeButtonBackgroundOnHover, RGBA maximizeButtonBackgroundOnDown,
+                             RGBA minimizeButtonBackgroundOnHover, RGBA minimizeButtonBackgroundOnDown);
 
     /**
-     * @brief Update the new colors for the button elements.
+     * @brief Updates the standard button colors.
      *
-     * @param StandardButton                New standard button color.
-     * @param StandardButton_OnHover        New standard button hover state color.
-     * @param StandardButton_OnDown         New standard button down state color.
-     * @param StandardButton_Border         New Standard button border color.
-     * @param StandardButton_Border_OnHover New standard button hover state border color.
-     * @param StandardButton_Border_OnDown  New standard button down state border color.
-     * @param StandardButton_Text_Default   New standard button default text color.
-     * @param StandardButton_Text_Highlight New standard button highlight text color.
+     * @param standardButtonDefault       The standard button default color.
+     * @param standardButtonHover         The standard button hover color.
+     * @param standardButtonDown          The standard button down color.
+     * @param standardButtonBorderDefault The standard button border default color.
+     * @param standardButtonBorderHover   The standard button border hover color.
+     * @param standardButtonBorderDown    The standard button border down color.
      */
-    void UpdateStandardButtonColors(MyColor StandardButton, MyColor StandardButton_OnHover, MyColor StandardButton_OnDown, MyColor StandardButton_Border,
-                                    MyColor StandardButton_Border_OnHover, MyColor StandardButton_Border_OnDown, MyColor StandardButton_Text_Default, MyColor StandardButton_Text_Highlight);
+    void updateStandardButtonColors(RGBA standardButtonDefault, RGBA standardButtonHover, RGBA standardButtonDown,
+                                    RGBA standardButtonBorderDefault, RGBA standardButtonBorderHover, RGBA standardButtonBorderDown);
 
     /**
-     * @brief Update the new colors for the radio button elements.
+     * @brief Updates the radio button colors.
      *
-     * @param RadioPrimary                   New radio button primary color.
-     * @param RadioPrimary_OnHover           New radio button hover state primary color.
-     * @param RadioPrimary_OnDown            New radio button down state primary color.
-     * @param RadioSecondary                 New radio button secondary color.
-     * @param RadioSecondary_OnHover         New radio button hover state secondary color.
-     * @param RadioSecondary_OnDown          New radio button down state secondary color.
-     * @param Radio_Border                   New radio button border color.
-     * @param Radio_Border_OnHover           New radio button hover state border color.
-     * @param Radio_Border_OnDown            New radio button down state border color.
-     * @param SelectedRadioPrimary           New selected radio button primary color.
-     * @param SelectedRadioPrimary_OnHover   New selected radio button hover state primary color.
-     * @param SelectedRadioPrimary_OnDown    New selected radio button down state primary color.
-     * @param SelectedRadioSecondary         New selected radio button secondary color.
-     * @param SelectedRadioSecondary_OnHover New selected radio button hover state secondary color.
-     * @param SelectedRadioSecondary_OnDown  New selected radio button down state secondary color.
-     * @param SelectedRadio_Border           New selected radio button border color.
-     * @param SelectedRadio_Border_OnHover   New selected radio button hover state border color.
-     * @param SelectedRadio_Border_OnDown    New selected radio button down state border color.
-     * @param Radio_Text_Default             New radio button default text color.
-     * @param Radio_Text_Highlight           New radio button highlight text color.
+     * @param radioButtonPrimaryDefault           The radio button primary default color.
+     * @param radioButtonPrimaryHover             The radio button primary hover color.
+     * @param radioButtonPrimaryDown              The radio button primary down color.
+     * @param radioButtonSecondaryDefault         The radio button secondary default color.
+     * @param radioButtonSecondaryHover           The radio button secondary hover color.
+     * @param radioButtonSecondaryDown            The radio button secondary down color.
+     * @param radioButtonBorderDefault            The radio button border default color.
+     * @param radioButtonBorderHover              The radio button border hover color.
+     * @param radioButtonBorderDown               The radio button border down color.
+     * @param selectedRadioButtonPrimaryDefault   The selected radio button primary default color.
+     * @param selectedRadioButtonPrimaryHover     The selected radio button primary hover color.
+     * @param selectedRadioButtonPrimaryDown      The selected radio button primary down color.
+     * @param selectedRadioButtonSecondaryDefault The selected radio button secondary default color.
+     * @param selectedRadioButtonSecondaryHover   The selected radio button secondary hover color.
+     * @param selectedRadioButtonSecondaryDown    The selected radio button secondary down color.
+     * @param selectedRadioButtonBorderDefault    The selected radio button border default color.
+     * @param selectedRadioButtonBorderHover      The selected radio button border hover color.
+     * @param selectedRadioButtonBorderDown       The selected radio button border down color.
      */
-    void UpdateRadioButtonColors(MyColor RadioPrimary, MyColor RadioPrimary_OnHover, MyColor RadioPrimary_OnDown, MyColor RadioSecondary, MyColor RadioSecondary_OnHover, MyColor RadioSecondary_OnDown, MyColor Radio_Border, MyColor Radio_Border_OnHover, MyColor Radio_Border_OnDown,
-                                 MyColor SelectedRadioPrimary, MyColor SelectedRadioPrimary_OnHover, MyColor SelectedRadioPrimary_OnDown, MyColor SelectedRadioSecondary, MyColor SelectedRadioSecondary_OnHover, MyColor SelectedRadioSecondary_OnDown, MyColor SelectedRadio_Border, MyColor SelectedRadio_Border_OnHover, MyColor SelectedRadio_Border_OnDown,
-                                 MyColor Radio_Text_Default, MyColor Radio_Text_Highlight);
+    void updateRadioButtonColors(RGBA radioButtonPrimaryDefault, RGBA radioButtonPrimaryHover, RGBA radioButtonPrimaryDown,
+                                 RGBA radioButtonSecondaryDefault, RGBA radioButtonSecondaryHover, RGBA radioButtonSecondaryDown,
+                                 RGBA radioButtonBorderDefault, RGBA radioButtonBorderHover, RGBA radioButtonBorderDown,
+                                 RGBA selectedRadioButtonPrimaryDefault, RGBA selectedRadioButtonPrimaryHover, RGBA selectedRadioButtonPrimaryDown,
+                                 RGBA selectedRadioButtonSecondaryDefault, RGBA selectedRadioButtonSecondaryHover, RGBA selectedRadioButtonSecondaryDown,
+                                 RGBA selectedRadioButtonBorderDefault, RGBA selectedRadioButtonBorderHover, RGBA selectedRadioButtonBorderDown);
 
     /**
-     * Update the new colors for the editbox elements.
+     * @brief Updates the editbox colors.
      *
-     * @param Edit                 New editbox color.
-     * @param Edit_Border          New default editbox border color.
-     * @param Edit_Border_Selected New selected editbox border color.
+     * @param editbox               The editbox color.
+     * @param editboxBorderDefault  The editbox border default color.
+     * @param editboxBorderSelected The editbox border selected color.
      */
-    void UpdateEditColors(MyColor Edit, MyColor Edit_Border, MyColor Edit_Border_Selected);
+    void updateEditboxColors(RGBA editbox, RGBA editboxBorderDefault, RGBA editboxBorderSelected);
 
     /**
-     * @brief Update the new colors for the combobox elements.
+     * @brief Updates the drop-down list combobox colors.
      *
-     * @param Combobox                                  New combobox color.
-     * @param Combobox_Border                           New combobox border color.
-     * @param Combobox_Dropdownlist_Background          New combobox drop down list background color.
-     * @param Combobox_Dropdownlist_Background_Selected New combobox drop down list selected item background color.
-     * @param Combobox_Dropdownlist_Border              New combobox drop down list border color.
-     * @param Combobox_Dropdownlist_Text_Default        New combobox drop down list default item text color.
-     * @param Combobox_Dropdownlist_Text_Selected       New combobox drop down list selected item text color.
+     * @param ddlCombobox                       The drop-down list combobox color.
+     * @param ddlComboboxBorder                 The drop-down list combobox border color.
+     * @param ddlComboboxItemBackground         The drop-down list combobox item background color.
+     * @param ddlComboboxSelectedItemBackground The drop-down list combobox selected item background color.
+     * @param ddlComboboxDropdownlistBorder     The drop-down list combobox dropdownlist border color.
+     * @param ddlComboboxItemTextDefault        The drop-down list combobox item text default color.
+     * @param ddlComboboxItemTextSelected       The drop-down list combobox item text selected color.
      */
-    void UpdateComboboxColors(MyColor Combobox, MyColor Combobox_Border, MyColor Combobox_Dropdownlist_Background,
-                              MyColor Combobox_Dropdownlist_Background_Selected, MyColor Combobox_Dropdownlist_Border,
-                              MyColor Combobox_Dropdownlist_Text_Default, MyColor Combobox_Dropdownlist_Text_Selected);
-
-public:
-    /// [CONTAINER FUNCTIONS]
-
-    /**
-     * @brief Add new color object to the container.
-     *
-     * @param Red      The red value of the color.
-     * @param Green    The green value of the color.
-     * @param Blue     The blue value of the color.
-     * @param Alpha    The alpha value of the color.
-     * @param ID       The instance ID must be unique within the container. If the instance doesn't require an ID, use zero.
-     */
-    void AddColor(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255, INT ID = 0);
-
-    /**
-     * @brief Remove an color object from the container.
-     * @note If the target object doesn't have a unique handle ID, use RemoveColorEx() instead.
-     *
-     * @param ID The instance ID.
-     *
-     * @return Returns true if the object is successfully removed from the container, false otherwise.
-     */
-    bool RemoveColor(INT ID);
-
-    /**
-     * @brief Remove color objects with specified parameters from the container.
-     * @note All the color objects match the specified parameters will be removed.
-     * @brief The container's reference can be retrieved using GetContainer() if needed to perform manual operations.
-     *
-     * @param Red   The red value of the color.
-     * @param Green The green value of the color.
-     * @param Blue  The blue value of the color.
-     * @param Alpha The alpha value of the color.
-     *
-     * @return Returns true if at least one object is successfully removed from the container, false otherwise.
-     */
-    bool RemoveColorEx(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255);
-
-    /**
-     * @brief Get the color object's pointer from the container using instance ID.
-     *
-     * @param ID The instance ID.
-     *
-     * @return Returns the object's pointer if found. Otherwise, return nullptr.
-     */
-    MyColor *GetColor(INT ID);
-
-    /**
-     * @brief Get the color object's pointer from the container using specified parameters.
-     *
-     * @param Red   The red value of the color.
-     * @param Green The green value of the color.
-     * @param Blue  The blue value of the color.
-     * @param Alpha The alpha value of the color.
-     *
-     * @return Returns the object's pointer if found. Otherwise, return nullptr.
-     */
-    MyColor *GetColorEx(BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha);
-
-    /**
-     * @brief Get the container.
-     *
-     * @return Return the container's reference.
-     */
-    std::vector<MyColor> &GetContainer();
+    void updateDDLComboboxColors(RGBA ddlCombobox, RGBA ddlComboboxBorder, RGBA ddlComboboxItemBackground, RGBA ddlComboboxSelectedItemBackground,
+                                 RGBA ddlComboboxDropdownlistBorder, RGBA ddlComboboxItemTextDefault, RGBA ddlComboboxItemTextSelected);
 };
 
 /**
- * @class UIObjectManager_Fonts
- * @brief This class provides an interface to access the default font objects and serves as an container for custom font objects.
- * @note This is an internal class of the UIObjectManager class.
+ * @class UIFonts
+ * 
+ * @brief Singleton class encapsulating and managing the UI font objects.
+ * 
+ * @note This class is used by UIElements class.
  */
-class UIObjectManager_Fonts
+class UIFonts
 {
-private:
-    std::vector<MyFont> Container; // Container for custom font objects.
-
 public:
-    /// [DEFAULT APPLICATION FONTS]
+    /// [DEFAULT APPLICATION UI FONTS]
 
-    MyFont Default = MyFont(L"Tahoma", 24, FW_NORMAL, CLEARTYPE_QUALITY);  // Default font.
-    MyFont Caption = MyFont(L"Tahoma", 23, FW_NORMAL, CLEARTYPE_QUALITY);  // Caption font.
-    MyFont Edit = MyFont(L"Tahoma", 29, FW_ULTRALIGHT, CLEARTYPE_QUALITY); // Edit font.
-    MyFont Combobox = MyFont(L"Tahoma", 24, FW_NORMAL, CLEARTYPE_QUALITY); // Combobox font.
-
-    MyFont Heading = MyFont(L"Tahoma", 26, FW_MEDIUM, CLEARTYPE_QUALITY); // Heading font.
-    MyFont Note = MyFont(L"Tahoma", 22, FW_NORMAL, CLEARTYPE_QUALITY);    // Note font.
+    MyFont caption = MyFont(L"Tahoma", 23, FW_NORMAL, CLEARTYPE_QUALITY);     // Caption font.
+    MyFont button = MyFont(L"Tahoma", 24, FW_NORMAL, CLEARTYPE_QUALITY);      // Button font.
+    MyFont editbox = MyFont(L"Tahoma", 29, FW_ULTRALIGHT, CLEARTYPE_QUALITY); // Editbox font.
+    MyFont ddlCombobox = MyFont(L"Tahoma", 24, FW_NORMAL, CLEARTYPE_QUALITY); // Drop-down list combobox font.
+    MyFont heading = MyFont(L"Tahoma", 26, FW_MEDIUM, CLEARTYPE_QUALITY);     // Heading font.
+    MyFont note = MyFont(L"Tahoma", 22, FW_NORMAL, CLEARTYPE_QUALITY);        // Note font.
 
 public:
     /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Update the new main fonts.
+     * @brief Updates the fonts.
      *
-     * @param Default New default font.
-     * @param Caption New caption font.
-     * @param Edit    New editbox font.
+     * @param caption     The caption font.
+     * @param editbox     The editbox font.
+     * @param ddlCombobox The drop-down list combobox font.
+     * @param heading     The heading font.
+     * @param note        The note font.
      */
-    void UpdateMainFonts(MyFont Default, MyFont Caption, MyFont Edit);
-
-    /**
-     * @brief Update the new container (@class MyContainer) fonts.
-     *
-     * @param Heading New heading font.
-     * @param Note    New note font.
-     */
-    void UpdateContainerFonts(MyFont Heading, MyFont Note);
-
-public:
-    /// [CONTAINER FUNCTIONS]
-
-    /**
-     * @brief Add new font object to the container.
-     *
-     * @param Name    The font name.
-     * @param Size    The font size.
-     * @param Weight  The font weight.
-     * @param Quality The font quality.
-     * @param ID      The instance ID must be unique within the container. If the instance doesn't require an ID, use zero.
-     */
-    void AddFont(std::wstring Name, USHORT Size, USHORT Weight = FW_NORMAL, DWORD Quality = DEFAULT_QUALITY, INT ID = 0);
-
-    /**
-     * @brief Remove an font object from the container.
-     * @note If the target object doesn't have a unique handle ID, use RemoveFontEx() instead.
-     *
-     * @param ID The instance ID.
-     *
-     * @return Returns true if the object is successfully removed from the container, false otherwise.
-     */
-    bool RemoveFont(INT ID);
-
-    /**
-     * @brief Remove font objects with specified parameters from the container.
-     * @note All the font objects match the specified parameters will be removed.
-     * @brief The container's reference can be retrieved using GetContainer() if needed to perform manual operations.
-     *
-     * @param Name    The font name.
-     * @param Size    The font size.
-     * @param Weight  The font weight.
-     * @param Quality The font quality.
-     *
-     * @return Returns true if at least one object is successfully removed from the container, false otherwise.
-     */
-    bool RemoveFontEx(std::wstring Name, USHORT Size, USHORT Weight = FW_NORMAL, DWORD Quality = DEFAULT_QUALITY);
-
-    /**
-     * @brief Get the font object's pointer from the container using instance ID.
-     *
-     * @param ID The instance ID.
-     *
-     * @return Returns the object's pointer if found. Otherwise, return nullptr.
-     */
-    MyFont *GetFont(INT ID);
-
-    /**
-     * @brief Get the font object's pointer from the container using specified parameters.
-     *
-     * @param Name    The font name.
-     * @param Size    The font size.
-     * @param Weight  The font weight.
-     * @param Quality The font quality.
-     *
-     * @return Returns the object's pointer if found. Otherwise, return nullptr.
-     */
-    MyFont *GetFontEx(std::wstring Name, USHORT Size, USHORT Weight = FW_NORMAL, DWORD Quality = DEFAULT_QUALITY);
-
-    /**
-     * @brief Get the container.
-     *
-     * @return Return the container's reference.
-     */
-    std::vector<MyFont> &GetContainer();
+    void updateFonts(MyFont caption, MyFont editbox, MyFont ddlCombobox, MyFont heading, MyFont note);
 };
 
 /**
- * @class UIObjectManager_Icons
- * @brief This class provides an interface to access the default icon objects and serves as an container for custom icon objects.
- * @note This is an internal class of the UIObjectManager class.
+ * @class UIIcons
+ * 
+ * @brief Singleton class encapsulating and managing the UI icon objects.
+ * 
+ * @note This class is used by UIElements class.
  */
-class UIObjectManager_Icons
+class UIIcons
 {
-private:
-    std::vector<MyIcon> Container; // Container for custom icon objects.
-
 public:
-    /// [DEFAULT APPLICATION ICONS]
-    /// Note: The icon object(s) will be initialized in the constructor.
-
-    MyIcon *Cross_Black = nullptr; // Black cross icon.
-    MyIcon *Cross_Grey = nullptr;  // Grey cross icon.
-    MyIcon *Cross_White = nullptr; // White cross icon.
-    MyIcon *Minus_Black = nullptr; // Black minus icon.
-    MyIcon *Minus_Grey = nullptr;  // Grey minus icon.
-    MyIcon *Minus_White = nullptr; // White minus icon.
-    MyIcon *MAINICON = nullptr;    // Application main icon.
-
-public:
-    /**
-     * @brief Default constructor.
-     *
-     * @param hInstance Handle to the module of either a DLL or executable (.exe) that contains the default icons to be loaded.
-     */
-    UIObjectManager_Icons(HINSTANCE hInstance);
-
-    /**
-     * @brief Default destructor.
-     */
-    ~UIObjectManager_Icons();
-
-private:
-    /// [(DE)INITIALIZATION FUNCTIONS]
-
-    /**
-     * @brief Initialize the default icon objects.
-     *
-     * @param hInstance Handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     *
-     * @return Returns true if successfully initialized the default icons, false otherwise.
-     */
-    bool InitDefaultIcons(HINSTANCE hInstance);
-
-    /**
-     * @brief Deinitialize the default icon objects.
-     *
-     * @return Returns true if successfully deinitialized the default icons, false otherwise.
-     */
-    bool DeinitDefaultIcons();
-
-public:
-    /// [CONTAINER FUNCTIONS]
-
-    /**
-     * @brief Add new icon object to the container.
-     *
-     * @param hInstance    Handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     * @param Width        The width of the icon.
-     * @param Height       The height of the icon.
-     * @param ResourceID   The resource ID of the icon.
-     * @param HICON_fuLoad Extra fuLoad flag(s) for the LoadImage() function.
-     * @param ID           The instance ID must be unique within the container. If the instance doesn't require an ID, use zero.
-     */
-    void AddIcon(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad = NULL, INT ID = 0);
-
-    /**
-     * @brief Remove an icon object from the container.
-     * @note If the target object doesn't have a unique handle ID, use RemoveIconEx() instead.
-     *
-     * @param ID The instance ID.
-     *
-     * @return Returns true if the object is successfully removed from the container, false otherwise.
-     */
-    bool RemoveIcon(INT ID);
-
-    /**
-     * @brief Remove icon objects with specified parameters from the container.
-     * @note All the icon objects match the specified parameters will be removed.
-     * @brief The container's reference can be retrieved using GetContainer() if needed to perform manual operations.
-     *
-     * @param hInstance    Handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     * @param Width        The width of the icon.
-     * @param Height       The height of the icon.
-     * @param ResourceID   The resource ID of the icon.
-     * @param HICON_fuLoad Extra fuLoad flag(s) for the LoadImage() function.
-     *
-     * @return Returns true if at least one object is successfully removed from the container, false otherwise.
-     */
-    bool RemoveIconEx(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad = NULL);
-
-    /**
-     * @brief Get the icon object's pointer from the container using instance ID.
-     *
-     * @param ID The instance ID.
-     *
-     * @return Returns the object's pointer if found. Otherwise, return nullptr.
-     */
-    MyIcon *GetIcon(INT ID);
-
-    /**
-     * @brief Get the icon object's pointer from the container using specified parameters.
-     *
-     * @param hInstance    Handle to the module of either a DLL or executable (.exe) that contains the icon to be loaded.
-     * @param Width        The width of the icon.
-     * @param Height       The height of the icon.
-     * @param ResourceID   The resource ID of the icon.
-     * @param HICON_fuLoad Extra fuLoad flag(s) for the LoadImage() function.
-     *
-     * @return Returns the object's pointer if found. Otherwise, return nullptr.
-     */
-    MyIcon *GetIconEx(HINSTANCE hInstance, INT Width, INT Height, INT ResourceID, UINT HICON_fuLoad = NULL);
-
-    /**
-     * @brief Get the container.
-     *
-     * @return Return the container's reference.
-     */
-    std::vector<MyIcon> &GetContainer();
-};
-
-class UIObjectManager_Images
-{
-private:
-    std::vector<MyImage> Container; // Container for custom MyImage objects.
-
-public:
-    /// [DEFAULT APPLICATION IMAGES]
-    MyImage Cross_Grey;  // Cross Grey.
-    MyImage Cross_White; // Cross White.
-    MyImage Cross_Black; // Cross Black.
-    MyImage Minus_Grey;  // Minus Grey.
-    MyImage Minus_White; // Minus White.
-    MyImage Minus_Black; // Minus Black.
-    
-    MyImage NonClient_CloseButton_Default;
-    MyImage NonClient_CloseButton_Hover;
-    MyImage NonClient_CloseButton_Down;
-    MyImage NonClient_MinimizeButton_Default;
-    MyImage NonClient_MinimizeButton_Hover;
-    MyImage NonClient_MinimizeButton_Down;
-
-public:
-    UIObjectManager_Images();
-
-public:
-    void UpdateNonClientButtonImages(MyImage NonClient_CloseButton_Default, MyImage NonClient_CloseButton_Hover, MyImage NonClient_CloseButton_Down,
-    MyImage NonClient_MinimizeButton_Default, MyImage NonClient_MinimizeButton_Hover, MyImage NonClient_MinimizeButton_Down);
+    const std::unique_ptr<MyIcon> pCrossGrey = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON2);
+    const std::unique_ptr<MyIcon> pCrossWhite = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON3);
+    const std::unique_ptr<MyIcon> pCrossBlack = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON1);
+    const std::unique_ptr<MyIcon> pMinusGrey = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON5);
+    const std::unique_ptr<MyIcon> pMinusWhite = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON6);
+    const std::unique_ptr<MyIcon> pMinusBlack = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON4);
 };
 
 /**
- * @class UIObjectManager_Pointers
- * @brief This class provides an interface to access pointers related to drawing operations.
- * @note This is an internal class of the UIObjectManager class.
+ * @class UIImages
+ * 
+ * @brief Singleton class encapsulating and managing the UI image objects.
+ * 
+ * @note This class is used by UIElements class.
  */
-class UIObjectManager_Pointers
+class UIImages
 {
 public:
+    /// [DEFAULT APPLICATION UI IMAGES]
+
+    // Default images.
+    const std::unique_ptr<MyImage> pCrossGrey = std::make_unique<MyImage>(IDB_PNG1, MyImageFormat::PNG);
+    const std::unique_ptr<MyImage> pCrossWhite = std::make_unique<MyImage>(IDB_PNG2, MyImageFormat::PNG);
+    const std::unique_ptr<MyImage> pCrossBlack = std::make_unique<MyImage>(IDB_PNG3, MyImageFormat::PNG);
+    const std::unique_ptr<MyImage> pMinusGrey = std::make_unique<MyImage>(IDB_PNG4, MyImageFormat::PNG);
+    const std::unique_ptr<MyImage> pMinusWhite = std::make_unique<MyImage>(IDB_PNG5, MyImageFormat::PNG);
+    const std::unique_ptr<MyImage> pMinusBlack = std::make_unique<MyImage>(IDB_PNG6, MyImageFormat::PNG);
+
+    // Non-client images.
+    std::unique_ptr<MyImage> pNonClientCloseButtonDefault;
+    std::unique_ptr<MyImage> pNonClientCloseButtonHover;
+    std::unique_ptr<MyImage> pNonClientCloseButtonDown;
+    std::unique_ptr<MyImage> pNonClientMinimizeButtonDefault;
+    std::unique_ptr<MyImage> pNonClientMinimizeButtonHover;
+    std::unique_ptr<MyImage> pNonClientMinimizeButtonDown;
+
+public:
+    /// [GENERAL FUNCTIONS]
+    /**
+     * @brief Updates the non-client button images.
+     *
+     * @param nonClientCloseButtonDefault     The non-client close button default image.
+     * @param nonClientCloseButtonHover       The non-client close button hover image.
+     * @param nonClientCloseButtonDown        The non-client close button down image.
+     * @param nonClientMinimizeButtonDefault  The non-client minimize button default image.
+     * @param nonClientMinimizeButtonHover    The non-client minimize button hover image.
+     * @param nonClientMinimizeButtonDown     The non-client minimize button down image.
+     */
+    void updateNonClientButtonImages(MyImage &nonClientCloseButtonDefault, MyImage &nonClientCloseButtonHover, MyImage &nonClientCloseButtonDown,
+                                     MyImage &nonClientMinimizeButtonDefault, MyImage &nonClientMinimizeButtonHover, MyImage &nonClientMinimizeButtonDown);
+};
+
+/**
+ * @class UIRectangles
+ * 
+ * @brief Singleton class encapsulating and managing the UI rectangle objects.
+ * 
+ * @note This class is used by UIElements class.
+ */
+class UIRectangles
+{
+public:
+    UIRectangles();
+
+public:
+    /// [APPLICATION UI RECTANGLES]
+
+    RECT rectCaption;          // Caption bar area rectangle.
+    RECT rectSizeBorderTop;    // Top border area rectangle.
+    RECT rectSizeBorderBottom; // Bottom border area rectangle.
+    RECT rectSizeBorderLeft;   // Left border area rectangle.
+    RECT rectSizeBorderRight;  // Right border area rectangle.
+};
+
+/**
+ * @class UIPointers
+ * 
+ * @brief Singleton class encapsulating and managing the UI pointers.
+ * 
+ * @note This class is used by UIElements class.
+ */
+class UIPointers
+{
+public:
+    /// [APPLICATION UI RELATED POINTERS]
+
     HBRUSH *pCurrentBorderBrush = nullptr; // Pointer that holds the current application border brush.
 };
 
 /**
- * @class UIObjectManager_Miscs
- * @brief This class provides an interface to access miscellaneous objects related to drawing operations.
- * @note This is an internal class of the UIObjectManager class.
+ * @class UIMiscs
+ * 
+ * @brief Singleton class encapsulating and managing the UI miscellaneous variables.
+ * 
+ * @note This class is used by UIElements class.
  */
-class UIObjectManager_Miscs
+class UIMiscs
 {
 public:
-    /// [APPLICATION RECTS]
-    /// The rects hold the dimensions of the application areas.
-    /// Note:
-    /// - The default rects value will be initialized in the constructor.
-    /// - If the application's dimensions change, the equivalent rect must be updated.
+    /// [APPLICATION MISCELLANEOUS UI VARIABLES]
 
-    RECT RECT_Caption;           // Caption bar area rectangle.
-    RECT RECT_SizeBorder_Top;    // Top border area rectangle.
-    RECT RECT_SizeBorder_Bottom; // Bottom border area rectangle.
-    RECT RECT_SizeBorder_Left;   // Left border area rectangle.
-    RECT RECT_SizeBorder_Right;  // Right border area rectangle.
     HWND hWndNonClientCloseButton = nullptr;
     HWND hWndNonClientMinimizeButton = nullptr;
-
-public:
-    /**
-     * @brief Default constructor.
-     */
-    UIObjectManager_Miscs();
 };
 
 /**
- * @class UIObjectManager
- * @brief This class provides an interface to access the default drawing objects. It also provides access to custom containers for color, font, icon objects.
+ * @class UIElements
+ * 
+ * @brief Singleton class encapsulating and managing all the UI-related variables.
+ * @brief This class provides interface to all the UI-related variables.
  */
-class UIObjectManager
+class UIElements
 {
 public:
-    UIObjectManager_Colors Colors;     // Contains the application's default colors and a custom color container.
-    UIObjectManager_Fonts Fonts;       // Contains the application's default fonts and a custom font container.
-    UIObjectManager_Icons *Icons;      // Contains the application's default icons and a custom icon container.
-    UIObjectManager_Images Images;
-    UIObjectManager_Pointers Pointers; // Contains pointers that related to drawing operations.
-    UIObjectManager_Miscs Miscs;       // Contains miscellaneous objects that related to drawing operations.
+    /// [APPLICATION UI ELEMENTS]
+
+    UIColors colors;
+    UIFonts fonts;
+    UIIcons icons;
+    UIImages images;
+    UIRectangles rectangles;
+    UIPointers pointers;
+    UIMiscs miscs;
 
 public:
-    /**
-     * @brief Default constructor.
-     *
-     * @param hInstance Handle to the module of either a DLL or executable (.exe) that contains the default icons to be loaded.
-     */
-    UIObjectManager(HINSTANCE hInstance);
+    // [GENERAL FUNCTIONS]
 
     /**
-     * @brief Default destructor.
+     * @brief Show the total number of instances (Color, font, icon, image objects).
      */
-    ~UIObjectManager();
-
-public:
-    /**
-     * @brief Show the total number of drawing objects that currently exist via message box (color, font, and icon objects).
-     * @note This is a debug function.
-     */
-    static void ShowTotalObjects();
+    static void showTotalInstances();
 };
+
+#endif // OBJECT_MANAGEMENT_H
