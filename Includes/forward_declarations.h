@@ -23,7 +23,7 @@ class MyRadioGroup;
 // Functions:
 namespace nSol
 {
-    void ShowLastErrorMessageBox();
+    bool ShowLastErrorMessageBox();
     std::wstring ConvertStringToWideString(const std::string&);
 }
 namespace nApp
@@ -48,19 +48,16 @@ namespace nApp
         }
     }
 }
-namespace nApp::API::Draw
+namespace nApp::API::GDIPDraw
 {
-    void GetRoundRectPath(Gdiplus::GraphicsPath *pPath, Gdiplus::Rect rect, INT diameter);
-    void DrawRoundRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect rect, Gdiplus::Color color, INT radius, INT width);
-    void FillRoundRect(Gdiplus::Graphics *pGraphics, Gdiplus::Brush *pBrush, Gdiplus::Rect rect, Gdiplus::Color border, INT radius);
-    bool MyDraw_DrawRoundRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, INT Radius, INT Width, Gdiplus::Color pRectColor, bool showErrorMsg = false);
-    bool MyDraw_FillRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, Gdiplus::Color *pRectColor, Gdiplus::Color *pRectBorderColor = nullptr, bool showErrorMsg = false);
-    bool MyDraw_FillRoundRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, INT Radius, Gdiplus::Color *pRectColor, Gdiplus::Color *pRectBorderColor = nullptr, bool showErrorMsg = false);
-    bool MyDraw_FillEllipse(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, INT Diameter, INT PosX, INT PosY, Gdiplus::Color *pRectColor, Gdiplus::Color *pRectBorderColor = nullptr, bool showErrorMsg = false);
-    bool MyDraw_DrawImage(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, Gdiplus::Image* Image, FLOAT Opacity, INT PosX, INT PosY, INT Width, INT Height, bool Centering, bool showErrorMsg = false);
+    bool MyDraw_DrawRoundRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, INT Radius, INT Width, Gdiplus::Color pRectColor);
+    bool MyDraw_FillRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, Gdiplus::Color *pRectColor, Gdiplus::Color *pRectBorderColor = nullptr);
+    bool MyDraw_FillRoundRect(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, INT Radius, Gdiplus::Color *pRectColor, Gdiplus::Color *pRectBorderColor = nullptr);
+    bool MyDraw_FillEllipse(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, INT Diameter, INT PosX, INT PosY, Gdiplus::Color *pRectColor, Gdiplus::Color *pRectBorderColor = nullptr);
+    bool MyDraw_DrawImage(Gdiplus::Graphics *pGraphics, Gdiplus::Rect Rect, Gdiplus::Image* Image, FLOAT Opacity, INT PosX, INT PosY, INT Width, INT Height, bool Centering);
 }
 using namespace Gdiplus;
-using namespace nApp::API::Draw;
+using namespace nApp::API::GDIPDraw;
 using nApp::File::Log::WriteLog;
 using nApp::File::Log::WriteLogEx;
 LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);

@@ -1,10 +1,10 @@
 /**
- * @file object_management.h
- * @brief Header file containing classes that related to object management.
+ * @file ui.h
+ * @brief Header file containing classes that related to UI management.
  */
 
-#ifndef OBJECT_MANAGEMENT_H
-#define OBJECT_MANAGEMENT_H
+#ifndef UI_H
+#define UI_H
 #include "../../Includes/my_enums.h" // My enum definitions.
 
 /**
@@ -23,7 +23,7 @@ struct RGBA
 
 /**
  * @class MyColor
- * 
+ *
  * @brief Represents a color. (Wrapped COLORREF, Gdiplus::Color, HBRUSH)
  */
 class MyColor
@@ -149,7 +149,7 @@ public:
 
 /**
  * @class MyFont
- * 
+ *
  * @brief Represents a font. (Wrapped HFONT)
  */
 class MyFont
@@ -259,7 +259,7 @@ public:
 
 /**
  * @class MyIcon
- * 
+ *
  * @brief Represents a icon. (Wrapped HICON)
  */
 class MyIcon
@@ -379,7 +379,7 @@ public:
 
 /**
  * @class MyImage
- * 
+ *
  * @brief Represents a image. (Wrapped Gdiplus::Image)
  */
 class MyImage
@@ -470,9 +470,9 @@ public:
 
 /**
  * @class UIColors
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI color objects.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIColors
@@ -653,9 +653,9 @@ public:
 
 /**
  * @class UIFonts
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI font objects.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIFonts
@@ -687,14 +687,16 @@ public:
 
 /**
  * @class UIIcons
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI icon objects.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIIcons
 {
 public:
+    /// [DEFAULT APPLICATION UI ICONS]
+
     const std::unique_ptr<MyIcon> pCrossGrey = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON2);
     const std::unique_ptr<MyIcon> pCrossWhite = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON3);
     const std::unique_ptr<MyIcon> pCrossBlack = std::make_unique<MyIcon>(GetModuleHandle(NULL), 512, 512, IDI_ICON1);
@@ -705,9 +707,9 @@ public:
 
 /**
  * @class UIImages
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI image objects.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIImages
@@ -733,6 +735,7 @@ public:
 
 public:
     /// [GENERAL FUNCTIONS]
+
     /**
      * @brief Updates the non-client button images.
      *
@@ -749,9 +752,9 @@ public:
 
 /**
  * @class UIRectangles
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI rectangle objects.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIRectangles
@@ -771,9 +774,9 @@ public:
 
 /**
  * @class UIPointers
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI pointers.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIPointers
@@ -786,9 +789,9 @@ public:
 
 /**
  * @class UIMiscs
- * 
+ *
  * @brief Singleton class encapsulating and managing the UI miscellaneous variables.
- * 
+ *
  * @note This class is used by UIElements class.
  */
 class UIMiscs
@@ -802,7 +805,7 @@ public:
 
 /**
  * @class UIElements
- * 
+ *
  * @brief Singleton class encapsulating and managing all the UI-related variables.
  * @brief This class provides interface to all the UI-related variables.
  */
@@ -828,4 +831,4 @@ public:
     static void showTotalInstances();
 };
 
-#endif // OBJECT_MANAGEMENT_H
+#endif // UI_H

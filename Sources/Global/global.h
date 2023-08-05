@@ -14,18 +14,13 @@
  *****************************/
 
 // Application parameters:
-extern const LPCWSTR g_WindowClassName;
 extern const std::wstring g_AppSettingsFileName;
 extern const std::wstring g_AppLogFileName;
-extern DWORD g_WindowsMajorVersion;
-extern DWORD g_WindowsMinorVersion;
-extern DWORD g_WindowsBuildNumber;
 extern INT g_CurrentWindowWidth;
 extern INT g_CurrentWindowHeight;
 extern INT g_AppLogLevel;
 extern MyTheme g_CurrentAppTheme;
 extern std::filesystem::path g_AppDirectoryPath;
-extern UIElements *g_pUIElements;
 
 // Application states:
 extern bool g_IsWindowReady;
@@ -35,25 +30,36 @@ extern bool g_IsWindowMinimized;
 extern bool g_IsWindowMaximized;
 extern bool g_IsWindows11BorderAttributeSupported;
 
-// Key toggle (Capture keydown events):
-extern KeyToggle g_KeyToggle_ENTER;
+// UI-related variables:
+extern UIElements *g_pUIElements;
 
 // WinAPI mains:
 extern HINSTANCE g_hInstance;
 extern HWND g_hWnd;
-extern std::vector<MyWindow *> g_VectorMyWindow_NonClient;
+extern std::vector<MyWindow *> g_VectorNonClientWindows;
 
 // WinAPI handles:
-extern MyContainer *g_Container_MainContent;
+extern MyContainer *g_ContainerMainContent;
 
-// My class objects:
+// My subclass class objects:
 extern MyRadioGroup SampleRadio;
 
+// Key toggle (Capture keydown events):
+extern KeyToggle g_KeyToggleENTER;
+
 // Initialization variables:
+extern const LPCWSTR g_WindowClassName;
+
 extern Gdiplus::GdiplusStartupInput g_APIGDIStartupInput;
 extern ULONG_PTR g_APIGDIToken;
-extern IUIAnimationManager* g_pAnimationManager;
+
+extern IUIAnimationManager *g_pAnimationManager;
 extern IUIAnimationTimer *g_pAnimationTimer;
-extern IUIAnimationTransitionLibrary* g_pTransitionLibrary;
+extern IUIAnimationTransitionLibrary *g_pTransitionLibrary;
+
+// Miscellaneous variables:
+extern DWORD g_WindowsMajorVersion;
+extern DWORD g_WindowsMinorVersion;
+extern DWORD g_WindowsBuildNumber;
 
 #endif // GLOBAL_H

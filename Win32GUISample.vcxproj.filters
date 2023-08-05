@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Utility">
-      <UniqueIdentifier>{9ac0e1ac-130a-430d-9994-50ec7bbd1c0c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Main">
       <UniqueIdentifier>{770173bb-4e31-4fd2-b866-aa53f1484eaf}</UniqueIdentifier>
     </Filter>
@@ -37,11 +34,11 @@
     <Filter Include="Header Files\Includes\Externals">
       <UniqueIdentifier>{69adddb0-27db-44a9-943c-b6c13491e1bf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Utility\WinAPI">
-      <UniqueIdentifier>{7ae2053a-746a-481c-ac24-908703296b67}</UniqueIdentifier>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{aef7aa2d-4db5-490c-9153-279b4f71ec34}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Utility\Object Management">
-      <UniqueIdentifier>{d0f08bf2-9869-4cf0-8036-8af92e05af85}</UniqueIdentifier>
+    <Filter Include="Source Files\WinAPI">
+      <UniqueIdentifier>{9ac0e1ac-130a-430d-9994-50ec7bbd1c0c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -54,11 +51,11 @@
     <ClCompile Include="Sources\Global\global.cpp">
       <Filter>Source Files\Global</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Utility\object_management.cpp">
-      <Filter>Source Files\Utility\Object Management</Filter>
+    <ClCompile Include="Sources\UI\ui.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Utility\my_winapi.cpp">
-      <Filter>Source Files\Utility\WinAPI</Filter>
+    <ClCompile Include="Sources\WinAPI\my_winapi.cpp">
+      <Filter>Source Files\WinAPI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,9 +74,6 @@
     <ClInclude Include="Sources\Resource\resource.h">
       <Filter>Source Files\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Utility\object_management.h">
-      <Filter>Source Files\Utility\Object Management</Filter>
-    </ClInclude>
     <ClInclude Include="Includes\standard_includes.h">
       <Filter>Header Files\Includes</Filter>
     </ClInclude>
@@ -92,14 +86,17 @@
     <ClInclude Include="Includes\my_includes.h">
       <Filter>Header Files\Includes</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Utility\my_winapi.h">
-      <Filter>Source Files\Utility\WinAPI</Filter>
-    </ClInclude>
     <ClInclude Include="Includes\forward_declarations.h">
       <Filter>Header Files\Includes</Filter>
     </ClInclude>
     <ClInclude Include="Includes\my_enums.h">
       <Filter>Header Files\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\UI\ui.h">
+      <Filter>Source Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\WinAPI\my_winapi.h">
+      <Filter>Source Files\WinAPI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -155,10 +152,5 @@
     <ResourceCompile Include="Sources\Resource\WindowsProject5.rc">
       <Filter>Source Files\Resource</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="snippet.md">
-      <Filter>Source Files</Filter>
-    </Text>
   </ItemGroup>
 </Project>

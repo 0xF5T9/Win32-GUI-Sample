@@ -1,6 +1,6 @@
 /**
- * @file object_management.cpp
- * @brief Implementation of the classes defined in object_management.h.
+ * @file ui.cpp
+ * @brief Implementation of the classes defined in ui.h.
  */
 
 #include "../../Includes/standard_includes.h" // Standard libraries, project resources and global constant includes.

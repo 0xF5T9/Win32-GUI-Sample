@@ -1017,7 +1017,7 @@ bool MyContainer::updateContainerDimensions(INT newX, INT newY, INT newWidth, IN
         {
             // Get the container new dimensions.
             RECT rect_container;
-            if (!GetClientRect(g_Container_MainContent->pContainerWindow->hWnd, &rect_container))
+            if (!GetClientRect(g_ContainerMainContent->pContainerWindow->hWnd, &rect_container))
             {
                 error_message = L"Failed to retrieve the container's client rect.";
                 break;
@@ -1027,7 +1027,7 @@ bool MyContainer::updateContainerDimensions(INT newX, INT newY, INT newWidth, IN
             SCROLLINFO scroll_info;
             scroll_info.cbSize = sizeof(SCROLLINFO);
             scroll_info.fMask = SIF_ALL;
-            if (!SendMessageW(g_Container_MainContent->pVerticalScrollbarWindow->hWnd, SBM_GETSCROLLINFO, NULL, reinterpret_cast<LPARAM>(&scroll_info)))
+            if (!SendMessageW(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SBM_GETSCROLLINFO, NULL, reinterpret_cast<LPARAM>(&scroll_info)))
             {
                 error_message = L"Failed to retrieve the container scroll information struct.";
                 break;
@@ -1040,12 +1040,12 @@ bool MyContainer::updateContainerDimensions(INT newX, INT newY, INT newWidth, IN
             // Scroll the container back to the zero pos and reset the scroll pos.
             if (resetScrollPosition)
             {
-                ScrollWindowEx(g_Container_MainContent->pContainerWindow->hWnd, NULL, scroll_info.nPos, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
+                ScrollWindowEx(g_ContainerMainContent->pContainerWindow->hWnd, NULL, scroll_info.nPos, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN | SW_INVALIDATE);
                 scroll_info.nPos = 0;
             }
 
             // Set scroll info.
-            SendMessageW(g_Container_MainContent->pVerticalScrollbarWindow->hWnd, SBM_SETSCROLLINFO, TRUE, reinterpret_cast<LPARAM>(&scroll_info));
+            SendMessageW(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SBM_SETSCROLLINFO, TRUE, reinterpret_cast<LPARAM>(&scroll_info));
 
             // Update container scrollbar visibility.
             ShowWindow(this->pVerticalScrollbarWindow->hWnd, (new_container_height > scroll_info.nMax ? SW_HIDE : (isCurrentThemeWantScrollbarsVisible ? SW_SHOW : SW_HIDE)));

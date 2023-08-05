@@ -5262,7 +5262,7 @@ LRESULT CALLBACK MyEdit::scMyEditStatic(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
                 FrameRect(mem_hdc, &rect_static2, g_pUIElements->colors.editbox.getHBRUSH());
                 Gdiplus::Graphics gdip_graphics(mem_hdc);
                 gdip_graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeAntiAlias);
-                DrawRoundRect(&gdip_graphics, gdip_rect_static, (GetFocus() == p_this->hWndEdit ? g_pUIElements->colors.editboxBorderSelected.getGDIPColor() : g_pUIElements->colors.editboxBorderDefault.getGDIPColor()), 2, 1);
+                MyDraw_DrawRoundRect(&gdip_graphics, gdip_rect_static, 2, 1, (GetFocus() == p_this->hWndEdit ? g_pUIElements->colors.editboxBorderSelected.getGDIPColor() : g_pUIElements->colors.editboxBorderDefault.getGDIPColor()));
             }
 
             // Draw contents from memory device context to target device context.
@@ -5540,9 +5540,6 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
             }
             Gdiplus::Rect gdip_rect_combobox(rect_combobox.top, rect_combobox.left, rect_combobox.right, rect_combobox.bottom);
 
-            // Create Gdiplus::SolidBrush object for drawing operations.
-            Gdiplus::SolidBrush gdip_brush_combobox = MyDDLCombobox::pColorDDLCombobox->getGDIPColor();
-
             // Begin the paintings.
             hdc = BeginPaint(hWnd, &ps);
             if (!hdc)
@@ -5610,8 +5607,7 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
                 FillRect(mem_hdc, &rect_combobox, MyDDLCombobox::pColorBackground->getHBRUSH());
 
                 // Draw the combobox.
-                FillRoundRect(&gdip_graphics, &gdip_brush_combobox, gdip_rect_combobox,
-                              (GetFocus() == hWnd ? MyDDLCombobox::pColorFocus->getGDIPColor() : MyDDLCombobox::pColorDDLComboboxBorder->getGDIPColor()), 4);
+                MyDraw_FillRoundRect(&gdip_graphics, gdip_rect_combobox, 4, &MyDDLCombobox::pColorDDLCombobox->getGDIPColor(), (GetFocus() == hWnd ? &MyDDLCombobox::pColorFocus->getGDIPColor() : &MyDDLCombobox::pColorDDLComboboxBorder->getGDIPColor()));
 
                 // Get and paint current selected combobox item text.
                 INT current_selected_item_index = static_cast<INT>(SendMessageW(hWnd, CB_GETCURSEL, NULL, NULL));

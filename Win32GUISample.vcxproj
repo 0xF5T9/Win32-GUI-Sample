@@ -162,21 +162,15 @@
     <ClCompile Include="Sources\Global\global.cpp" />
     <ClCompile Include="Sources\Main\main.cpp" />
     <ClCompile Include="Sources\Subclass\subclasses.cpp" />
-    <ClCompile Include="Sources\Utility\object_management.cpp" />
-    <ClCompile Include="Sources\Utility\my_winapi.cpp" />
-    <Text Include="snippet.md">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Text>
+    <ClCompile Include="Sources\UI\ui.cpp" />
+    <ClCompile Include="Sources\WinAPI\my_winapi.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Includes\forward_declarations.h" />
     <ClInclude Include="Includes\my_enums.h" />
     <ClInclude Include="Includes\standard_includes.h" />
     <ClInclude Include="Includes\my_includes.h" />
-    <ClInclude Include="Sources\Utility\my_winapi.h" />
+    <ClInclude Include="Sources\WinAPI\my_winapi.h" />
     <ClInclude Include="Sources\Resource\resource.h" />
     <ClInclude Include="Sources\Resource\c_resources.h" />
     <ClInclude Include="Includes\Externals\Ex_DarkMode.h" />
@@ -184,7 +178,7 @@
     <ClInclude Include="Sources\Main\func.h" />
     <ClInclude Include="Sources\Global\global.h" />
     <ClInclude Include="Sources\Subclass\subclasses.h" />
-    <ClInclude Include="Sources\Utility\object_management.h" />
+    <ClInclude Include="Sources\UI\ui.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sources\Resource\WindowsProject5.rc" />

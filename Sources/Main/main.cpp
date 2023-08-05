@@ -72,17 +72,17 @@ int WINAPI wWinMain(
     }
 
     // Create my custom window class.
-    WNDCLASSW MyClass = {0};
-    MyClass.hbrBackground = NULL;
-    MyClass.hCursor = LoadCursorW(NULL, IDC_ARROW);
-    MyClass.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON7));
-    MyClass.hInstance = hInstance;
-    MyClass.lpszClassName = g_WindowClassName;
-    MyClass.lpfnWndProc = WindowProcedure;
+    WNDCLASSW my_class = {0};
+    my_class.hbrBackground = NULL;
+    my_class.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    my_class.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON7));
+    my_class.hInstance = hInstance;
+    my_class.lpszClassName = g_WindowClassName;
+    my_class.lpfnWndProc = WindowProcedure;
     g_hInstance = hInstance;
 
     // Register my window class.
-    if (!RegisterClassW(&MyClass))
+    if (!RegisterClassW(&my_class))
     {
         WriteLog(L"Failed to register the window class.", L"", MyLogType::Error);
         return -1;
@@ -101,8 +101,7 @@ int WINAPI wWinMain(
     {
         // Get user desktop resolution.
         INT desktop_width = 0, desktop_height = 0;
-        nSol::GetDesktopResolution(desktop_width, desktop_height);
-        if (!desktop_width || !desktop_height)
+        if (!nSol::GetDesktopResolution(desktop_width, desktop_height))
         {
             WriteLog(L"Failed to retrieve the desktop resolution.", L"", MyLogType::Error);
             return -1;
@@ -110,7 +109,7 @@ int WINAPI wWinMain(
         WriteLog(L"Current desktop resolution: ", (L"\"" + std::to_wstring(desktop_width) + L"x" + std::to_wstring(desktop_height) + L"\"").c_str(), MyLogType::Debug);
 
         // Create the window.
-        g_hWnd = CreateWindowExW(WS_EX_LAYERED,       // Layered window, allows window to be transparent, semi-transparent or have a custom opacity.
+        g_hWnd = CreateWindowExW(NULL,                // No extended style.
                                  g_WindowClassName,   // Window class name.
                                  L"Win32 GUI Sample", // Window title.
                                  WS_MYSTYLE,          // My window style.
@@ -125,15 +124,6 @@ int WINAPI wWinMain(
             WriteLog(L"Failed to create the application window.", L"", MyLogType::Error);
             return -1;
         }
-
-        // Set window opacity and transparency color.
-        // Remark: Set transparency color so the window manager will not render any pixels that match the transparency color.
-        // This means that the standard window frames will also be rendered transparent.
-        if (!SetLayeredWindowAttributes(g_hWnd, RGB(141, 172, 160), 255, LWA_ALPHA | LWA_COLORKEY))
-        {
-            WriteLog(L"Failed to set the application window attributes.", L"", MyLogType::Error);
-            return -1;
-        }
     }
 
     // Sets the application window and essential controls to be visible, indicating that the application is ready.
@@ -144,14 +134,19 @@ int WINAPI wWinMain(
     }
 
     // Enter the message loop.
-    MSG msg = {0};
-    while (GetMessageW(&msg, NULL, 0, 0))
+    MSG message = {0};
+    while (GetMessageW(&message, NULL, 0, 0))
     {
-        if (IsDialogMessageW(g_hWnd, &msg) == 0)
+        if (message.message == WM_KEYDOWN)
         {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
+            // Note: When processing WM_KEYDOWN messages, call IsDialogMessageW() to ensure proper handling
+            //       of keyboard input for dialog boxes, thus improving message loop efficiency.
+            if (IsDialogMessageW(g_hWnd, &message))
+                continue;
         }
+
+        TranslateMessage(&message);
+        DispatchMessageW(&message);
     }
 
     // Write a log record indicating that the application has exited.
@@ -666,7 +661,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             break;
         }
         }
-        
+
         // Invalidate the borders.
         InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderLeft, FALSE);
         InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderTop, FALSE);
@@ -674,7 +669,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         InvalidateRect(hWnd, &g_pUIElements->rectangles.rectSizeBorderBottom, FALSE);
 
         // Invalidate non-client window controls.
-        for (const auto &window : g_VectorMyWindow_NonClient)
+        for (const auto &window : g_VectorNonClientWindows)
         {
             InvalidateRect(window->hWnd, NULL, FALSE);
         }
@@ -836,8 +831,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         g_IsWindowMinimized = (wParam == SIZE_MINIMIZED ? true : false);
 
         // If the application window is maximized, perform an additional redraw on the containers.
-        if (wParam == SIZE_MAXIMIZED && IsWindow(g_Container_MainContent->pContainerWindow->hWnd))
-            RedrawWindow(g_Container_MainContent->pContainerWindow->hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+        if (wParam == SIZE_MAXIMIZED && IsWindow(g_ContainerMainContent->pContainerWindow->hWnd))
+            RedrawWindow(g_ContainerMainContent->pContainerWindow->hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 
         // Redraw the application window and trigger WM_WINDOWPOSCHANGING message to update application controls dimensions.
         RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
@@ -856,9 +851,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
         // Update the dimensions of the containers.
         // Container: MainContent
-        if (IsWindow(g_Container_MainContent->pContainerWindow->hWnd))
+        if (IsWindow(g_ContainerMainContent->pContainerWindow->hWnd))
         {
-            if (!g_Container_MainContent->updateContainerDimensions(WINDOW_BORDER_DEFAULTWIDTH,
+            if (!g_ContainerMainContent->updateContainerDimensions(WINDOW_BORDER_DEFAULTWIDTH,
                                                                     g_pUIElements->rectangles.rectCaption.bottom,
                                                                     g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),
                                                                     g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), g_IsCurrentThemeWantScrollbarsVisible, reset_containers_scroll_position))
@@ -928,7 +923,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                     is_thumb_dragging = false;      // Indicates if the user is dragging the scroll bar thumb.
                 INT scroll_pixel = 10,              // Number of pixels to scroll per scroll.
                     previous_pos = 0;               // Previous message's scroll position.
-                HWND scroll_container = g_Container_MainContent->pContainerWindow->hWnd;
+                HWND scroll_container = g_ContainerMainContent->pContainerWindow->hWnd;
 
                 // Check if the scroll container window is valid.
                 if (!IsWindow(scroll_container))
@@ -1061,7 +1056,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     case WM_MOUSEWHEEL:
     {
         // Remark: For now, the application only have 1 scrollable container: MainContent.
-        if (g_Container_MainContent && IsWindow(g_Container_MainContent->pContainerWindow->hWnd) && IsWindowVisible(g_Container_MainContent->pContainerWindow->hWnd) && IsWindow(g_Container_MainContent->pVerticalScrollbarWindow->hWnd))
+        if (g_ContainerMainContent && IsWindow(g_ContainerMainContent->pContainerWindow->hWnd) && IsWindowVisible(g_ContainerMainContent->pContainerWindow->hWnd) && IsWindow(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd))
         {
             bool are_all_operation_success = false;
             std::wstring error_message = L"";
@@ -1071,8 +1066,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                 INT scroll_pixel = 10,              // Number of pixels to scroll per scroll.
                     scroll_delta = 0,               // The actual number of pixels that will be scrolled per scroll event.
                     wheel_delta = 0;                // Wheel Delta.
-                HWND scroll_container = g_Container_MainContent->pContainerWindow->hWnd,
-                     hwnd_scrollbar = g_Container_MainContent->pVerticalScrollbarWindow->hWnd;
+                HWND scroll_container = g_ContainerMainContent->pContainerWindow->hWnd,
+                     hwnd_scrollbar = g_ContainerMainContent->pVerticalScrollbarWindow->hWnd;
 
                 // Get the container scroll information struct.
                 SCROLLINFO scroll_info;
@@ -1247,9 +1242,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             else
             {
                 // The MainContent container have a change theme combobox, update its current selected index.
-                if (g_Container_MainContent && IsWindow(g_Container_MainContent->pContainerWindow->hWnd))
+                if (g_ContainerMainContent && IsWindow(g_ContainerMainContent->pContainerWindow->hWnd))
                 {
-                    HWND change_theme_combobox = g_Container_MainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEME_COMBOBOX);
+                    HWND change_theme_combobox = g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEME_COMBOBOX);
                     if (IsWindow(change_theme_combobox))
                         SendMessageW(change_theme_combobox, CB_SETCURSEL, change_theme_combobox_index, NULL);
                     else
@@ -1269,13 +1264,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             {
                 // Get the container dimensions (MainContent).
                 INT container_maincontent_width = 0, container_maincontent_height = 0;
-                if (!g_Container_MainContent || !IsWindow(g_Container_MainContent->pContainerWindow->hWnd))
+                if (!g_ContainerMainContent || !IsWindow(g_ContainerMainContent->pContainerWindow->hWnd))
                 {
                     error_message = L"The MainContent container window is invalid.";
                     break;
                 }
                 RECT rect_container_maincontent;
-                if (!GetClientRect(g_Container_MainContent->pContainerWindow->hWnd, &rect_container_maincontent))
+                if (!GetClientRect(g_ContainerMainContent->pContainerWindow->hWnd, &rect_container_maincontent))
                 {
                     error_message = L"Failed to retrieve the MainContent container's client rect.";
                     break;
@@ -1361,9 +1356,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         }
 
         case VK_F2:
-        {   
+        {
             MessageBeep(MB_OK);
-            g_pUIElements->showTotalInstances();
             return 0;
         }
         }
@@ -1509,7 +1503,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                             break;
                         }
 
-                        if (!nApp::File::UpdateSettingsFile(g_AppDirectoryPath, g_AppSettingsFileName, L"theme", L"Light", true))
+                        if (!nApp::File::UpdateSettingsFile(g_AppDirectoryPath, g_AppSettingsFileName, L"theme", L"Light"))
                         {
                             error_message = L"Failed to update the settings file.";
                         }
@@ -1525,7 +1519,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                             break;
                         }
 
-                        if (!nApp::File::UpdateSettingsFile(g_AppDirectoryPath, g_AppSettingsFileName, L"theme", L"Dark", true))
+                        if (!nApp::File::UpdateSettingsFile(g_AppDirectoryPath, g_AppSettingsFileName, L"theme", L"Dark"))
                         {
                             error_message = L"Failed to update the settings file.";
                         }
@@ -1541,7 +1535,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                             break;
                         }
 
-                        if (!nApp::File::UpdateSettingsFile(g_AppDirectoryPath, g_AppSettingsFileName, L"theme", L"Monokai", true))
+                        if (!nApp::File::UpdateSettingsFile(g_AppDirectoryPath, g_AppSettingsFileName, L"theme", L"Monokai"))
                         {
                             error_message = L"Failed to update the settings file.";
                         }

@@ -324,13 +324,13 @@ struct MyImageButtonNonSharedPropertiesConfig
     MyColor *pColorBackgroundDefault = nullptr;        // Pointer to the image button default state background color.
     MyColor *pColorBackgroundHover = nullptr;          // Pointer to the image button hover state background color.
     MyColor *pColorBackgroundDown = nullptr;           // Pointer to the image button down state background color.
-    INT imagePosX = 0;                                   // The image relative x position.
-    INT imagePosY = 0;                                   // The image relative y position.
-    INT imageWidth = 0;                                  // The image width.
-    INT imageHeight = 0;                                 // The image height.
-    bool centering = false;                              // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;                // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;                 // Indicate whether to skip the down state animation.
+    INT imagePosX = 0;                                 // The image relative x position.
+    INT imagePosY = 0;                                 // The image relative y position.
+    INT imageWidth = 0;                                // The image width.
+    INT imageHeight = 0;                               // The image height.
+    bool centering = false;                            // Indicate whether to centering the image.
+    bool skipHoverAnimationState = false;              // Indicate whether to skip the hover state animation.
+    bool skipDownAnimationState = false;               // Indicate whether to skip the down state animation.
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -393,13 +393,13 @@ private:
     MyColor *pColorBackgroundDefault = nullptr;        // Pointer to the image button default state background color.
     MyColor *pColorBackgroundHover = nullptr;          // Pointer to the image button hover state background color.
     MyColor *pColorBackgroundDown = nullptr;           // Pointer to the image button down state background color.
-    INT imagePosX = 0;                                   // The image relative x position.
-    INT imagePosY = 0;                                   // The image relative y position.
-    INT imageWidth = 0;                                  // The image width.
-    INT imageHeight = 0;                                 // The image height.
-    bool isCentering = false;                            // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;                // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;                 // Indicate whether to skip the down state animation.
+    INT imagePosX = 0;                                 // The image relative x position.
+    INT imagePosY = 0;                                 // The image relative y position.
+    INT imageWidth = 0;                                // The image width.
+    INT imageHeight = 0;                               // The image height.
+    bool isCentering = false;                          // Indicate whether to centering the image.
+    bool skipHoverAnimationState = false;              // Indicate whether to skip the hover state animation.
+    bool skipDownAnimationState = false;               // Indicate whether to skip the down state animation.
 
     // Animation variables.
     inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
