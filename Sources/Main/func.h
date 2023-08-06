@@ -27,9 +27,9 @@ namespace nSol
 {
     /**
      * @brief Show the last error message "GetLastError()"" via WinAPI message box.
-     * 
+     *
      * @return Returns true if the error message was successfully retrieved, otherwise false.
-     * 
+     *
      * @note Used for debugging purposes.
      */
     bool ShowLastErrorMessageBox()
@@ -63,7 +63,7 @@ namespace nSol
      * @param hWnd Handle to the target window (HWND).
      *
      * @return Returns true if all the window information was successfully retrieved, otherwise false.
-     * 
+     *
      * @note Used for debugging purposes.
      */
     bool DisplayWindowInfo(HWND hWnd)
@@ -172,7 +172,7 @@ namespace nSol
      *
      * @param horizontal Reference to the variable that will hold the horizontal value.
      * @param vertical   Reference to the variable that will hold the vertical value.
-     * 
+     *
      * @return Returns true if successfully retrieved the desktop resolution, otherwise false.
      */
     bool GetDesktopResolution(INT &horizontal, INT &vertical)
@@ -187,7 +187,7 @@ namespace nSol
                 error_message = L"Failed to retrieve the desktop window handle.";
                 break;
             }
-            
+
             RECT rect_desktop;
             if (!GetWindowRect(window_desktop, &rect_desktop))
             {
@@ -212,7 +212,7 @@ namespace nSol
 
     /**
      * @brief Retrieves the current date and time as a formatted string.
-     * 
+     *
      * Visit: http://en.cppreference.com/Width/cpp/chrono/c/strftime
      * for more information about date/time format.
      *
@@ -491,7 +491,7 @@ namespace nApp
          */
         bool LoadSettingsFile(std::filesystem::path fileDirectory, std::wstring fileName)
         {
-            bool generate_file_notice = true;           // Set this to false to disable file generation notice.
+            bool generate_file_notice = true;            // Set this to false to disable file generation notice.
             USHORT total_generate_file_attempts = 0;     // File generation attempt counter.
             const USHORT MAX_GENERATE_FILE_ATTEMPTS = 3; // Maximum file generation attempts.
 
@@ -555,7 +555,7 @@ namespace nApp
                     // Display the file generation notice.
                     if (generate_file_notice == true)
                     {
-                        WriteLog(L"Default settings file not found, generating one ...", L"", MyLogType::Debug);
+                        WriteLogEx(L"Default settings file not found, generating one ...", L"", MyLogType::Info, 1);
                         generate_file_notice = false;
                     }
 
@@ -1543,7 +1543,7 @@ namespace nApp
 
             /**
              * @brief Draw a image.
-             * 
+             *
              * @param pGraphics   Pointer to the Gdiplus::Graphics object for drawing.
              * @param rect        Gdiplus::Rect object representing the position and dimensions of the image to be drawn.
              * @param image       Pointer to the Gdiplus::Image object for drawing.
@@ -1553,7 +1553,7 @@ namespace nApp
              * @param width       The width of the image to be drawn.
              * @param height      The height of the image to be drawn.
              * @param centering   Whether to center the image to be drawn.
-             * 
+             *
              * @return Returns true if successfully performed the draw operations, false otherwise.
              */
             bool MyDraw_DrawImage(Gdiplus::Graphics *pGraphics, Gdiplus::Rect rect, Gdiplus::Image *image, FLOAT opacity, INT posX, INT posY, INT width, INT height, bool centering)
@@ -1629,871 +1629,998 @@ namespace nApp
     /**
      * @brief Functions related to theme management.
      * @brief This namespace contains functions for initializing and updating
-     * @brief global drawing objects for the current application theme, as well as
+     * @brief ui objects for the current application theme, as well as
      * @brief updating class names of standard controls to match the current theme (e.g., Dark Scrollbar from DarkMode API).
      */
     namespace Theme
     {
         /**
-         * @brief Update the container contents class name to match a specified theme.
+         * @brief Update the container contents's class names to match a specified theme.
          *
-         * @param Theme            The theme name.
-         * @param ContainerPtr     Handle to the target container pointer (MyContainer*).
-         * @param ApplyToNonChilds Specifies whether to apply the changes to container non-childs.
+         * @param theme            The theme.
+         * @param pContainer       Pointer to the container.
+         * @param applyToNonChilds Specifies whether to apply the changes to container's non-childs windows.
          */
-        void UpdateContainerThemeClass(MyTheme Theme, MyContainer *ContainerPtr, bool ApplyToNonChilds = false)
+        bool UpdateContainerThemeClass(MyTheme theme, MyContainer *pContainer, bool applyToNonChilds = false)
         {
-            // Text buffer to retrieve the window class name.
-            WCHAR TextBuffer[256];
-
-            // Get the container child & non-childs vectors.
-            auto Container_Vector_Childs = ContainerPtr->getChildWindowsVector();
-            auto Container_Vector_NonChilds = ContainerPtr->getAssociatedWindowsVector();
-
-            // Get the container vertical scrollbar.
-            auto Container_Scrollbar_Vertical = ContainerPtr->pVerticalScrollbarWindow->hWnd;
-
-            switch (Theme)
+            bool are_all_operation_success = false;
+            std::wstring error_message = L"";
+            while (!are_all_operation_success)
             {
-            // For light themes.
-            case MyTheme::Light:
-            {
-                // Update new class name for the container childs.
-                if (!Container_Vector_Childs.empty())
+                // Get the container child & non-childs vectors.
+                auto container_childs = pContainer->getChildWindowsVector();
+                auto container_nonchilds = pContainer->getAssociatedWindowsVector();
+
+                // Get the container vertical scrollbar.
+                auto container_scrollbar_vertical = pContainer->pVerticalScrollbarWindow->hWnd;
+
+                bool are_all_operation_success_2 = false;
+                HRESULT hr;
+                switch (theme)
                 {
-                    for (auto &pWindow : Container_Vector_Childs)
+                // For light themes.
+                case MyTheme::Light:
+                {
+                    // Update new class name for the container childs.
+                    if (!container_childs.empty())
                     {
-                        GetClassNameW(pWindow->hWnd, TextBuffer, 256);
-                        std::wstring lwstr(TextBuffer);
-                        if (lwstr == L"ScrollBar")
-                            SetWindowTheme(pWindow->hWnd, L"Explorer", L"ScrollBar");
-                        else if (lwstr == L"Button")
-                            SetWindowTheme(pWindow->hWnd, L"Explorer", L"Button");
+                        bool is_for_loop_failed = false;
+                        for (auto &p_window : container_childs)
+                        {
+                            std::wstring class_name = nSol::GetWindowClassName(p_window->hWnd);
+                            if (class_name == WC_SCROLLBAR)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"Explorer", WC_SCROLLBAR);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                            else if (class_name == WC_BUTTON)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"Explorer", WC_BUTTON);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_for_loop_failed)
+                        {
+                            error_message = L"Failed to update new class name for the container child windows.";
+                            break;
+                        }
                     }
-                }
 
-                // Update new class name for the container non-childs.
-                if (ApplyToNonChilds && !Container_Vector_NonChilds.empty())
-                {
-                    for (auto &pWindow : Container_Vector_NonChilds)
+                    // Update new class name for the container non-childs.
+                    if (applyToNonChilds && !container_nonchilds.empty())
                     {
-                        GetClassNameW(pWindow->hWnd, TextBuffer, 256);
-                        std::wstring lwstr(TextBuffer);
-                        if (lwstr == L"ScrollBar")
-                            SetWindowTheme(pWindow->hWnd, L"Explorer", L"ScrollBar");
-                        else if (lwstr == L"Button")
-                            SetWindowTheme(pWindow->hWnd, L"Explorer", L"Button");
+                        bool is_for_loop_failed = false;
+                        for (auto &p_window : container_nonchilds)
+                        {
+                            std::wstring class_name = nSol::GetWindowClassName(p_window->hWnd);
+                            if (class_name == WC_SCROLLBAR)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"Explorer", WC_SCROLLBAR);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                            else if (class_name == WC_BUTTON)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"Explorer", WC_BUTTON);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_for_loop_failed)
+                        {
+                            error_message = L"Failed to update new class name for the container associated windows.";
+                            break;
+                        }
                     }
+
+                    // Update new class name for the container scrollbar.
+                    if (container_scrollbar_vertical)
+                    {
+                        std::wstring class_name = nSol::GetWindowClassName(container_scrollbar_vertical);
+                        if (class_name == WC_SCROLLBAR)
+                        {
+                            hr = SetWindowTheme(container_scrollbar_vertical, L"Explorer", WC_SCROLLBAR);
+                            if (FAILED(hr))
+                            {
+                                error_message = L"Failed to execute \"SetWindowTheme()\".";
+                                break;
+                            }
+                        }
+                        else if (class_name == WC_BUTTON)
+                        {
+                            hr = SetWindowTheme(container_scrollbar_vertical, L"Explorer", WC_BUTTON);
+                            if (FAILED(hr))
+                            {
+                                error_message = L"Failed to execute \"SetWindowTheme()\".";
+                                break;
+                            }
+                        }
+                    }
+
+                    are_all_operation_success_2 = true;
+                    break;
                 }
 
-                // Update new class name for the container scrollbar.
-                if (Container_Scrollbar_Vertical)
+                // For dark themes.
+                case MyTheme::Dark:
+                case MyTheme::Monokai:
                 {
-                    GetClassNameW(Container_Scrollbar_Vertical, TextBuffer, 256);
-                    std::wstring lwstr(TextBuffer);
-                    if (lwstr == L"ScrollBar")
-                        SetWindowTheme(Container_Scrollbar_Vertical, L"Explorer", L"ScrollBar");
-                    else if (lwstr == L"Button")
-                        SetWindowTheme(Container_Scrollbar_Vertical, L"Explorer", L"Button");
+                    // Update new class name for the container childs.
+                    if (!container_childs.empty())
+                    {
+                        bool is_for_loop_failed = false;
+                        for (auto &p_window : container_childs)
+                        {
+                            std::wstring class_name = nSol::GetWindowClassName(p_window->hWnd);
+                            if (class_name == WC_SCROLLBAR)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"DarkMode_Explorer", WC_SCROLLBAR);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                            else if (class_name == WC_BUTTON)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"DarkMode_Explorer", WC_BUTTON);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_for_loop_failed)
+                        {
+                            error_message = L"Failed to update new class name for the container child windows.";
+                            break;
+                        }
+                    }
+
+                    // Update new class name for the container non-childs.
+                    if (applyToNonChilds && !container_nonchilds.empty())
+                    {
+                        bool is_for_loop_failed = false;
+                        for (auto &p_window : container_nonchilds)
+                        {
+                            std::wstring class_name = nSol::GetWindowClassName(p_window->hWnd);
+                            if (class_name == WC_SCROLLBAR)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"DarkMode_Explorer", WC_SCROLLBAR);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                            else if (class_name == WC_BUTTON)
+                            {
+                                hr = SetWindowTheme(p_window->hWnd, L"DarkMode_Explorer", WC_BUTTON);
+                                if (FAILED(hr))
+                                {
+                                    is_for_loop_failed = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_for_loop_failed)
+                        {
+                            error_message = L"Failed to update new class name for the container associated windows.";
+                            break;
+                        }
+                    }
+
+                    // Update new class name for the container scrollbar.
+                    if (container_scrollbar_vertical)
+                    {
+                        std::wstring class_name = nSol::GetWindowClassName(container_scrollbar_vertical);
+                        if (class_name == WC_SCROLLBAR)
+                        {
+                            hr = SetWindowTheme(container_scrollbar_vertical, L"DarkMode_Explorer", WC_SCROLLBAR);
+                            if (FAILED(hr))
+                            {
+                                error_message = L"Failed to execute \"SetWindowTheme()\".";
+                                break;
+                            }
+                        }
+                        else if (class_name == WC_BUTTON)
+                        {
+                            hr = SetWindowTheme(container_scrollbar_vertical, L"DarkMode_Explorer", WC_BUTTON);
+                            if (FAILED(hr))
+                            {
+                                error_message = L"Failed to execute \"SetWindowTheme()\".";
+                                break;
+                            }
+                        }
+                    }
+
+                    are_all_operation_success_2 = true;
+                    break;
                 }
 
-                break;
+                default:
+                {
+                    error_message = L"The theme name is not valid.";
+                    break;
+                }
+                }
+                if (!are_all_operation_success_2)
+                    break;
+
+                are_all_operation_success = true;
             }
 
-            // For dark themes.
-            case MyTheme::Dark:
-            case MyTheme::Monokai:
+            if (!are_all_operation_success)
             {
-                // Update new class name for the container childs.
-                if (!Container_Vector_Childs.empty())
-                {
-                    for (auto &pWindow : Container_Vector_Childs)
-                    {
-                        GetClassNameW(pWindow->hWnd, TextBuffer, 256);
-                        std::wstring lwstr(TextBuffer);
-                        if (lwstr == L"ScrollBar")
-                            SetWindowTheme(pWindow->hWnd, L"DarkMode_Explorer", L"ScrollBar");
-                        else if (lwstr == L"Button")
-                            SetWindowTheme(pWindow->hWnd, L"DarkMode_Explorer", L"Button");
-                    }
-                }
-
-                // Update new class name for the container non-childs.
-                if (ApplyToNonChilds && !Container_Vector_NonChilds.empty())
-                {
-                    for (auto &pWindow : Container_Vector_NonChilds)
-                    {
-                        GetClassNameW(pWindow->hWnd, TextBuffer, 256);
-                        std::wstring lwstr(TextBuffer);
-                        if (lwstr == L"ScrollBar")
-                            SetWindowTheme(pWindow->hWnd, L"DarkMode_Explorer", L"ScrollBar");
-                        else if (lwstr == L"Button")
-                            SetWindowTheme(pWindow->hWnd, L"DarkMode_Explorer", L"Button");
-                    }
-                }
-
-                // Update new class name for the container scrollbar.
-                if (Container_Scrollbar_Vertical)
-                {
-                    GetClassNameW(Container_Scrollbar_Vertical, TextBuffer, 256);
-                    std::wstring lwstr(TextBuffer);
-                    if (lwstr == L"ScrollBar")
-                        SetWindowTheme(Container_Scrollbar_Vertical, L"DarkMode_Explorer", L"ScrollBar");
-                    else if (lwstr == L"Button")
-                        SetWindowTheme(Container_Scrollbar_Vertical, L"DarkMode_Explorer", L"Button");
-                }
-
-                break;
+                WriteLog(error_message, L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainerThemeClass()\"]", MyLogType::Error);
+                return false;
             }
 
-            default:
-            {
-                std::wstring error_message = L"";
-                error_message.append(L"Error occurred!\n");
-                error_message.append(L"The theme name is not valid.\n\n");
-                error_message.append(L"NAMESPACE: nApp::Theme\n");
-                error_message.append(L"FUNC: UpdateContainerThemeClass()");
-                MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                WriteLog(L"The theme name is not valid.", L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainerThemeClass()\"]", MyLogType::Error);
-
-                break;
-            }
-            }
+            return true;
         }
 
         /**
          * @brief Updates all the application containers to match a specified theme.
          *
-         * @param Theme The theme name.
+         * @param theme The theme.
+         *
+         * @return Returns true if all the operations are successful, otherwise false.
          */
-        void UpdateContainers(MyTheme Theme)
+        bool UpdateContainers(MyTheme theme)
         {
-            /// CONTINUE WORK: Replace code with updateContainer() function from the MyContainer class.
-            switch (Theme)
-            {
-            case MyTheme::Light:
-            {
-                // Container: MainContent
-                if (g_ContainerMainContent->pContainerWindow->hWnd)
-                {
-                    // Update container positions and dimensions.
-                    SetWindowPos(g_ContainerMainContent->pContainerWindow->hWnd, NULL,
-                                 WINDOW_BORDER_DEFAULTWIDTH,                                                                                                                            // PosX
-                                 g_pUIElements->rectangles.rectCaption.bottom,                                                                                                          // PosY
-                                 g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2) - WINDOW_SCROLLBAR_DEFAULTWIDTH,                                                               // Width
-                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), // Height
-                                 SWP_NOZORDER);
-
-                    // Check if the container scrollbar exists and if the current container dimensions need the scrollbar to be visible.
-                    if (g_ContainerMainContent->pVerticalScrollbarWindow->hWnd && g_IsCurrentThemeWantScrollbarsVisible)
-                    {
-                        // Get the container client rect.
-                        RECT RECT_Container;
-                        if (!GetClientRect(g_ContainerMainContent->pContainerWindow->hWnd, &RECT_Container))
-                        {
-                            std::wstring error_message = L"";
-                            error_message.append(L"Error occurred!\n");
-                            error_message.append(L"Failed to retrieve the container client rect.\n\n");
-                            error_message.append(L"NAMESPACE: nApp::Theme\n");
-                            error_message.append(L"FUNC: UpdateContainers()");
-                            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                            WriteLog(L"Failed to retrieve the container client rect.", L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainers()\"]", MyLogType::Error);
-                        }
-
-                        // Get the container scroll info.
-                        SCROLLINFO si;
-                        si.cbSize = sizeof(SCROLLINFO);
-                        si.fMask = SIF_ALL;
-                        if (SendMessageW(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
-                        {
-                            std::wstring error_message = L"";
-                            error_message.append(L"Error occurred!\n");
-                            error_message.append(L"Failed to retrieve the container scroll info.\n\n");
-                            error_message.append(L"NAMESPACE: nApp::Theme\n");
-                            error_message.append(L"FUNC: UpdateContainers()");
-                            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                            WriteLog(L"Failed to retrieve the container scroll info.", L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainers()\"]", MyLogType::Error);
-                        }
-
-                        // If the container is big enough to show all of its content, then hide the scrollbar. Otherwise, show the scrollbar.
-                        if (static_cast<INT>(RECT_Container.bottom) > si.nMax)
-                            ShowWindow(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SW_HIDE);
-                        else
-                            ShowWindow(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SW_SHOW);
-                    }
-
-                    // Update the container contents class name to match the theme.
-                    UpdateContainerThemeClass(Theme, g_ContainerMainContent);
-                }
-
-                break;
-            }
-
-            case MyTheme::Dark:
+            bool are_all_operation_success = false;
+            std::wstring error_message = L"";
+            while (!are_all_operation_success)
             {
                 // Container: MainContent
-                if (g_ContainerMainContent->pContainerWindow->hWnd)
+                if (g_ContainerMainContent)
                 {
-                    // Update container positions and dimensions.
-                    SetWindowPos(g_ContainerMainContent->pContainerWindow->hWnd, NULL,
-                                 WINDOW_BORDER_DEFAULTWIDTH,                                                                                                                            // PosX
-                                 g_pUIElements->rectangles.rectCaption.bottom,                                                                                                          // PosY
-                                 g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2) - WINDOW_SCROLLBAR_DEFAULTWIDTH,                                                               // Width
-                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), // Height
-                                 SWP_NOZORDER);
-
-                    // Check if the container scrollbar exists and if the current container dimensions require the scrollbar to be visible.
-                    if (g_ContainerMainContent->pVerticalScrollbarWindow->hWnd && g_IsCurrentThemeWantScrollbarsVisible)
+                    // Update the container's dimensions.
+                    if (!g_ContainerMainContent->updateContainerDimensions(WINDOW_BORDER_DEFAULTWIDTH,
+                                                                           g_pUIElements->rectangles.rectCaption.bottom,
+                                                                           g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),
+                                                                           g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top),
+                                                                           g_IsCurrentThemeWantScrollbarsVisible, false))
                     {
-                        // Get the container client rect.
-                        RECT RECT_Container;
-                        if (!GetClientRect(g_ContainerMainContent->pContainerWindow->hWnd, &RECT_Container))
-                        {
-                            std::wstring error_message = L"";
-                            error_message.append(L"Error occurred!\n");
-                            error_message.append(L"Failed to retrieve the container client rect.\n\n");
-                            error_message.append(L"NAMESPACE: nApp::Theme\n");
-                            error_message.append(L"FUNC: UpdateContainers()");
-                            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                            WriteLog(L"Failed to retrieve the container client rect.", L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainers()\"]", MyLogType::Error);
-                        }
-
-                        // Get the container scroll info.
-                        SCROLLINFO si;
-                        si.cbSize = sizeof(SCROLLINFO);
-                        si.fMask = SIF_ALL;
-                        if (SendMessageW(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SBM_GETSCROLLINFO, NULL, (LPARAM)&si) == FALSE)
-                        {
-                            std::wstring error_message = L"";
-                            error_message.append(L"Error occurred!\n");
-                            error_message.append(L"Failed to retrieve the container scroll info.\n\n");
-                            error_message.append(L"NAMESPACE: nApp::Theme\n");
-                            error_message.append(L"FUNC: UpdateContainers()");
-                            MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                            WriteLog(L"Failed to retrieve the container scroll info.", L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainers()\"]", MyLogType::Error);
-                        }
-
-                        // If the container is big enough to show all of its content, then hide the scrollbar. Otherwise, show the scrollbar.
-                        if (static_cast<INT>(RECT_Container.bottom) > si.nMax)
-                            ShowWindow(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SW_HIDE);
-                        else
-                            ShowWindow(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SW_SHOW);
+                        error_message = L"Failed to update the container's dimensions.";
+                        break;
                     }
 
-                    // Update the container contents class name to match the theme.
-                    UpdateContainerThemeClass(Theme, g_ContainerMainContent);
-                }
-
-                break;
-            }
-
-            case MyTheme::Monokai:
-            {
-                // Container: MainContent
-                if (g_ContainerMainContent->pContainerWindow->hWnd)
-                {
-                    // This theme doesn't need the scrollbar to be visible, hide the scrollbar if it exists.
-                    if (g_ContainerMainContent->pVerticalScrollbarWindow->hWnd)
-                        ShowWindow(g_ContainerMainContent->pVerticalScrollbarWindow->hWnd, SW_HIDE);
-
-                    // Update container positions and dimensions.
-                    SetWindowPos(g_ContainerMainContent->pContainerWindow->hWnd, NULL,
-                                 WINDOW_BORDER_DEFAULTWIDTH,                                                                                                                            // PosX
-                                 g_pUIElements->rectangles.rectCaption.bottom,                                                                                                          // PosY
-                                 g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),                                                                                               // Width
-                                 g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), // Height
-                                 SWP_NOZORDER);
-
-                    // Update the container contents class name to match the theme.
-                    UpdateContainerThemeClass(Theme, g_ContainerMainContent);
-                }
-                break;
-            }
-            }
-
-            // Refresh the non-client controls.
-            if (!g_VectorNonClientWindows.empty())
-            {
-                for (auto &Window : g_VectorNonClientWindows)
-                {
-                    if (Window->isManagedWindow())
+                    // Update the container's theme class.
+                    if (!UpdateContainerThemeClass(theme, g_ContainerMainContent))
                     {
-                        switch (Window->getWindowType())
+                        error_message = L"Failed to update the container's theme class.";
+                        break;
+                    }
+
+                    // Refresh the container's child windows.
+                    auto child_windows = g_ContainerMainContent->getChildWindowsVector();
+                    if (!child_windows.empty())
+                    {
+                        bool is_for_loop_failed = false;
+                        for (auto &p_window : child_windows)
                         {
-                        case MyWindowType::StandardButton:
-                        {
-                            MyStandardButton *pSubclass = static_cast<MyStandardButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
+                            if (p_window->isManagedWindow())
+                            {
+                                switch (p_window->getWindowType())
+                                {
+                                case MyWindowType::StandardButton:
+                                {
+                                    MyStandardButton *p_casted_subclass = static_cast<MyStandardButton *>(p_window->getSubclassPointer());
+                                    if (p_casted_subclass)
+                                    {
+                                        if (!p_casted_subclass->refresh(p_window->hWnd))
+                                            is_for_loop_failed = true;
+                                    }
+                                    break;
+                                }
+                                case MyWindowType::ImageButton:
+                                {
+                                    MyImageButton *p_casted_subclass = static_cast<MyImageButton *>(p_window->getSubclassPointer());
+                                    if (p_casted_subclass)
+                                    {
+                                        if (!p_casted_subclass->refresh(p_window->hWnd))
+                                            is_for_loop_failed = true;
+                                    }
+                                    break;
+                                }
+                                case MyWindowType::RadioButton:
+                                {
+                                    MyRadioButton *p_casted_subclass = static_cast<MyRadioButton *>(p_window->getSubclassPointer());
+                                    if (p_casted_subclass)
+                                    {
+                                        if (!p_casted_subclass->refresh(p_window->hWnd))
+                                            is_for_loop_failed = true;
+                                    }
+                                    break;
+                                }
+                                }
+                                if (is_for_loop_failed)
+                                    break;
+                            }
                         }
-                        case MyWindowType::ImageButton:
+                        if (is_for_loop_failed)
                         {
-                            MyImageButton *pSubclass = static_cast<MyImageButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
+                            error_message = L"Failed to refresh the container's child windows.";
                             break;
-                        }
-                        case MyWindowType::RadioButton:
-                        {
-                            MyRadioButton *pSubclass = static_cast<MyRadioButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
-                        }
                         }
                     }
-                }
-            }
 
-            // Refresh the associated subclass.
-            auto Childs = g_ContainerMainContent->getChildWindowsVector();
-            if (!Childs.empty())
-            {
-                for (auto &Window : Childs)
-                {
-                    if (Window->isManagedWindow())
+                    // Refresh the container's associated windows.
+                    auto associated_windows = g_ContainerMainContent->getAssociatedWindowsVector();
+                    if (!associated_windows.empty())
                     {
-                        switch (Window->getWindowType())
+                        bool is_for_loop_failed = false;
+                        for (auto &p_window : associated_windows)
                         {
-                        case MyWindowType::StandardButton:
-                        {
-                            MyStandardButton *pSubclass = static_cast<MyStandardButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
+                            if (p_window->isManagedWindow())
+                            {
+                                switch (p_window->getWindowType())
+                                {
+                                case MyWindowType::StandardButton:
+                                {
+                                    MyStandardButton *p_casted_subclass = static_cast<MyStandardButton *>(p_window->getSubclassPointer());
+                                    if (p_casted_subclass)
+                                    {
+                                        if (!p_casted_subclass->refresh(p_window->hWnd))
+                                            is_for_loop_failed = true;
+                                    }
+                                    break;
+                                }
+                                case MyWindowType::ImageButton:
+                                {
+                                    MyImageButton *p_casted_subclass = static_cast<MyImageButton *>(p_window->getSubclassPointer());
+                                    if (p_casted_subclass)
+                                    {
+                                        if (!p_casted_subclass->refresh(p_window->hWnd))
+                                            is_for_loop_failed = true;
+                                    }
+                                    break;
+                                }
+                                case MyWindowType::RadioButton:
+                                {
+                                    MyRadioButton *p_casted_subclass = static_cast<MyRadioButton *>(p_window->getSubclassPointer());
+                                    if (p_casted_subclass)
+                                    {
+                                        if (!p_casted_subclass->refresh(p_window->hWnd))
+                                            is_for_loop_failed = true;
+                                    }
+                                    break;
+                                }
+                                }
+                                if (is_for_loop_failed)
+                                    break;
+                            }
                         }
-                        case MyWindowType::ImageButton:
+                        if (is_for_loop_failed)
                         {
-                            MyImageButton *pSubclass = static_cast<MyImageButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
+                            error_message = L"Failed to refresh the container's associated windows.";
                             break;
-                        }
-                        case MyWindowType::RadioButton:
-                        {
-                            MyRadioButton *pSubclass = static_cast<MyRadioButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
-                        }
                         }
                     }
                 }
-            }
-            auto NonChilds = g_ContainerMainContent->getAssociatedWindowsVector();
-            if (!NonChilds.empty())
-            {
-                for (auto &Window : NonChilds)
+
+                // Refresh the non-client controls.
+                if (!g_VectorNonClientWindows.empty())
                 {
-                    if (Window->isManagedWindow())
+                    bool is_for_loop_failed = false;
+                    for (auto &p_window : g_VectorNonClientWindows)
                     {
-                        switch (Window->getWindowType())
+                        if (p_window->isManagedWindow())
                         {
-                        case MyWindowType::StandardButton:
-                        {
-                            MyStandardButton *pSubclass = static_cast<MyStandardButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
-                        }
-                        case MyWindowType::ImageButton:
-                        {
-                            MyImageButton *pSubclass = static_cast<MyImageButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
-                        }
-                        case MyWindowType::RadioButton:
-                        {
-                            MyRadioButton *pSubclass = static_cast<MyRadioButton *>(Window->getSubclassPointer());
-                            if (pSubclass)
-                                pSubclass->refresh(Window->hWnd);
-                            break;
-                        }
+                            switch (p_window->getWindowType())
+                            {
+                            case MyWindowType::StandardButton:
+                            {
+                                MyStandardButton *p_casted_subclass = static_cast<MyStandardButton *>(p_window->getSubclassPointer());
+                                if (p_casted_subclass)
+                                {
+                                    if (!p_casted_subclass->refresh(p_window->hWnd))
+                                        is_for_loop_failed = true;
+                                }
+                                break;
+                            }
+                            case MyWindowType::ImageButton:
+                            {
+                                MyImageButton *p_casted_subclass = static_cast<MyImageButton *>(p_window->getSubclassPointer());
+                                if (p_casted_subclass)
+                                {
+                                    if (!p_casted_subclass->refresh(p_window->hWnd))
+                                        is_for_loop_failed = true;
+                                }
+                                break;
+                            }
+                            case MyWindowType::RadioButton:
+                            {
+                                MyRadioButton *p_casted_subclass = static_cast<MyRadioButton *>(p_window->getSubclassPointer());
+                                if (p_casted_subclass)
+                                {
+                                    if (!p_casted_subclass->refresh(p_window->hWnd))
+                                        is_for_loop_failed = true;
+                                }
+                                break;
+                            }
+                            }
+                            if (is_for_loop_failed)
+                                break;
                         }
                     }
+                    if (is_for_loop_failed)
+                    {
+                        error_message = L"Failed to refresh the non-client windows.";
+                        break;
+                    }
                 }
-            }
 
-            // Update application border brush.
-            g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderActive.getHBRUSH();
-            if (g_IsWindows11BorderAttributeSupported)
-            {
-                COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
-                HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
-                if (FAILED(hr))
+                // Update application border brush.
+                g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderActive.getHBRUSH();
+                if (g_IsWindows11BorderAttributeSupported)
                 {
-                    std::wstring error_message = L"Failed to set the window border attribute.";
-                    std::wstring message = L"";
-                    message.append(L"Error occurred!\n");
-                    message.append(L"Failed to update the container.\n");
-                    message.append(L"Error Message: " + error_message + L"\n");
-                    message.append(L"CLASS: \n");
-                    message.append(L"FUNC: UpdateContainers()");
-                    MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
+                    COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
+                    HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
+                    if (FAILED(hr))
+                    {
+                        error_message = L"Failed to set the window border attribute.";
+                        break;
+                    }
                 }
+
+                // Redraw the entire application.
+                RedrawWindow(g_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+
+                // Set application to active.
+                SetActiveWindow(g_hWnd);
+
+                are_all_operation_success = true;
             }
 
-            // Redraw the entire application.
-            RedrawWindow(g_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+            if (!are_all_operation_success)
+            {
+                WriteLog(error_message, L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"UpdateContainers()\"]", MyLogType::Error);
+                return false;
+            }
 
-            // Set application to active.
-            SetActiveWindow(g_hWnd);
+            return true;
         }
 
         /**
-         * @brief Set or update the application theme.
+         * @brief Set the application theme.
          *
-         * @param Theme       The theme name.
-         * @param isFirstCall Specifies whether it is the first time setting the application theme.
+         * @param Theme The theme.
          *
          * @return Returns true if the application theme is successfully set. Otherwise, false.
          */
-        bool SetAppTheme(MyTheme Theme = MyTheme::Light, bool isFirstCall = false)
+        bool SetAppTheme(MyTheme Theme = MyTheme::Light)
         {
-            std::wstring ThemeStr = L"";
-
-            switch (Theme)
+            bool are_all_operation_success = false;
+            std::wstring error_message = L"";
+            while (!are_all_operation_success)
             {
-            case MyTheme::Light:
-            {
-                g_pUIElements->colors.updateMainColors(RGBA(255, 255, 255),  // Primary color.
-                                                       RGBA(255, 255, 255),  // Secondary color.
-                                                       RGBA(64, 64, 64),     // Border active color.
-                                                       RGBA(192, 192, 192),  // Border inactive color.
-                                                       RGBA(0, 0, 0),        // Text active color.
-                                                       RGBA(153, 153, 153),  // Text inactive color.
-                                                       RGBA(0, 0, 0),        // Text highlight color.
-                                                       RGBA(0, 162, 237),    // Focus color.
-                                                       RGBA(240, 240, 240)); // Background color.
+                std::wstring theme_name = L"";
 
-                g_pUIElements->colors.updateCaptionColors(RGBA(255, 255, 255),  // Caption background color.
-                                                          RGBA(0, 0, 0),        // Caption text active color.
-                                                          RGBA(153, 153, 153),  // Caption text inactive color.
-                                                          RGBA(255, 89, 89),    // Caption close button hover background color.
-                                                          RGBA(255, 89, 89),    // Caption close button down background color.
-                                                          RGBA(205, 206, 206),  // Caption maximize button hover background color.
-                                                          RGBA(205, 206, 206),  // Caption maximize button down background color.
-                                                          RGBA(205, 206, 206),  // Caption minimize button hover background color.
-                                                          RGBA(205, 206, 206)); // Caption minimize button down background color.
+                bool is_switch_failed = false;
+                switch (Theme)
+                {
+                case MyTheme::Light:
+                {
+                    g_pUIElements->colors.updateMainColors(RGBA(255, 255, 255),  // Primary color.
+                                                           RGBA(255, 255, 255),  // Secondary color.
+                                                           RGBA(64, 64, 64),     // Border active color.
+                                                           RGBA(192, 192, 192),  // Border inactive color.
+                                                           RGBA(0, 0, 0),        // Text active color.
+                                                           RGBA(153, 153, 153),  // Text inactive color.
+                                                           RGBA(0, 0, 0),        // Text highlight color.
+                                                           RGBA(0, 162, 237),    // Focus color.
+                                                           RGBA(240, 240, 240)); // Background color.
 
-                g_pUIElements->colors.updateStandardButtonColors(RGBA(225, 225, 225), // Standard button default color.
-                                                                 RGBA(229, 241, 251), // Standard button hover color.
-                                                                 RGBA(204, 228, 247), // Standard button down color.
-                                                                 RGBA(172, 172, 172), // Standard button border default color.
-                                                                 RGBA(0, 120, 215),   // Standard button border hover color.
-                                                                 RGBA(0, 84, 153));   // Standard button border down color.
+                    g_pUIElements->colors.updateCaptionColors(RGBA(255, 255, 255),  // Caption background color.
+                                                              RGBA(0, 0, 0),        // Caption text active color.
+                                                              RGBA(153, 153, 153),  // Caption text inactive color.
+                                                              RGBA(255, 89, 89),    // Caption close button hover background color.
+                                                              RGBA(255, 89, 89),    // Caption close button down background color.
+                                                              RGBA(205, 206, 206),  // Caption maximize button hover background color.
+                                                              RGBA(205, 206, 206),  // Caption maximize button down background color.
+                                                              RGBA(205, 206, 206),  // Caption minimize button hover background color.
+                                                              RGBA(205, 206, 206)); // Caption minimize button down background color.
 
-                g_pUIElements->colors.updateRadioButtonColors(RGBA(255, 255, 255), // Radio button primary color.
-                                                              RGBA(255, 255, 255), // Radio button hover state primary color.
-                                                              RGBA(204, 228, 247), // Radio button down state primary color.
-                                                              RGBA(255, 255, 255), // Radio button secondary color.
-                                                              RGBA(255, 255, 255), // Radio button hover state secondary color.
-                                                              RGBA(204, 228, 247), // Radio button down state secondary color.
-                                                              RGBA(51, 51, 51),    // Radio button border color.
-                                                              RGBA(0, 120, 215),   // Radio button hover state border color.
-                                                              RGBA(0, 84, 153),    // Radio button down state border color.
-                                                              RGBA(51, 51, 51),    // Selected radio button primary color.
-                                                              RGBA(0, 120, 215),   // Selected radio button hover state primary color.
-                                                              RGBA(0, 84, 153),    // Selected radio button down state primary color.
-                                                              RGBA(255, 255, 255), // Selected radio button secondary color.
-                                                              RGBA(255, 255, 255), // Selected radio button hover state secondary color.
-                                                              RGBA(204, 228, 247), // Selected radio button down state secondary color.
-                                                              RGBA(51, 51, 51),    // Selected radio button border color.
-                                                              RGBA(0, 120, 215),   // Selected radio button hover state border color.
-                                                              RGBA(0, 84, 153));   // Selected radio button down state border color.
+                    g_pUIElements->colors.updateStandardButtonColors(RGBA(225, 225, 225), // Standard button default color.
+                                                                     RGBA(229, 241, 251), // Standard button hover color.
+                                                                     RGBA(204, 228, 247), // Standard button down color.
+                                                                     RGBA(172, 172, 172), // Standard button border default color.
+                                                                     RGBA(0, 120, 215),   // Standard button border hover color.
+                                                                     RGBA(0, 84, 153));   // Standard button border down color.
 
-                g_pUIElements->colors.updateEditboxColors(RGBA(255, 255, 255), // Editbox color.
-                                                          RGBA(122, 122, 122), // Editbox border default color.
-                                                          RGBA(0, 120, 215));  // Editbox border selected color.
+                    g_pUIElements->colors.updateRadioButtonColors(RGBA(255, 255, 255), // Radio button primary color.
+                                                                  RGBA(255, 255, 255), // Radio button hover state primary color.
+                                                                  RGBA(204, 228, 247), // Radio button down state primary color.
+                                                                  RGBA(255, 255, 255), // Radio button secondary color.
+                                                                  RGBA(255, 255, 255), // Radio button hover state secondary color.
+                                                                  RGBA(204, 228, 247), // Radio button down state secondary color.
+                                                                  RGBA(51, 51, 51),    // Radio button border color.
+                                                                  RGBA(0, 120, 215),   // Radio button hover state border color.
+                                                                  RGBA(0, 84, 153),    // Radio button down state border color.
+                                                                  RGBA(51, 51, 51),    // Selected radio button primary color.
+                                                                  RGBA(0, 120, 215),   // Selected radio button hover state primary color.
+                                                                  RGBA(0, 84, 153),    // Selected radio button down state primary color.
+                                                                  RGBA(255, 255, 255), // Selected radio button secondary color.
+                                                                  RGBA(255, 255, 255), // Selected radio button hover state secondary color.
+                                                                  RGBA(204, 228, 247), // Selected radio button down state secondary color.
+                                                                  RGBA(51, 51, 51),    // Selected radio button border color.
+                                                                  RGBA(0, 120, 215),   // Selected radio button hover state border color.
+                                                                  RGBA(0, 84, 153));   // Selected radio button down state border color.
 
-                g_pUIElements->colors.updateDDLComboboxColors(RGBA(225, 225, 225),  // DDL combobox color.
-                                                              RGBA(172, 172, 172),  // DDL combobox border color.
-                                                              RGBA(255, 255, 255),  // DDL combobox default item background color.
-                                                              RGBA(0, 120, 215),    // DDL combobox selected item background color.
-                                                              RGBA(0, 120, 215),    // DDL combobox drop-down list window border color.
-                                                              RGBA(0, 0, 0),        // DDL combobox default item text color.
-                                                              RGBA(255, 255, 255)); // DDL combobox selected item text color.
+                    g_pUIElements->colors.updateEditboxColors(RGBA(255, 255, 255), // Editbox color.
+                                                              RGBA(122, 122, 122), // Editbox border default color.
+                                                              RGBA(0, 120, 215));  // Editbox border selected color.
 
-                g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossBlack,  // Close button default image.
-                                                                  *g_pUIElements->images.pCrossWhite,  // Close button hover image.
-                                                                  *g_pUIElements->images.pCrossWhite,  // Close button down image.
-                                                                  *g_pUIElements->images.pMinusBlack,  // Minimize button default image.
-                                                                  *g_pUIElements->images.pMinusBlack,  // Minimize button hover image.
-                                                                  *g_pUIElements->images.pMinusBlack); // Minimize button down image.
+                    g_pUIElements->colors.updateDDLComboboxColors(RGBA(225, 225, 225),  // DDL combobox color.
+                                                                  RGBA(172, 172, 172),  // DDL combobox border color.
+                                                                  RGBA(255, 255, 255),  // DDL combobox default item background color.
+                                                                  RGBA(0, 120, 215),    // DDL combobox selected item background color.
+                                                                  RGBA(0, 120, 215),    // DDL combobox drop-down list window border color.
+                                                                  RGBA(0, 0, 0),        // DDL combobox default item text color.
+                                                                  RGBA(255, 255, 255)); // DDL combobox selected item text color.
 
-                // Update standard button class.
-                MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
+                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossBlack,  // Close button default image.
+                                                                      *g_pUIElements->images.pCrossWhite,  // Close button hover image.
+                                                                      *g_pUIElements->images.pCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pMinusBlack,  // Minimize button default image.
+                                                                      *g_pUIElements->images.pMinusBlack,  // Minimize button hover image.
+                                                                      *g_pUIElements->images.pMinusBlack); // Minimize button down image.
+
+                    // Update standard button class.
+                    MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.standardButtonDefault,
+                            &g_pUIElements->colors.standardButtonHover,
+                            &g_pUIElements->colors.standardButtonDown,
+                            &g_pUIElements->colors.standardButtonBorderDefault,
+                            &g_pUIElements->colors.standardButtonBorderHover,
+                            &g_pUIElements->colors.standardButtonBorderDown,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.textHighlight,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.button};
+                    if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     {
-                        &g_pUIElements->colors.standardButtonDefault,
-                        &g_pUIElements->colors.standardButtonHover,
-                        &g_pUIElements->colors.standardButtonDown,
-                        &g_pUIElements->colors.standardButtonBorderDefault,
-                        &g_pUIElements->colors.standardButtonBorderHover,
-                        &g_pUIElements->colors.standardButtonBorderDown,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.textHighlight,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.button};
-                if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
-                    return false;
+                        error_message = L"Failed to update standard button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
 
-                // Update image button class.
-                MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
+                    // Update image button class.
+                    MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.focus // Image button focus color.
+                        };
+                    if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
                     {
-                        &g_pUIElements->colors.focus // Image button focus color.
-                    };
-                if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
-                    return false;
+                        error_message = L"Failed to update image button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
 
-                // Update radio button class.
-                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
+                    // Update radio button class.
+                    MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.radioButtonPrimaryDefault,
+                            &g_pUIElements->colors.radioButtonPrimaryHover,
+                            &g_pUIElements->colors.radioButtonPrimaryDown,
+                            &g_pUIElements->colors.radioButtonSecondaryDefault,
+                            &g_pUIElements->colors.radioButtonSecondaryHover,
+                            &g_pUIElements->colors.radioButtonSecondaryDown,
+                            &g_pUIElements->colors.radioButtonBorderDefault,
+                            &g_pUIElements->colors.radioButtonBorderHover,
+                            &g_pUIElements->colors.radioButtonBorderDown,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                            &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                            &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                            &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.textHighlight,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.button};
+                    if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
                     {
-                        &g_pUIElements->colors.radioButtonPrimaryDefault,
-                        &g_pUIElements->colors.radioButtonPrimaryHover,
-                        &g_pUIElements->colors.radioButtonPrimaryDown,
-                        &g_pUIElements->colors.radioButtonSecondaryDefault,
-                        &g_pUIElements->colors.radioButtonSecondaryHover,
-                        &g_pUIElements->colors.radioButtonSecondaryDown,
-                        &g_pUIElements->colors.radioButtonBorderDefault,
-                        &g_pUIElements->colors.radioButtonBorderHover,
-                        &g_pUIElements->colors.radioButtonBorderDown,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
-                        &g_pUIElements->colors.selectedRadioButtonBorderDefault,
-                        &g_pUIElements->colors.selectedRadioButtonBorderHover,
-                        &g_pUIElements->colors.selectedRadioButtonBorderDown,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.textHighlight,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.button};
-                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
-                    return false;
+                        error_message = L"Failed to update radio button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
 
-                // Update ddl combobox class.
-                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                    // Update ddl combobox class.
+                    MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.ddlCombobox,
+                            &g_pUIElements->colors.ddlComboboxBorder,
+                            &g_pUIElements->colors.ddlComboboxItemBackground,
+                            &g_pUIElements->colors.ddlComboboxSelectedItemBackground,
+                            &g_pUIElements->colors.ddlComboboxDropdownlistBorder,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.ddlCombobox};
+                    if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
                     {
-                        &g_pUIElements->colors.ddlCombobox,
-                        &g_pUIElements->colors.ddlComboboxBorder,
-                        &g_pUIElements->colors.ddlComboboxItemBackground,
-                        &g_pUIElements->colors.ddlComboboxSelectedItemBackground,
-                        &g_pUIElements->colors.ddlComboboxDropdownlistBorder,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.ddlCombobox};
-                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
-                    return false;
+                        error_message = L"Failed to update ddl combobox class.";
+                        is_switch_failed = true;
+                        break;
+                    }
 
-                // Update global variables.
-                g_CurrentAppTheme = MyTheme::Light;
-                g_IsCurrentThemeWantScrollbarsVisible = true;
-                ThemeStr = L"Light";
-                break;
+                    // Update global variables.
+                    g_CurrentAppTheme = MyTheme::Light;
+                    g_IsCurrentThemeWantScrollbarsVisible = true;
+                    theme_name = L"Light";
+                    break;
+                }
+
+                case MyTheme::Dark:
+                {
+                    g_pUIElements->colors.updateMainColors(RGBA(0, 0, 0),       // Primary color.
+                                                           RGBA(32, 32, 32),    // Secondary color.
+                                                           RGBA(48, 48, 48),    // Border active color.
+                                                           RGBA(57, 57, 57),    // Border inactive color.
+                                                           RGBA(216, 222, 233), // Text active color.
+                                                           RGBA(162, 162, 162), // Text inactive color.
+                                                           RGBA(216, 222, 233), // Text highlight color.
+                                                           RGBA(0, 162, 237),   // Focus color.
+                                                           RGBA(32, 32, 32));   // Background color.
+
+                    g_pUIElements->colors.updateCaptionColors(RGBA(0, 0, 0),       // Caption background color.
+                                                              RGBA(216, 222, 233), // Caption text active color.
+                                                              RGBA(162, 162, 162), // Caption text inactive color.
+                                                              RGBA(232, 17, 35),   // Caption close button hover background color.
+                                                              RGBA(232, 17, 35),   // Caption close button down background color.
+                                                              RGBA(57, 57, 57),    // Caption maximize button hover background color.
+                                                              RGBA(57, 57, 57),    // Caption maximize button down background color.
+                                                              RGBA(57, 57, 57),    // Caption minimize button hover background color.
+                                                              RGBA(57, 57, 57));   // Caption minimize button down background color.
+
+                    g_pUIElements->colors.updateStandardButtonColors(RGBA(51, 51, 51),     // Standard button default color.
+                                                                     RGBA(69, 69, 69),     // Standard button hover color.
+                                                                     RGBA(102, 102, 102),  // Standard button down color.
+                                                                     RGBA(155, 155, 155),  // Standard button border default color.
+                                                                     RGBA(155, 155, 155),  // Standard button border hover color.
+                                                                     RGBA(155, 155, 155)); // Standard button border down color.
+
+                    g_pUIElements->colors.updateRadioButtonColors(RGBA(51, 51, 51),     // Radio button primary color.
+                                                                  RGBA(69, 69, 69),     // Radio button hover state primary color.
+                                                                  RGBA(87, 87, 87),     // Radio button down state primary color.
+                                                                  RGBA(51, 51, 51),     // Radio button secondary color.
+                                                                  RGBA(69, 69, 69),     // Radio button hover state secondary color.
+                                                                  RGBA(87, 87, 87),     // Radio button down state secondary color.
+                                                                  RGBA(155, 155, 155),  // Radio button border color.
+                                                                  RGBA(155, 155, 155),  // Radio button hover state border color.
+                                                                  RGBA(155, 155, 155),  // Radio button down state border color.
+                                                                  RGBA(207, 207, 207),  // Selected radio button primary color.
+                                                                  RGBA(225, 225, 225),  // Selected radio button hover state primary color.
+                                                                  RGBA(250, 250, 250),  // Selected radio button down state primary color.
+                                                                  RGBA(51, 51, 51),     // Selected radio button secondary color.
+                                                                  RGBA(51, 51, 51),     // Selected radio button hover state secondary color.
+                                                                  RGBA(51, 51, 51),     // Selected radio button down state secondary color.
+                                                                  RGBA(155, 155, 155),  // Selected radio button border color.
+                                                                  RGBA(155, 155, 155),  // Selected radio button hover state border color.
+                                                                  RGBA(155, 155, 155)); // Selected radio button down state border color.
+
+                    g_pUIElements->colors.updateEditboxColors(RGBA(48, 48, 48),     // Editbox color.
+                                                              RGBA(79, 79, 79),     // Editbox border default color.
+                                                              RGBA(100, 100, 100)); // Editbox border selected color.
+
+                    g_pUIElements->colors.updateDDLComboboxColors(RGBA(51, 51, 51),     // DDL combobox color.
+                                                                  RGBA(155, 155, 155),  // DDL combobox border color.
+                                                                  RGBA(32, 32, 32),     // DDL combobox default item background color.
+                                                                  RGBA(44, 44, 44),     // DDL combobox selected item background color.
+                                                                  RGBA(44, 44, 44),     // DDL combobox drop-down list window border color.
+                                                                  RGBA(162, 162, 162),  // DDL combobox default item text color.
+                                                                  RGBA(255, 255, 255)); // DDL combobox selected item text color.
+
+                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
+                                                                      *g_pUIElements->images.pCrossWhite,  // Close button hover image.
+                                                                      *g_pUIElements->images.pCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
+                                                                      *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
+                                                                      *g_pUIElements->images.pMinusWhite); // Minimize button down image.
+
+                    // Update standard button class.
+                    MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.standardButtonDefault,
+                            &g_pUIElements->colors.standardButtonHover,
+                            &g_pUIElements->colors.standardButtonDown,
+                            &g_pUIElements->colors.standardButtonBorderDefault,
+                            &g_pUIElements->colors.standardButtonBorderHover,
+                            &g_pUIElements->colors.standardButtonBorderDown,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.textHighlight,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.button};
+                    if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update standard button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update image button class.
+                    MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.focus // Image button focus color.
+                        };
+                    if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update image button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update radio button class.
+                    MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.radioButtonPrimaryDefault,
+                            &g_pUIElements->colors.radioButtonPrimaryHover,
+                            &g_pUIElements->colors.radioButtonPrimaryDown,
+                            &g_pUIElements->colors.radioButtonSecondaryDefault,
+                            &g_pUIElements->colors.radioButtonSecondaryHover,
+                            &g_pUIElements->colors.radioButtonSecondaryDown,
+                            &g_pUIElements->colors.radioButtonBorderDefault,
+                            &g_pUIElements->colors.radioButtonBorderHover,
+                            &g_pUIElements->colors.radioButtonBorderDown,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                            &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                            &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                            &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.textHighlight,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.button};
+                    if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update radio button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update ddl combobox class.
+                    MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.ddlCombobox,
+                            &g_pUIElements->colors.ddlComboboxBorder,
+                            &g_pUIElements->colors.ddlComboboxItemBackground,
+                            &g_pUIElements->colors.ddlComboboxSelectedItemBackground,
+                            &g_pUIElements->colors.ddlComboboxDropdownlistBorder,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.ddlCombobox};
+                    if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update ddl combobox class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update global variables.
+                    g_CurrentAppTheme = MyTheme::Dark;
+                    g_IsCurrentThemeWantScrollbarsVisible = true;
+                    theme_name = L"Dark";
+                    break;
+                }
+
+                case MyTheme::Monokai:
+                {
+                    g_pUIElements->colors.updateMainColors(RGBA(34, 31, 34),    // Primary color.
+                                                           RGBA(45, 42, 46),    // Secondary color.
+                                                           RGBA(25, 24, 26),    // Border active color.
+                                                           RGBA(49, 47, 51),    // Border inactive color.
+                                                           RGBA(231, 230, 229), // Text active color.
+                                                           RGBA(82, 76, 83),    // Text inactive color.
+                                                           RGBA(231, 230, 229), // Text highlight color.
+                                                           RGBA(169, 220, 118), // Focus color.
+                                                           RGBA(45, 42, 46));   // Background color.
+
+                    g_pUIElements->colors.updateCaptionColors(RGBA(34, 31, 34),    // Caption background color.
+                                                              RGBA(147, 146, 147), // Caption text active color.
+                                                              RGBA(91, 89, 92),    // Caption text inactive color.
+                                                              RGBA(232, 17, 35),   // Caption close button hover background color.
+                                                              RGBA(232, 17, 35),   // Caption close button down background color.
+                                                              RGBA(63, 61, 63),    // Caption maximize button hover background color.
+                                                              RGBA(63, 61, 63),    // Caption maximize button down background color.
+                                                              RGBA(63, 61, 63),    // Caption minimize button hover background color.
+                                                              RGBA(63, 61, 63));   // Caption minimize button down background color.
+
+                    g_pUIElements->colors.updateStandardButtonColors(RGBA(64, 62, 65),     // Standard button default color.
+                                                                     RGBA(91, 89, 92),     // Standard button hover color.
+                                                                     RGBA(101, 99, 102),   // Standard button down color.
+                                                                     RGBA(114, 112, 114),  // Standard button border default color.
+                                                                     RGBA(114, 112, 114),  // Standard button border hover color.
+                                                                     RGBA(114, 112, 114)); // Standard button border down color.
+
+                    g_pUIElements->colors.updateRadioButtonColors(RGBA(64, 62, 65),     // Radio button primary color.
+                                                                  RGBA(91, 89, 92),     // Radio button hover state primary color.
+                                                                  RGBA(101, 99, 102),   // Radio button down state primary color.
+                                                                  RGBA(64, 62, 65),     // Radio button secondary color.
+                                                                  RGBA(91, 89, 92),     // Radio button hover state secondary color.
+                                                                  RGBA(101, 99, 102),   // Radio button down state secondary color.
+                                                                  RGBA(114, 112, 114),  // Radio button border color.
+                                                                  RGBA(114, 112, 114),  // Radio button hover state border color.
+                                                                  RGBA(114, 112, 114),  // Radio button down state border color.
+                                                                  RGBA(231, 230, 229),  // Selected radio button primary color.
+                                                                  RGBA(242, 241, 240),  // Selected radio button hover state primary color.
+                                                                  RGBA(255, 255, 255),  // Selected radio button down state primary color.
+                                                                  RGBA(64, 62, 65),     // Selected radio button secondary color.
+                                                                  RGBA(64, 62, 65),     // Selected radio button hover state secondary color.
+                                                                  RGBA(64, 62, 65),     // Selected radio button down state secondary color.
+                                                                  RGBA(114, 112, 114),  // Selected radio button border color.
+                                                                  RGBA(114, 112, 114),  // Selected radio button hover state border color.
+                                                                  RGBA(114, 112, 114)); // Selected radio button down state border color.
+
+                    g_pUIElements->colors.updateEditboxColors(RGBA(64, 62, 65),     // Editbox color.
+                                                              RGBA(64, 62, 65),     // Editbox border default color.
+                                                              RGBA(114, 112, 114)); // Editbox border selected color.
+
+                    g_pUIElements->colors.updateDDLComboboxColors(RGBA(64, 62, 65),     // DDL combobox color.
+                                                                  RGBA(64, 62, 65),     // DDL combobox border color.
+                                                                  RGBA(64, 62, 65),     // DDL combobox default item background color.
+                                                                  RGBA(74, 72, 75),     // DDL combobox selected item background color.
+                                                                  RGBA(114, 112, 114),  // DDL combobox drop-down list window border color.
+                                                                  RGBA(237, 237, 235),  // DDL combobox default item text color.
+                                                                  RGBA(225, 216, 102)); // DDL combobox selected item text color.
+
+                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
+                                                                      *g_pUIElements->images.pCrossWhite,  // Close button hover image.
+                                                                      *g_pUIElements->images.pCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
+                                                                      *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
+                                                                      *g_pUIElements->images.pMinusWhite); // Minimize button down image.
+
+                    // Update standard button class.
+                    MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.standardButtonDefault,
+                            &g_pUIElements->colors.standardButtonHover,
+                            &g_pUIElements->colors.standardButtonDown,
+                            &g_pUIElements->colors.standardButtonBorderDefault,
+                            &g_pUIElements->colors.standardButtonBorderHover,
+                            &g_pUIElements->colors.standardButtonBorderDown,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.textHighlight,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.button};
+                    if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update standard button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update image button class.
+                    MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.focus // Image button focus color.
+                        };
+                    if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update image button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update radio button class.
+                    MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.radioButtonPrimaryDefault,
+                            &g_pUIElements->colors.radioButtonPrimaryHover,
+                            &g_pUIElements->colors.radioButtonPrimaryDown,
+                            &g_pUIElements->colors.radioButtonSecondaryDefault,
+                            &g_pUIElements->colors.radioButtonSecondaryHover,
+                            &g_pUIElements->colors.radioButtonSecondaryDown,
+                            &g_pUIElements->colors.radioButtonBorderDefault,
+                            &g_pUIElements->colors.radioButtonBorderHover,
+                            &g_pUIElements->colors.radioButtonBorderDown,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                            &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                            &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                            &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                            &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                            &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.textHighlight,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.button};
+                    if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update radio button class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update ddl combobox class.
+                    MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
+                        {
+                            &g_pUIElements->colors.ddlCombobox,
+                            &g_pUIElements->colors.ddlComboboxBorder,
+                            &g_pUIElements->colors.ddlComboboxItemBackground,
+                            &g_pUIElements->colors.ddlComboboxSelectedItemBackground,
+                            &g_pUIElements->colors.ddlComboboxDropdownlistBorder,
+                            &g_pUIElements->colors.textActive,
+                            &g_pUIElements->colors.background,
+                            &g_pUIElements->colors.focus,
+                            &g_pUIElements->fonts.ddlCombobox};
+                    if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
+                    {
+                        error_message = L"Failed to update ddl combobox class.";
+                        is_switch_failed = true;
+                        break;
+                    }
+
+                    // Update global variables.
+                    g_CurrentAppTheme = MyTheme::Monokai;
+                    g_IsCurrentThemeWantScrollbarsVisible = false;
+                    theme_name = L"Monokai";
+                    break;
+                }
+                }
+                if (is_switch_failed)
+                    break;
+
+                // If the window is not ready, then we don't need to update containers.
+                if (!g_IsWindowReady)
+                {
+                    WriteLogEx(L"Default application theme: ", (L"\"" + theme_name + L"\"").c_str(), MyLogType::Info, 1);
+                    are_all_operation_success = true;
+                    break;
+                }
+
+                // Update containers.
+                if (!UpdateContainers(g_CurrentAppTheme))
+                {
+                    error_message = L"Failed to update containers.";
+                    break;
+                }
+                WriteLogEx(L"Application theme changed: ", (L"\"" + theme_name + L"\"").c_str(), MyLogType::Info, 1);
+
+                are_all_operation_success = true;
             }
 
-            case MyTheme::Dark:
+            if (!are_all_operation_success)
             {
-                g_pUIElements->colors.updateMainColors(RGBA(0, 0, 0),       // Primary color.
-                                                       RGBA(32, 32, 32),    // Secondary color.
-                                                       RGBA(48, 48, 48),    // Border active color.
-                                                       RGBA(57, 57, 57),    // Border inactive color.
-                                                       RGBA(216, 222, 233), // Text active color.
-                                                       RGBA(162, 162, 162), // Text inactive color.
-                                                       RGBA(216, 222, 233), // Text highlight color.
-                                                       RGBA(0, 162, 237),   // Focus color.
-                                                       RGBA(32, 32, 32));   // Background color.
-
-                g_pUIElements->colors.updateCaptionColors(RGBA(0, 0, 0),       // Caption background color.
-                                                          RGBA(216, 222, 233), // Caption text active color.
-                                                          RGBA(162, 162, 162), // Caption text inactive color.
-                                                          RGBA(232, 17, 35),   // Caption close button hover background color.
-                                                          RGBA(232, 17, 35),   // Caption close button down background color.
-                                                          RGBA(57, 57, 57),    // Caption maximize button hover background color.
-                                                          RGBA(57, 57, 57),    // Caption maximize button down background color.
-                                                          RGBA(57, 57, 57),    // Caption minimize button hover background color.
-                                                          RGBA(57, 57, 57));   // Caption minimize button down background color.
-
-                g_pUIElements->colors.updateStandardButtonColors(RGBA(51, 51, 51),     // Standard button default color.
-                                                                 RGBA(69, 69, 69),     // Standard button hover color.
-                                                                 RGBA(102, 102, 102),  // Standard button down color.
-                                                                 RGBA(155, 155, 155),  // Standard button border default color.
-                                                                 RGBA(155, 155, 155),  // Standard button border hover color.
-                                                                 RGBA(155, 155, 155)); // Standard button border down color.
-
-                g_pUIElements->colors.updateRadioButtonColors(RGBA(51, 51, 51),     // Radio button primary color.
-                                                              RGBA(69, 69, 69),     // Radio button hover state primary color.
-                                                              RGBA(87, 87, 87),     // Radio button down state primary color.
-                                                              RGBA(51, 51, 51),     // Radio button secondary color.
-                                                              RGBA(69, 69, 69),     // Radio button hover state secondary color.
-                                                              RGBA(87, 87, 87),     // Radio button down state secondary color.
-                                                              RGBA(155, 155, 155),  // Radio button border color.
-                                                              RGBA(155, 155, 155),  // Radio button hover state border color.
-                                                              RGBA(155, 155, 155),  // Radio button down state border color.
-                                                              RGBA(207, 207, 207),  // Selected radio button primary color.
-                                                              RGBA(225, 225, 225),  // Selected radio button hover state primary color.
-                                                              RGBA(250, 250, 250),  // Selected radio button down state primary color.
-                                                              RGBA(51, 51, 51),     // Selected radio button secondary color.
-                                                              RGBA(51, 51, 51),     // Selected radio button hover state secondary color.
-                                                              RGBA(51, 51, 51),     // Selected radio button down state secondary color.
-                                                              RGBA(155, 155, 155),  // Selected radio button border color.
-                                                              RGBA(155, 155, 155),  // Selected radio button hover state border color.
-                                                              RGBA(155, 155, 155)); // Selected radio button down state border color.
-
-                g_pUIElements->colors.updateEditboxColors(RGBA(48, 48, 48),     // Editbox color.
-                                                          RGBA(79, 79, 79),     // Editbox border default color.
-                                                          RGBA(100, 100, 100)); // Editbox border selected color.
-
-                g_pUIElements->colors.updateDDLComboboxColors(RGBA(51, 51, 51),     // DDL combobox color.
-                                                              RGBA(155, 155, 155),  // DDL combobox border color.
-                                                              RGBA(32, 32, 32),     // DDL combobox default item background color.
-                                                              RGBA(44, 44, 44),     // DDL combobox selected item background color.
-                                                              RGBA(44, 44, 44),     // DDL combobox drop-down list window border color.
-                                                              RGBA(162, 162, 162),  // DDL combobox default item text color.
-                                                              RGBA(255, 255, 255)); // DDL combobox selected item text color.
-
-                g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
-                                                                  *g_pUIElements->images.pCrossWhite,  // Close button hover image.
-                                                                  *g_pUIElements->images.pCrossWhite,  // Close button down image.
-                                                                  *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
-                                                                  *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
-                                                                  *g_pUIElements->images.pMinusWhite); // Minimize button down image.
-
-                // Update standard button class.
-                MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.standardButtonDefault,
-                        &g_pUIElements->colors.standardButtonHover,
-                        &g_pUIElements->colors.standardButtonDown,
-                        &g_pUIElements->colors.standardButtonBorderDefault,
-                        &g_pUIElements->colors.standardButtonBorderHover,
-                        &g_pUIElements->colors.standardButtonBorderDown,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.textHighlight,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.button};
-                if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
-                    return false;
-
-                // Update image button class.
-                MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.focus // Image button focus color.
-                    };
-                if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
-                    return false;
-
-                // Update radio button class.
-                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.radioButtonPrimaryDefault,
-                        &g_pUIElements->colors.radioButtonPrimaryHover,
-                        &g_pUIElements->colors.radioButtonPrimaryDown,
-                        &g_pUIElements->colors.radioButtonSecondaryDefault,
-                        &g_pUIElements->colors.radioButtonSecondaryHover,
-                        &g_pUIElements->colors.radioButtonSecondaryDown,
-                        &g_pUIElements->colors.radioButtonBorderDefault,
-                        &g_pUIElements->colors.radioButtonBorderHover,
-                        &g_pUIElements->colors.radioButtonBorderDown,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
-                        &g_pUIElements->colors.selectedRadioButtonBorderDefault,
-                        &g_pUIElements->colors.selectedRadioButtonBorderHover,
-                        &g_pUIElements->colors.selectedRadioButtonBorderDown,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.textHighlight,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.button};
-                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
-                    return false;
-
-                // Update ddl combobox class.
-                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.ddlCombobox,
-                        &g_pUIElements->colors.ddlComboboxBorder,
-                        &g_pUIElements->colors.ddlComboboxItemBackground,
-                        &g_pUIElements->colors.ddlComboboxSelectedItemBackground,
-                        &g_pUIElements->colors.ddlComboboxDropdownlistBorder,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.ddlCombobox};
-                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
-                    return false;
-
-                // Update global variables.
-                g_CurrentAppTheme = MyTheme::Dark;
-                g_IsCurrentThemeWantScrollbarsVisible = true;
-                ThemeStr = L"Dark";
-                break;
+                WriteLog(error_message, L" [NAMESPACE: \"nApp::Theme\" | FUNC: \"SetAppTheme()\"]", MyLogType::Error);
+                return false;
             }
 
-            case MyTheme::Monokai:
-            {
-                g_pUIElements->colors.updateMainColors(RGBA(34, 31, 34),    // Primary color.
-                                                       RGBA(45, 42, 46),    // Secondary color.
-                                                       RGBA(25, 24, 26),    // Border active color.
-                                                       RGBA(49, 47, 51),    // Border inactive color.
-                                                       RGBA(231, 230, 229), // Text active color.
-                                                       RGBA(82, 76, 83),    // Text inactive color.
-                                                       RGBA(231, 230, 229), // Text highlight color.
-                                                       RGBA(169, 220, 118), // Focus color.
-                                                       RGBA(45, 42, 46));   // Background color.
-
-                g_pUIElements->colors.updateCaptionColors(RGBA(34, 31, 34),    // Caption background color.
-                                                          RGBA(147, 146, 147), // Caption text active color.
-                                                          RGBA(91, 89, 92),    // Caption text inactive color.
-                                                          RGBA(232, 17, 35),   // Caption close button hover background color.
-                                                          RGBA(232, 17, 35),   // Caption close button down background color.
-                                                          RGBA(63, 61, 63),    // Caption maximize button hover background color.
-                                                          RGBA(63, 61, 63),    // Caption maximize button down background color.
-                                                          RGBA(63, 61, 63),    // Caption minimize button hover background color.
-                                                          RGBA(63, 61, 63));   // Caption minimize button down background color.
-
-                g_pUIElements->colors.updateStandardButtonColors(RGBA(64, 62, 65),     // Standard button default color.
-                                                                 RGBA(91, 89, 92),     // Standard button hover color.
-                                                                 RGBA(101, 99, 102),   // Standard button down color.
-                                                                 RGBA(114, 112, 114),  // Standard button border default color.
-                                                                 RGBA(114, 112, 114),  // Standard button border hover color.
-                                                                 RGBA(114, 112, 114)); // Standard button border down color.
-
-                g_pUIElements->colors.updateRadioButtonColors(RGBA(64, 62, 65),     // Radio button primary color.
-                                                              RGBA(91, 89, 92),     // Radio button hover state primary color.
-                                                              RGBA(101, 99, 102),   // Radio button down state primary color.
-                                                              RGBA(64, 62, 65),     // Radio button secondary color.
-                                                              RGBA(91, 89, 92),     // Radio button hover state secondary color.
-                                                              RGBA(101, 99, 102),   // Radio button down state secondary color.
-                                                              RGBA(114, 112, 114),  // Radio button border color.
-                                                              RGBA(114, 112, 114),  // Radio button hover state border color.
-                                                              RGBA(114, 112, 114),  // Radio button down state border color.
-                                                              RGBA(231, 230, 229),  // Selected radio button primary color.
-                                                              RGBA(242, 241, 240),  // Selected radio button hover state primary color.
-                                                              RGBA(255, 255, 255),  // Selected radio button down state primary color.
-                                                              RGBA(64, 62, 65),     // Selected radio button secondary color.
-                                                              RGBA(64, 62, 65),     // Selected radio button hover state secondary color.
-                                                              RGBA(64, 62, 65),     // Selected radio button down state secondary color.
-                                                              RGBA(114, 112, 114),  // Selected radio button border color.
-                                                              RGBA(114, 112, 114),  // Selected radio button hover state border color.
-                                                              RGBA(114, 112, 114)); // Selected radio button down state border color.
-
-                g_pUIElements->colors.updateEditboxColors(RGBA(64, 62, 65),     // Editbox color.
-                                                          RGBA(64, 62, 65),     // Editbox border default color.
-                                                          RGBA(114, 112, 114)); // Editbox border selected color.
-
-                g_pUIElements->colors.updateDDLComboboxColors(RGBA(64, 62, 65),     // DDL combobox color.
-                                                              RGBA(64, 62, 65),     // DDL combobox border color.
-                                                              RGBA(64, 62, 65),     // DDL combobox default item background color.
-                                                              RGBA(74, 72, 75),     // DDL combobox selected item background color.
-                                                              RGBA(114, 112, 114),  // DDL combobox drop-down list window border color.
-                                                              RGBA(237, 237, 235),  // DDL combobox default item text color.
-                                                              RGBA(225, 216, 102)); // DDL combobox selected item text color.
-
-                g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
-                                                                  *g_pUIElements->images.pCrossWhite,  // Close button hover image.
-                                                                  *g_pUIElements->images.pCrossWhite,  // Close button down image.
-                                                                  *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
-                                                                  *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
-                                                                  *g_pUIElements->images.pMinusWhite); // Minimize button down image.
-
-                // Update standard button class.
-                MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.standardButtonDefault,
-                        &g_pUIElements->colors.standardButtonHover,
-                        &g_pUIElements->colors.standardButtonDown,
-                        &g_pUIElements->colors.standardButtonBorderDefault,
-                        &g_pUIElements->colors.standardButtonBorderHover,
-                        &g_pUIElements->colors.standardButtonBorderDown,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.textHighlight,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.button};
-                if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
-                    return false;
-
-                // Update image button class.
-                MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.focus // Image button focus color.
-                    };
-                if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
-                    return false;
-
-                // Update radio button class.
-                MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.radioButtonPrimaryDefault,
-                        &g_pUIElements->colors.radioButtonPrimaryHover,
-                        &g_pUIElements->colors.radioButtonPrimaryDown,
-                        &g_pUIElements->colors.radioButtonSecondaryDefault,
-                        &g_pUIElements->colors.radioButtonSecondaryHover,
-                        &g_pUIElements->colors.radioButtonSecondaryDown,
-                        &g_pUIElements->colors.radioButtonBorderDefault,
-                        &g_pUIElements->colors.radioButtonBorderHover,
-                        &g_pUIElements->colors.radioButtonBorderDown,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
-                        &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
-                        &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
-                        &g_pUIElements->colors.selectedRadioButtonBorderDefault,
-                        &g_pUIElements->colors.selectedRadioButtonBorderHover,
-                        &g_pUIElements->colors.selectedRadioButtonBorderDown,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.textHighlight,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.button};
-                if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
-                    return false;
-
-                // Update ddl combobox class.
-                MyDDLComboboxSharedPropertiesConfig MyDDLComboboxSharedPropertiesConfig =
-                    {
-                        &g_pUIElements->colors.ddlCombobox,
-                        &g_pUIElements->colors.ddlComboboxBorder,
-                        &g_pUIElements->colors.ddlComboboxItemBackground,
-                        &g_pUIElements->colors.ddlComboboxSelectedItemBackground,
-                        &g_pUIElements->colors.ddlComboboxDropdownlistBorder,
-                        &g_pUIElements->colors.textActive,
-                        &g_pUIElements->colors.background,
-                        &g_pUIElements->colors.focus,
-                        &g_pUIElements->fonts.ddlCombobox};
-                if (!MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig))
-                    return false;
-
-                // Update global variables.
-                g_CurrentAppTheme = MyTheme::Monokai;
-                g_IsCurrentThemeWantScrollbarsVisible = false;
-                ThemeStr = L"Monokai";
-                break;
-            }
-            }
-
-            // Update application containers.
-            if (!isFirstCall)
-                UpdateContainers(g_CurrentAppTheme);
-
-            if (!isFirstCall)
-                WriteLogEx(L"Application theme changed: ", (L"\"" + ThemeStr + L"\"").c_str(), MyLogType::Info, 1);
-            else
-                WriteLogEx(L"Default application theme: ", (L"\"" + ThemeStr + L"\"").c_str(), MyLogType::Info, 1);
             return true;
         }
     }
@@ -2506,177 +2633,6 @@ namespace nApp
     namespace Window
     {
         /**
-         * @brief Functions related to window and window component creation.
-         */
-        namespace Creation
-        {
-            /**
-             * @brief Create a font object for the specified font handle (HFONT).
-             *
-             * @param hFont       Reference to the font handle.
-             * @param FontName    Font name.
-             * @param FontSize    Font size.
-             * @param FontWeight  Font weight  (default: FW_DONTCARE).
-             * @param FontQuality Font quality (default: DEFAULT_QUALITY).
-             */
-            void CreateMyFont(HFONT &hFont, std::wstring FontName, INT FontSize, INT FontWeight /* = FW_DONTCARE*/, DWORD FontQuality /* = DEFAULT_QUALITY*/)
-            {
-                hFont = CreateFontW(FontSize, 0, 0, 0x1,
-                                    FontWeight, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                                    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, FontQuality,
-                                    DEFAULT_PITCH | FF_DONTCARE, (LPCWSTR)FontName.c_str());
-            }
-
-            /**
-             * @brief Create a horizontal standalone scrollbar.
-             *
-             * @param hInstance         Handle to an instance.
-             * @param hParent           Handle to the scrollbar Parent.
-             * @param Identifier        Scrollbar id.
-             * @param ScrollbarHeight   Scroll bar height.
-             * @param ParentBorderWidth Parent border width (Specify only if the Parent's border is in the client area).
-             * @param UseCustomXYW      Flag indicating whether to use custom scrollbar position (PosX, PosY) and width (ScrollbarWidth). If false, ParentBorderWidth will be used.
-             * @param cPosX             Custom PosX (Horizontal relative position).
-             * @param cPosY             Custom PosY (Vertical relative position).
-             * @param ScrollbarWidth    Custom scrollbar width.
-             *
-             * @return Returns the window handle of the created scrollbar.
-             */
-            HWND CreateHorizontalScrollbar(HINSTANCE hInstance, HWND hParent, HMENU Identifier, INT ScrollbarHeight, UINT ParentBorderWidth = 0, bool UseCustomXYW = false, INT cPosX = 0, INT cPosY = 0, INT ScrollbarWidth = 0)
-            {
-                RECT RECT_Parent;
-                if (!GetClientRect(hParent, &RECT_Parent))
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to retrieve the window Parent client rect.\n\n");
-                    error_message.append(L"NAMESPACE: nSol\n");
-                    error_message.append(L"FUNC: CreateHorizontalScrollbar()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    return NULL;
-                }
-
-                INT PosX, PosY, Width, Height;
-                if (!UseCustomXYW)
-                {
-                    PosX = RECT_Parent.left + ParentBorderWidth;
-                    PosY = RECT_Parent.bottom - ParentBorderWidth - ScrollbarHeight;
-                    Width = RECT_Parent.right - (ParentBorderWidth * 2);
-                    Height = ScrollbarHeight;
-                }
-                else
-                {
-                    PosX = cPosX;
-                    PosY = cPosY;
-                    Width = ScrollbarWidth;
-                    Height = ScrollbarHeight;
-                }
-
-                return (CreateWindowExW(NULL, L"SCROLLBAR", NULL,
-                                        WS_CHILD | /*WS_VISIBLE |*/ SBS_VERT,
-                                        PosX, PosY,
-                                        Width, Height,
-                                        hParent, Identifier, hInstance, NULL));
-            }
-
-            /**
-             * @brief Create a vertical standalone scrollbar.
-             *
-             * @param hInstance         Handle to an instance.
-             * @param hParent           Handle to the scrollbar Parent.
-             * @param Identifier        Scrollbar id.
-             * @param ScrollbarWidth    Scrollbar width.
-             * @param PosY              Vertical position of the scrollbar.
-             * @param ParentBorderWidth Parent border width (Specify only if the Parent's border is in the client area).
-             * @param UseCustomXYH      Flag indicating whether to use custom scrollbar position (PosX, PosY) and height (ScrollbarHeight). If false, ParentBorderWidth will be used.
-             * @param cPosX             Custom PosX (Horizontal relative position).
-             * @param cPosY             Custom PosY (Vertical relative position).
-             * @param ScrollbarHeight   Custom scrollbar height.
-             *
-             * @return Returns the window handle of the created scrollbar.
-             */
-            HWND CreateVerticalScrollbar(HINSTANCE hInstance, HWND hParent, HMENU Identifier, INT ScrollbarWidth, INT PosY = 0, UINT ParentBorderWidth = 0, bool UseCustomXYH = false, INT cPosX = 0, INT cPosY = 0, INT ScrollbarHeight = 0)
-            {
-                RECT RECT_Parent;
-                if (!GetClientRect(hParent, &RECT_Parent))
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to retrieve the window Parent client rect.\n\n");
-                    error_message.append(L"NAMESPACE: nSol\n");
-                    error_message.append(L"FUNC: CreateVerticalScrollbar()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    return NULL;
-                }
-
-                INT PosX, Width, Height;
-                if (!UseCustomXYH)
-                {
-                    PosX = RECT_Parent.right - ScrollbarWidth - ParentBorderWidth;
-                    Width = ScrollbarWidth;
-                    Height = RECT_Parent.bottom - WINDOW_BORDER_DEFAULTWIDTH - PosY;
-                }
-                else
-                {
-                    PosX = cPosX;
-                    PosY = cPosY;
-                    Width = ScrollbarWidth;
-                    Height = ScrollbarHeight;
-                }
-
-                return (CreateWindowExW(0, L"SCROLLBAR", NULL,
-                                        WS_CHILD | /*WS_VISIBLE |*/ SBS_VERT,
-                                        PosX, PosY,
-                                        Width, Height,
-                                        hParent, Identifier, hInstance, NULL));
-            }
-
-            /**
-             * @brief Create an edit control with borders.
-             * @brief This function creates an edit control by using two window handles: a static hwnd and an actual edit hwnd.
-             * @brief The static hwnd is used to handle the WM_CTLCOLORSTATIC message for drawing the border of the edit control.
-             *
-             * @param PosX            Horizontal relative position of the edit control.
-             * @param PosY            Vertical relative position of the edit control.
-             * @param Width           Width of the edit control.
-             * @param Height          Height of the edit control.
-             * @param Parent          Parent window handle for the edit control.
-             * @param hWnd_Static     Reference to the window handle that will hold the static hwnd.
-             * @param hWnd_Edit       Reference to the window handle that will hold the edit hwnd.
-             * @param Static_Styles   Window styles for the static hwnd (DEFAULT: WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT).
-             * @param Edit_Styles     Window styles for the edit hwnd (DEFAULT: WS_VISIBLE | WS_CHILD | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN).
-             * @param Static_ID       Static hwnd id.
-             * @param Edit_ID         Edit hwnd id.
-             * @param Static_ExStyles Extended window styles for the static hwnd (DEFAULT: NULL).
-             * @param Edit_ExStyles   Extended window styles for the edit hwnd (DEFAULT: NULL).
-             *
-             * @return Returns true if the edit control is successfully created.
-             */
-            bool CreateEditControl(UINT PosX, UINT PosY, UINT Width, UINT Height,
-                                   HWND &Parent, HWND &hWnd_Static, HWND &hWnd_Edit,
-                                   LONG Static_Styles = WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                   LONG Edit_Styles = WS_VISIBLE | WS_CHILD | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
-                                   HMENU Static_ID = NULL, HMENU Edit_ID = NULL,
-                                   LONG Static_ExStyles = NULL, LONG Edit_ExStyles = NULL)
-            {
-                hWnd_Static = CreateWindowExW(Static_ExStyles, L"STATIC", L"",
-                                              Static_Styles,
-                                              PosX,
-                                              PosY, Width, Height, Parent, Static_ID, NULL, NULL);
-
-                hWnd_Edit = CreateWindowExW(Edit_ExStyles, L"EDIT", L"",
-                                            Edit_Styles,
-                                            PosX + 2,
-                                            PosY + 2,
-                                            Width - 4, Height - 4, Parent, Edit_ID, NULL, NULL);
-
-                if (!hWnd_Static || !hWnd_Edit)
-                    return false;
-                return true;
-            }
-        }
-
-        /**
          * @brief Functions related to WinAPI utility.
          */
         namespace Utility
@@ -2685,29 +2641,34 @@ namespace nApp
              * @brief Remove a specific window style from a window.
              *
              * @param hWnd  Handle to the target window (HWND).
-             * @param Style The window style to be removed.
+             * @param style The window style to be removed.
              */
-            void RemoveWindowStyle(HWND hWnd, LONG Style)
+            bool RemoveWindowStyle(HWND hWnd, LONG style)
             {
-                DWORD dwStyle = GetClassLongW(hWnd, GCL_STYLE);
-                dwStyle &= ~Style;
-                SetClassLongW(hWnd, GCL_STYLE, dwStyle);
+                DWORD new_style = GetClassLongW(hWnd, GCL_STYLE);
+                if (!new_style)
+                    return false;
+
+                new_style &= ~style;
+                SetClassLongW(hWnd, GCL_STYLE, new_style);
+
+                return true;
             }
 
             /**
              * @brief Callback function for setting the font on child windows.
              *
-             * @param hWnd_Child Handle to the child window.
-             * @param hFont      Font handle passed as a LPARAM.
+             * @param hWndChild Handle to the child window.
+             * @param hFont     Font handle passed as a LPARAM.
              *
              * @return Returns true if the font handle is valid and the font is set successfully on the child window.
              */
-            bool CALLBACK SetFontOnChild(HWND hWnd_Child, LPARAM hFont)
+            bool CALLBACK SetFontOnChild(HWND hWndChild, LPARAM hFont)
             {
                 if (!reinterpret_cast<HFONT>(hFont))
                     return false;
 
-                SendMessageW(hWnd_Child, WM_SETFONT, hFont, TRUE);
+                SendMessageW(hWndChild, WM_SETFONT, hFont, TRUE);
 
                 return true;
             }
@@ -2727,14 +2688,7 @@ namespace nApp
 
                 if (!GetWindowPlacement(hWnd, &placement))
                 {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to retrieve the window placement struct.\n\n");
-                    error_message.append(L"NAMESPACE: nApp::Window::Utility\n");
-                    error_message.append(L"FUNC: IsWindowMaximized()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
                     WriteLog(L"Failed to retrieve the window placement struct.", L" [NAMESPACE: \"nApp::Window::Utility\" | FUNC: \"IsWindowMaximized()\"]", MyLogType::Error);
-
                     return false;
                 }
 
@@ -2761,14 +2715,7 @@ namespace nApp
                 monitor_info.cbSize = sizeof(monitor_info);
                 if (!GetMonitorInfoW(monitor, &monitor_info))
                 {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to retrieve the monitor info.\n\n");
-                    error_message.append(L"NAMESPACE: nApp::Window::Utility\n");
-                    error_message.append(L"FUNC: AdjustMaximizedClientRect()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
                     WriteLog(L"Failed to retrieve the monitor info.", L" [NAMESPACE: \"nApp::Window::Utility\" | FUNC: \"AdjustMaximizedClientRect()\"]", MyLogType::Error);
-
                     return;
                 }
 
@@ -2792,165 +2739,130 @@ namespace nApp
              */
             bool InitBegin(HWND hWnd, HINSTANCE hInstance)
             {
-                // Retrieve the current windows version.
-                auto module_ntdll = GetModuleHandleW(L"ntdll.dll");
-                auto rtl_get_version_number = reinterpret_cast<void(WINAPI *)(LPDWORD major, LPDWORD minor, LPDWORD build)>(GetProcAddress(module_ntdll, "RtlGetNtVersionNumbers"));
-                if (!rtl_get_version_number)
+                bool are_all_operation_success = false;
+                std::wstring error_message = L"";
+                while (!are_all_operation_success)
                 {
-                    WriteLog(L"Failed to retrieve the windows version.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
-                    return false;
-                }
-                rtl_get_version_number(&g_WindowsMajorVersion, &g_WindowsMinorVersion, &g_WindowsBuildNumber);
-                g_WindowsBuildNumber &= ~0xF0000000;
-                WriteLog(L"Windows version: ", (L"\"" + std::to_wstring(g_WindowsMajorVersion) + L"." + std::to_wstring(g_WindowsMinorVersion) + L"." + std::to_wstring(g_WindowsBuildNumber) + L" Build " + std::to_wstring(g_WindowsBuildNumber) + L"\"").c_str(), MyLogType::Debug);
-                if (g_WindowsBuildNumber >= 22000)
-                    g_IsWindows11BorderAttributeSupported = true;
+                    // Retrieve the current windows version.
+                    auto module_ntdll = GetModuleHandleW(L"ntdll.dll");
+                    auto rtl_get_version_number = reinterpret_cast<void(WINAPI *)(LPDWORD major, LPDWORD minor, LPDWORD build)>(GetProcAddress(module_ntdll, "RtlGetNtVersionNumbers"));
+                    if (!rtl_get_version_number)
+                    {
+                        error_message = L"Failed to retrieve the windows version.";
+                        break;
+                    }
+                    rtl_get_version_number(&g_WindowsMajorVersion, &g_WindowsMinorVersion, &g_WindowsBuildNumber);
+                    g_WindowsBuildNumber &= ~0xF0000000;
+                    WriteLog(L"Windows version: ", (L"\"" + std::to_wstring(g_WindowsMajorVersion) + L"." + std::to_wstring(g_WindowsMinorVersion) + L"." + std::to_wstring(g_WindowsBuildNumber) + L" Build " + std::to_wstring(g_WindowsBuildNumber) + L"\"").c_str(), MyLogType::Debug);
+                    if (g_WindowsBuildNumber >= 22000)
+                        g_IsWindows11BorderAttributeSupported = true;
 
-                // Initialize DarkMode API.
-                WriteLog(L"Initializing DarkMode API ...", L"", MyLogType::Debug);
-                if (!nApp::API::InitDarkModeAPI(hWnd))
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to initialize DarkMode API.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to initialize DarkMode API.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
-                    return false;
-                }
-                else
+                    // Initialize DarkMode API.
+                    WriteLog(L"Initializing DarkMode API ...", L"", MyLogType::Debug);
+                    if (!nApp::API::InitDarkModeAPI(hWnd))
+                    {
+                        error_message = L"Failed to initialize DarkMode API.";
+                        break;
+                    }
                     WriteLog(L"DarkMode API initialized.", L"", MyLogType::Debug);
 
-                // Initialize GDI Animation & GDI+ APIs.
-                WriteLog(L"Initializing GDI Animation & GDI+ APIs ...", L"", MyLogType::Debug);
-                if (!nApp::API::InitGraphicAPI(&g_APIGDIToken, &g_APIGDIStartupInput))
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to initialize GDI Animation & GDI+ APIs.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to initialize GDI Animation & GDI+ APIs.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
-                    return false;
-                }
-                else
+                    // Initialize GDI Animation & GDI+ APIs.
+                    WriteLog(L"Initializing GDI Animation & GDI+ APIs ...", L"", MyLogType::Debug);
+                    if (!nApp::API::InitGraphicAPI(&g_APIGDIToken, &g_APIGDIStartupInput))
+                    {
+                        error_message = L"Failed to initialize GDI Animation & GDI+ APIs.";
+                        break;
+                    }
                     WriteLog(L"GDI Animation & GDI+ APIs initialized.", L"", MyLogType::Debug);
 
-                // Initialize the Windows Animation Manager API.
-                WriteLog(L"Initializing Windows Animation Manager API ...", L"", MyLogType::Debug);
-                if (!nApp::API::InitWindowsAnimationManager())
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to initialize Windows Animation Manager API.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to initialize Windows Animation Manager API.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
-                    return false;
-                }
-                else
+                    // Initialize the Windows Animation Manager API.
+                    WriteLog(L"Initializing Windows Animation Manager API ...", L"", MyLogType::Debug);
+                    if (!nApp::API::InitWindowsAnimationManager())
+                    {
+                        error_message = L"Failed to initialize Windows Animation Manager API.";
+                        break;
+                    }
                     WriteLog(L"Windows Animation Manager API initialized.", L"", MyLogType::Debug);
 
-                // Initialize animation subclass classes.
-                MyStandardButtonInitializeConfig MyStandardButtonInitializeConfig =
+                    // Initialize my subclass classes.
+                    WriteLog(L"Initializing subclass classes ...", L"", MyLogType::Debug);
+                    MyStandardButtonInitializeConfig initialize_config_mystandardbutton =
+                        {
+                            &g_KeyToggleENTER,
+                            &g_pAnimationManager,
+                            &g_pAnimationTimer,
+                            &g_pTransitionLibrary};
+                    MyImageButtonInitializeConfig initialize_config_myimagebutton =
+                        {
+                            &g_KeyToggleENTER,
+                            &g_pAnimationManager,
+                            &g_pAnimationTimer,
+                            &g_pTransitionLibrary};
+                    MyRadioButtonInitializeConfig initialize_config_myradiobutton =
+                        {
+                            &g_KeyToggleENTER,
+                            &g_pAnimationManager,
+                            &g_pAnimationTimer,
+                            &g_pTransitionLibrary};
+                    MyEditInitializeConfig initialize_config_myedit =
+                        {
+                            &g_KeyToggleENTER,
+                            &g_hWnd};
+                    if (!MyStandardButton::initialize(initialize_config_mystandardbutton) ||
+                        !MyImageButton::initialize(initialize_config_myimagebutton) ||
+                        !MyRadioButton::initialize(initialize_config_myradiobutton) ||
+                        !MyEdit::initialize(initialize_config_myedit))
                     {
-                        &g_KeyToggleENTER,
-                        &g_pAnimationManager,
-                        &g_pAnimationTimer,
-                        &g_pTransitionLibrary};
-                MyImageButtonInitializeConfig MyImageButtonInitializeConfig =
-                    {
-                        &g_KeyToggleENTER,
-                        &g_pAnimationManager,
-                        &g_pAnimationTimer,
-                        &g_pTransitionLibrary};
-                MyRadioButtonInitializeConfig MyRadioButtonInitializeConfig =
-                    {
-                        &g_KeyToggleENTER,
-                        &g_pAnimationManager,
-                        &g_pAnimationTimer,
-                        &g_pTransitionLibrary};
-                MyEditInitializeConfig MyEdit_InitializeConfig =
-                    {
-                        &g_KeyToggleENTER,
-                        &g_hWnd};
-                if (!MyStandardButton::initialize(MyStandardButtonInitializeConfig) ||
-                    !MyImageButton::initialize(MyImageButtonInitializeConfig) ||
-                    !MyRadioButton::initialize(MyRadioButtonInitializeConfig) ||
-                    !MyEdit::initialize(MyEdit_InitializeConfig))
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to initialize animation subclass classes.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to initialize animation subclass classes.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
+                        error_message = L"Failed to initialize subclass classes.";
+                        break;
+                    }
+                    WriteLog(L"Subclass classes initialized.", L"", MyLogType::Debug);
 
-                    return false;
-                }
-                else
-                    WriteLog(L"Animation subclass classes initialized.", L"", MyLogType::Debug);
+                    // Initialize global objects.
+                    WriteLog(L"Initializing global objects ...", L"", MyLogType::Debug);
+                    g_pUIElements = new UIElements();
+                    g_ContainerMainContent = new MyContainer(WINDOW_CONTAINER_DEFAULTPADDING, false, WINDOW_CONTAINER_DEFAULTPADDING, true);
+                    if (!g_pUIElements || !g_ContainerMainContent)
+                    {
+                        error_message = L"Failed to initialize global objects.";
+                        break;
+                    }
+                    WriteLog(L"Global objects initialized.", L"", MyLogType::Debug);
 
-                // Extends the window frames into the client area (enabling the window drop-shadow effect).
-                MARGINS borders = {1, 1, 1, 1};
-                HRESULT hr = DwmExtendFrameIntoClientArea(hWnd, &borders);
-                if (FAILED(hr))
-                {
-                    _com_error COMError(hr);
-                    std::wstring error_message = L"";
-                    std::wstring COMErrorMessage = COMError.ErrorMessage();
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to extend the window frames into the client area.\n");
-                    error_message.append(L"Error message (COM): " + COMErrorMessage + L"\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to extend the window frames into the client area.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
-                    return false;
-                }
-                else
+                    // Extends the window frames into the client area (enabling the window drop-shadow effect).
+                    MARGINS borders = {1, 1, 1, 1};
+                    HRESULT hr = DwmExtendFrameIntoClientArea(hWnd, &borders);
+                    if (FAILED(hr))
+                    {
+                        error_message = L"Failed to extend the window frames into the client area.";
+                        break;
+                    }
                     WriteLog(L"Extended the window frames into client area (MARGINS: 1,1,1,1).", L"", MyLogType::Debug);
 
-                hr = DwmEnableMMCSS(TRUE);
-                if (FAILED(hr))
-                    return false;
+                    // Enable the DWM MCSS.
+                    hr = DwmEnableMMCSS(TRUE);
+                    if (FAILED(hr))
+                    {
+                        error_message = L"Failed to enable the DWM MCSS.";
+                        break;
+                    }
 
-                // Set the minimum resolution for periodic timers to increase the precision of application timers (WM_TIMER).
-                if (timeBeginPeriod(15) != TIMERR_NOERROR)
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to set minimum resolution for periodic timers.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to set minimum resolution for periodic timers.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
-                    return false;
-                }
-                else
+                    // Set the minimum resolution for periodic timers to increase the precision of application timers (WM_TIMER).
+                    if (timeBeginPeriod(15) != TIMERR_NOERROR)
+                    {
+                        error_message = L"Failed to set minimum resolution for periodic timers.";
+                        break;
+                    }
                     WriteLog(L"Minimum resolution for periodic timers sets (15).", L"", MyLogType::Debug);
 
-                // Initialize global objects.
-                WriteLog(L"Initializing global objects ...", L"", MyLogType::Debug);
-                g_pUIElements = new UIElements();
-                g_ContainerMainContent = new MyContainer(WINDOW_CONTAINER_DEFAULTPADDING, false, WINDOW_CONTAINER_DEFAULTPADDING, true);
-                if (!g_pUIElements || !g_ContainerMainContent)
+                    are_all_operation_success = true;
+                }
+
+                if (!are_all_operation_success)
                 {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to initialize global objects.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitBegin()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to initialize global objects.", L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
+                    WriteLog(error_message, L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitBegin()\"]", MyLogType::Error);
                     return false;
                 }
-                else
-                    WriteLog(L"Global objects initialized.", L"", MyLogType::Debug);
 
                 return true;
             }
@@ -2964,15 +2876,9 @@ namespace nApp
              */
             bool InitTheme(HWND hWnd)
             {
-                if (!Theme::SetAppTheme(g_CurrentAppTheme, true))
+                if (!Theme::SetAppTheme(g_CurrentAppTheme))
                 {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to initialize application theme.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Initialization\"\n");
-                    error_message.append(L"FUNC: InitTheme()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to initialize application theme", L" [NAMESPACE: \"nApp::Window::Initialization\" | \"FUNC: InitTheme()\"]", MyLogType::Error);
+                    WriteLog(L"Failed to initialize application theme.", L" [NAMESPACE: \"nApp::Window::Initialization\" | \"FUNC: InitTheme()\"]", MyLogType::Error);
                     return false;
                 }
 
@@ -2980,317 +2886,373 @@ namespace nApp
             }
 
             /**
-             * @brief Create application window objects.
+             * @brief Create application windows.
              *
              * @param hWnd      Handle to the main application window (HWND).
              * @param hInstance Handle to the main application instance (HINSTANCE).
              *
-             * @return Returns true if all the window objects are successfully created. Otherwise, returns false.
+             * @return Returns true if all the windows are successfully created. Otherwise, returns false.
              */
             bool InitControl(HWND hWnd, HINSTANCE hInstance)
             {
-                /// Non-client windows:
+                // Create non-client windows of the main window.
+                // Such as the title, minimize, maximize, and close buttons.
                 {
-                    // Close button
-                    MyWindow *pButton_Close = new MyWindow(true);
-                    MyImageButtonNonSharedPropertiesConfig Button_Close_NonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->images.pNonClientCloseButtonDefault,
-                            &g_pUIElements->images.pNonClientCloseButtonHover,
-                            &g_pUIElements->images.pNonClientCloseButtonDown,
-                            &g_pUIElements->colors.captionBackground,
-                            &g_pUIElements->colors.closeButtonBackgroundOnHover,
-                            &g_pUIElements->colors.closeButtonBackgroundOnDown,
-                            0, 0, 20, 20, true, false, true};
-                    if (!pButton_Close->createImageButton(hWnd, L"", false, true, Button_Close_NonSharedPropertiesConfig,
-                                                          0, 0, 58, 37, (HMENU)IDC_NONCLIENT_CLOSE_BUTTON))
-                        return false;
-                    g_VectorNonClientWindows.push_back(pButton_Close);
-                    g_pUIElements->miscs.hWndNonClientCloseButton = pButton_Close->hWnd;
-
-                    // Minimize button
-                    MyWindow *pButton_Minimize = new MyWindow(true);
-                    MyImageButtonNonSharedPropertiesConfig Button_Minimize_NonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->images.pNonClientMinimizeButtonDefault,
-                            &g_pUIElements->images.pNonClientMinimizeButtonHover,
-                            &g_pUIElements->images.pNonClientMinimizeButtonDown,
-                            &g_pUIElements->colors.captionBackground,
-                            &g_pUIElements->colors.minimizeButtonBackgroundOnHover,
-                            &g_pUIElements->colors.minimizeButtonBackgroundOnDown,
-                            0, 0, 20, 20, true, false, true};
-                    if (!pButton_Minimize->createImageButton(hWnd, L"", false, true, Button_Minimize_NonSharedPropertiesConfig,
-                                                             0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MINIMIZE_BUTTON))
-                        return false;
-                    g_VectorNonClientWindows.push_back(pButton_Minimize);
-                    g_pUIElements->miscs.hWndNonClientMinimizeButton = pButton_Minimize->hWnd;
-
-                    // Window title
-                    size_t TextLength_AppTitle = static_cast<size_t>(GetWindowTextLengthW(hWnd)) + static_cast<size_t>(1);
-                    WCHAR *TextBuffer_AppTitle = new WCHAR[TextLength_AppTitle];
-                    GetWindowTextW(hWnd, TextBuffer_AppTitle, static_cast<INT>(TextLength_AppTitle));
-                    MyWindow *pText_CaptionTitle = new MyWindow();
-                    pText_CaptionTitle->hWnd = CreateWindowExW(NULL, L"STATIC", TextBuffer_AppTitle, WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                               WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23, hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
-                    g_VectorNonClientWindows.push_back(pText_CaptionTitle);
-                    delete[] TextBuffer_AppTitle;
-                }
-
-                /// Client windows:
-
-                // Container: MainContent
-                {
-                    // Create the container.
-                    if (!g_ContainerMainContent->createContainerWindow(hWnd, false, &WindowProcedure_Container_MainContent,
-                                                                        WINDOW_BORDER_DEFAULTWIDTH, WINDOW_BORDER_DEFAULTWIDTH + WINDOW_CAPTIONBAR_DEFAULTHEIGHT,
-                                                                        0, 0, (HMENU)IDC_MAINCONTENT_CONTAINER))
-                        return false;
-
-                    MyWindow *pContainer_MainContent = g_ContainerMainContent->getContainerWindow();
-
-                    // Create container contents.
+                    bool are_all_operation_success = false;
+                    std::wstring error_message = L"";
+                    while (!are_all_operation_success)
                     {
-                        // Static text (Sample buttons:)
-                        MyWindow *pText_SampleButtons = new MyWindow(false);
-                        pText_SampleButtons->hWnd = CreateWindowExW(NULL, L"STATIC", L"Sample buttons:",
-                                                                    WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                    g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                    477, 26, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_SampleButtons, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pText_SampleButtons->hWnd); /// End container line 1.
-
-                        // Standard button
-                        MyWindow *pButton_Standard = new MyWindow(true);
-                        if (!pButton_Standard->createStandardButton(pContainer_MainContent->hWnd, L"Standard", true, true,
-                                                                    g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1), 130, 40, (HMENU)503))
-                            return false;
-
-                        g_ContainerMainContent->addWindow(pButton_Standard, true);
-
-                        // Radio Test: First button
-                        MyWindow *pButton_Radio_Test_First = new MyWindow(true);
-                        if (!pButton_Radio_Test_First->createRadioButton(g_ContainerMainContent->pContainerWindow->hWnd, L"First", true, true,
-                                                                         g_ContainerMainContent->getInitiateWindowPosition(0) + 140, g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                         86, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_FIRST_BUTTON))
-                            return false;
-                        if (!SampleRadio.addRadioButton(pButton_Radio_Test_First))
-                            return false;
-                        g_ContainerMainContent->addWindow(pButton_Radio_Test_First, true);
-
-                        // Radio Test: Second button
-                        MyWindow *pButton_Radio_Test_Second = new MyWindow(true);
-                        if (!pButton_Radio_Test_Second->createRadioButton(g_ContainerMainContent->pContainerWindow->hWnd, L"Second", true, true,
-                                                                          g_ContainerMainContent->getInitiateWindowPosition(0) + 232, g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                          110, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_SECOND_BUTTON))
-                            return false;
-                        if (!SampleRadio.addRadioButton(pButton_Radio_Test_Second))
-                            return false;
-                        g_ContainerMainContent->addWindow(pButton_Radio_Test_Second, true);
-
-                        // Radio Test: Third button
-                        MyWindow *pButton_Radio_Test_Third = new MyWindow(true);
-                        if (!pButton_Radio_Test_Third->createRadioButton(g_ContainerMainContent->pContainerWindow->hWnd, L"Third", true, true,
-                                                                         g_ContainerMainContent->getInitiateWindowPosition(0) + 346, g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                         92, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_THIRD_BUTTON))
-                            return false;
-                        if (!SampleRadio.addRadioButton(pButton_Radio_Test_Third))
-                            return false;
-                        g_ContainerMainContent->addWindow(pButton_Radio_Test_Third, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pButton_Standard->hWnd); /// End container line 2.
-
-                        // Static text (Sample editboxs:)
-                        MyWindow *pText_SampleEditboxs = new MyWindow(false);
-                        pText_SampleEditboxs->hWnd = CreateWindowExW(NULL, L"STATIC", L"Sample editboxs:",
-                                                                     WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                     g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                     477, 26, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_SampleEditboxs, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pText_SampleEditboxs->hWnd); /// End container line 3.
-
-                        // Standard editbox (Static text note)
-                        MyWindow *pText_StandardEditboxNote = new MyWindow(false);
-                        pText_StandardEditboxNote->hWnd = CreateWindowExW(NULL, L"STATIC", L"(Normal)",
-                                                                          WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                          g_ContainerMainContent->getInitiateWindowPosition(0) + 360, g_ContainerMainContent->getInitiateWindowPosition(1) + 5,
-                                                                          80, 22, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_StandardEditboxNote, true);
-
-                        // Standard editbox
-                        MyEditNonSharedPropertiesConfig pEdit_StandardEditbox_NonSharedPropertiesConfig =
+                        // Close button.
+                        MyWindow *p_imagebutton_close = new MyWindow(true);
+                        MyImageButtonNonSharedPropertiesConfig button_close_nonsharedpropertiesconfig =
                             {
-                                IDC_MAINCONTENT_STANDARDEDITBOX_STATIC,
-                                IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON,
-                                false};
-                        MyWindow *pEdit_StandardEditbox = new MyWindow(true);
-                        if (!pEdit_StandardEditbox->createEditbox(g_ContainerMainContent->pContainerWindow->hWnd, L"", true, true, pEdit_StandardEditbox_NonSharedPropertiesConfig, MyEditboxType::Singleline,
-                                                                  g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                  270, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_EDIT))
-                            return false;
-                        MyEdit *pSubclass_StandardEditbox = static_cast<MyEdit *>(pEdit_StandardEditbox->getSubclassPointer());
-                        g_ContainerMainContent->addWindow(pEdit_StandardEditbox, true);
-
-                        // Standard editbox submit button
-                        MyWindow *pButton_StandardEditbox = new MyWindow(true);
-                        if (!pButton_StandardEditbox->createStandardButton(pContainer_MainContent->hWnd, L"OK", true, true,
-                                                                           g_ContainerMainContent->getInitiateWindowPosition(0) + 280, g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                           70, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON))
-                            return false;
-                        g_ContainerMainContent->addWindow(pButton_StandardEditbox, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pSubclass_StandardEditbox->getStaticHandleRef()); /// End container line 4.
-
-                        // Password editbox (Static text note)
-                        MyWindow *pText_PasswordEditboxNote = new MyWindow(false);
-                        pText_PasswordEditboxNote->hWnd = CreateWindowExW(NULL, L"STATIC", L"(Password)",
-                                                                          WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                          g_ContainerMainContent->getInitiateWindowPosition(0) + 360, g_ContainerMainContent->getInitiateWindowPosition(1) + 5,
-                                                                          95, 22, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_PasswordEditboxNote, true);
-
-                        // Password editbox
-                        MyEditNonSharedPropertiesConfig pEdit_PasswordEditbox_NonSharedPropertiesConfig =
-                            {
-                                IDC_MAINCONTENT_PASSWORDEDITBOX_STATIC,
-                                IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON,
-                                false};
-                        MyWindow *pEdit_PasswordEditbox = new MyWindow(true);
-                        if (!pEdit_PasswordEditbox->createEditbox(g_ContainerMainContent->pContainerWindow->hWnd, L"", true, true, pEdit_PasswordEditbox_NonSharedPropertiesConfig, MyEditboxType::SinglelinePassword,
-                                                                  g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1), 270, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT))
-                            return false;
-                        g_ContainerMainContent->addWindow(pEdit_PasswordEditbox, true);
-                        MyEdit *pSubclass_PasswordEditbox = static_cast<MyEdit *>(pEdit_PasswordEditbox->getSubclassPointer());
-
-                        // Password editbox submit button
-                        MyWindow *pButton_PasswordEditbox = new MyWindow(true);
-                        if (!pButton_PasswordEditbox->createStandardButton(pContainer_MainContent->hWnd, L"OK", true, true,
-                                                                           g_ContainerMainContent->getInitiateWindowPosition(0) + 280, g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                           70, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON))
-                            return false;
-                        g_ContainerMainContent->addWindow(pButton_PasswordEditbox, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pSubclass_PasswordEditbox->getStaticHandleRef()); /// End container line 5.
-
-                        // Multiline editbox (Static text note)
-                        MyWindow *pText_MultilineEditboxNote = new MyWindow(false);
-                        pText_MultilineEditboxNote->hWnd = CreateWindowExW(NULL, L"STATIC", L"(Multiline)",
-                                                                           WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                           g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                           95, 22, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_MultilineEditboxNote, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pText_MultilineEditboxNote->hWnd); /// End container line 6.
-
-                        // Multiline editbox
-                        MyEditNonSharedPropertiesConfig pEdit_MultilineEditbox_NonSharedPropertiesConfig =
-                            {
-                                IDC_MAINCONTENT_MULTILINEEDITBOX_STATIC,
-                                NULL,
-                                false};
-                        MyWindow *pEdit_MultilineEditbox = new MyWindow(true);
-                        if (!pEdit_MultilineEditbox->createEditbox(g_ContainerMainContent->pContainerWindow->hWnd, L"", true, true, pEdit_MultilineEditbox_NonSharedPropertiesConfig, MyEditboxType::Multiline,
-                                                                   g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1), 478, 200, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT))
-                            return false;
-                        g_ContainerMainContent->addWindow(pEdit_MultilineEditbox, true);
-                        MyEdit *pSubclass_MultilineEditbox = static_cast<MyEdit *>(pEdit_MultilineEditbox->getSubclassPointer());
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pSubclass_MultilineEditbox->getStaticHandleRef()); /// End container line 7.
-
-                        // Multiline editbox clear button
-                        MyWindow *pButton_MultilineEditbox = new MyWindow(true);
-                        if (!pButton_MultilineEditbox->createStandardButton(pContainer_MainContent->hWnd, L"Clear", true, true,
-                                                                            g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1) - 5,
-                                                                            478, 33, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_BUTTON))
-                            return false;
-
-                        g_ContainerMainContent->addWindow(pButton_MultilineEditbox, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pButton_MultilineEditbox->hWnd); /// End container line 8.
-
-                        // Static text (Sample comboboxs:)
-                        MyWindow *pText_SampleComboboxes = new MyWindow(false);
-                        pText_SampleComboboxes->hWnd = CreateWindowExW(NULL, L"STATIC", L"Sample comboboxs:",
-                                                                       WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                       g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                       477, 26, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_SampleComboboxes, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pText_SampleComboboxes->hWnd); /// End container line 9.
-
-                        // Select theme combobox (Static text note)
-                        MyWindow *pText_SelectThemeComboboxNote = new MyWindow(false);
-                        pText_SelectThemeComboboxNote->hWnd = CreateWindowExW(NULL, L"STATIC", L"(Select theme)",
-                                                                              WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                              g_ContainerMainContent->getInitiateWindowPosition(0) + 130, g_ContainerMainContent->getInitiateWindowPosition(1) + 9,
-                                                                              127, 22, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_SelectThemeComboboxNote, true);
-
-                        // Select theme combobox
-                        MyWindow *pCombobox_SelectThemeCombobox = new MyWindow(true);
-                        if (!pCombobox_SelectThemeCombobox->createDDLCombobox(g_ContainerMainContent->pContainerWindow->hWnd, true, true,
-                                                                              g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                                              120, 40, (HMENU)IDC_MAINCONTENT_SELECTTHEME_COMBOBOX))
-                            return false;
-                        g_ContainerMainContent->addWindow(pCombobox_SelectThemeCombobox, true);
-
-                        g_ContainerMainContent->registerNewHorizontalLine(pCombobox_SelectThemeCombobox->hWnd); /// End container line 10.
-
-                        // Initialize combobox items (mwCombobox_SelectThemeCombobox).
+                                &g_pUIElements->images.pNonClientCloseButtonDefault,
+                                &g_pUIElements->images.pNonClientCloseButtonHover,
+                                &g_pUIElements->images.pNonClientCloseButtonDown,
+                                &g_pUIElements->colors.captionBackground,
+                                &g_pUIElements->colors.closeButtonBackgroundOnHover,
+                                &g_pUIElements->colors.closeButtonBackgroundOnDown,
+                                0, 0, 20, 20, true, false, true};
+                        if (!p_imagebutton_close->createImageButton(hWnd, L"", false, true, button_close_nonsharedpropertiesconfig,
+                                                               0, 0, 58, 37, (HMENU)IDC_NONCLIENT_CLOSE_BUTTON))
                         {
-                            const UINT total_items = 3;
-                            const UINT longest_item_textlength = 8; // Including null string.
-                            WCHAR item_array[total_items][longest_item_textlength] =
-                                {
-                                    TEXT("Light"), TEXT("Dark"), TEXT("Monokai")};
-                            WCHAR text_buffer[longest_item_textlength];
-                            memset(&text_buffer, 0, sizeof(text_buffer)); // Memset to ensure the buffer is clean.
-                            for (int i = 0; i < total_items; i++)         // Load items to the combobox.
-                            {
-                                wcscpy_s(text_buffer, sizeof(text_buffer) / sizeof(WCHAR), (WCHAR *)item_array[i]);
-                                SendMessageW(pCombobox_SelectThemeCombobox->hWnd, CB_ADDSTRING, 0, (LPARAM)text_buffer);
-                            }
-                            // Set default selected item.
-                            switch (g_CurrentAppTheme)
-                            {
-                            case MyTheme::Light:
-                                SendMessageW(pCombobox_SelectThemeCombobox->hWnd, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
-                                break;
-
-                            case MyTheme::Dark:
-                                SendMessageW(pCombobox_SelectThemeCombobox->hWnd, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
-                                break;
-
-                            case MyTheme::Monokai:
-                                SendMessageW(pCombobox_SelectThemeCombobox->hWnd, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
-                                break;
-                            }
+                            error_message = L"Failed to create the close button.";
+                            break;
                         }
+                        g_VectorNonClientWindows.push_back(p_imagebutton_close);
+                        g_pUIElements->miscs.hWndNonClientCloseButton = p_imagebutton_close->hWnd;
 
-                        // Static text (Test zone:)
-                        MyWindow *pText_TestZone = new MyWindow(false);
-                        pText_TestZone->hWnd = CreateWindowExW(NULL, L"STATIC", L"Test zone:",
-                                                               WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                               g_ContainerMainContent->getInitiateWindowPosition(0), g_ContainerMainContent->getInitiateWindowPosition(1),
-                                                               477, 26, g_ContainerMainContent->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_TESTZONE_STATIC, NULL, NULL);
-                        g_ContainerMainContent->addWindow(pText_TestZone, true);
+                        // Minimize button
+                        MyWindow *p_imagebutton_minimize = new MyWindow(true);
+                        MyImageButtonNonSharedPropertiesConfig button_minimize_nonsharedpropertiesconfig =
+                            {
+                                &g_pUIElements->images.pNonClientMinimizeButtonDefault,
+                                &g_pUIElements->images.pNonClientMinimizeButtonHover,
+                                &g_pUIElements->images.pNonClientMinimizeButtonDown,
+                                &g_pUIElements->colors.captionBackground,
+                                &g_pUIElements->colors.minimizeButtonBackgroundOnHover,
+                                &g_pUIElements->colors.minimizeButtonBackgroundOnDown,
+                                0, 0, 20, 20, true, false, true};
+                        if (!p_imagebutton_minimize->createImageButton(hWnd, L"", false, true, button_minimize_nonsharedpropertiesconfig,
+                                                                  0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MINIMIZE_BUTTON))
+                        {
+                            error_message = L"Failed to create the minimize button.";
+                            break;
+                        }
+                        g_VectorNonClientWindows.push_back(p_imagebutton_minimize);
+                        g_pUIElements->miscs.hWndNonClientMinimizeButton = p_imagebutton_minimize->hWnd;
 
-                        g_ContainerMainContent->registerNewHorizontalLine(pText_TestZone->hWnd); /// End container line 11.
+                        // Window title
+                        size_t text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
+                        WCHAR *text_buffer = new WCHAR[text_length];
+                        if (!GetWindowTextW(hWnd, text_buffer, text_length + 1) && text_length != NULL)
+                        {
+                            delete[] text_buffer;
+                            error_message = L"Failed to get the window title.";
+                            break;
+                        }
+                        MyWindow *p_textnormal_title = new MyWindow(false);
+                        p_textnormal_title->hWnd = CreateWindowExW(NULL, WC_STATIC, text_buffer, WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                             WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23,
+                                                             hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
+                        if (!p_textnormal_title->hWnd)
+                        {
+                            delete[] text_buffer;
+                            error_message = L"Failed to create the window title.";
+                            break;
+                        }
+                        SendMessageW(p_textnormal_title->hWnd, WM_SETFONT, (WPARAM)g_pUIElements->fonts.caption.getHFONT(), FALSE);
+                        g_VectorNonClientWindows.push_back(p_textnormal_title);
+                        delete[] text_buffer;
 
-                        // Create container vertical scrollbar.
-                        if (!g_ContainerMainContent->createVerticalScrollbarWindow(hWnd, false, 0, 0, WINDOW_SCROLLBAR_DEFAULTWIDTH, 0, (HMENU)IDC_MAINCONTENT_CONTAINER_SCROLLBAR))
-                            return false;
+                        are_all_operation_success = true;
+                    }
 
-                        // Set the scroll information for the container vertical scrollbar.
-                        if (!g_ContainerMainContent->setVerticalScrollInformations(false))
-                            return false;
+                    if (!are_all_operation_success)
+                    {
+                        WriteLog(error_message, L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitControl()\"]", MyLogType::Error);
+                        return false;
                     }
                 }
 
-                // Invalidate the containers.
-                if (!g_ContainerMainContent->invalidateCheck())
-                    return false; // continue here
+                // Create client windows.
+                // Container: MainContent
+                {
+                    bool are_all_operation_success = false;
+                    std::wstring error_message = L"";
+                    while (!are_all_operation_success)
+                    {
+                        MyContainer *p_container = g_ContainerMainContent;
+
+                        // Create the container window.
+                        if (!p_container->createContainerWindow(hWnd, false, &WindowProcedure_Container_MainContent,
+                                                                WINDOW_BORDER_DEFAULTWIDTH, WINDOW_BORDER_DEFAULTWIDTH + WINDOW_CAPTIONBAR_DEFAULTHEIGHT,
+                                                                0, 0, (HMENU)IDC_MAINCONTENT_CONTAINER))
+                        {
+                            error_message = L"Failed to create the container window.";
+                            break;
+                        }
+
+                        // Create container's contents.
+                        error_message = L"Failed to create the container's contents; an error occurred during the process.";
+                        {
+                            // Header text: "Sample buttons:"
+                            MyWindow *p_textheader_samplebuttons = new MyWindow(false);
+                            p_textheader_samplebuttons->hWnd = CreateWindowExW(NULL, WC_STATIC, L"Sample buttons:",
+                                                                         WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                         p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                         477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC, NULL, NULL);
+                            if (!p_textheader_samplebuttons->hWnd ||
+                                !p_container->addWindow(p_textheader_samplebuttons, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_textheader_samplebuttons->hWnd); /// End container line 1.
+
+                            // Standard button: "Standard"
+                            MyWindow *p_standardbutton_sample = new MyWindow(true);
+                            if (!p_standardbutton_sample->createStandardButton(p_container->pContainerWindow->hWnd, L"Standard", true, true,
+                                                                        p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 130, 40, (HMENU)503))
+                                break;
+                            if (!p_container->addWindow(p_standardbutton_sample, true))
+                                break;
+
+                            // Radio button: "First"
+                            MyWindow *p_radiobutton_sample_first = new MyWindow(true);
+                            if (!p_radiobutton_sample_first->createRadioButton(p_container->pContainerWindow->hWnd, L"First", true, true,
+                                                                             p_container->getInitiateWindowPosition(0) + 140, p_container->getInitiateWindowPosition(1),
+                                                                             86, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_FIRST_BUTTON))
+                                break;
+                            if (!SampleRadio.addRadioButton(p_radiobutton_sample_first) ||
+                                !p_container->addWindow(p_radiobutton_sample_first, true))
+                                break;
+
+                            // Radio button: "Second"
+                            MyWindow *p_radiobutton_sample_second = new MyWindow(true);
+                            if (!p_radiobutton_sample_second->createRadioButton(p_container->pContainerWindow->hWnd, L"Second", true, true,
+                                                                              p_container->getInitiateWindowPosition(0) + 232, p_container->getInitiateWindowPosition(1),
+                                                                              110, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_SECOND_BUTTON))
+                                break;
+                            if (!SampleRadio.addRadioButton(p_radiobutton_sample_second) ||
+                                !p_container->addWindow(p_radiobutton_sample_second, true))
+                                break;
+                            
+                            // Radio button: "Third"
+                            MyWindow *p_radiobutton_sample_third = new MyWindow(true);
+                            if (!p_radiobutton_sample_third->createRadioButton(p_container->pContainerWindow->hWnd, L"Third", true, true,
+                                                                             p_container->getInitiateWindowPosition(0) + 346, p_container->getInitiateWindowPosition(1),
+                                                                             92, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_THIRD_BUTTON))
+                                break;
+                            if (!SampleRadio.addRadioButton(p_radiobutton_sample_third) ||
+                                !p_container->addWindow(p_radiobutton_sample_third, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_standardbutton_sample->hWnd); /// End container line 2.
+
+                            // Header text: "Sample editboxs:"
+                            MyWindow *p_textheader_sampleeditboxes = new MyWindow(false);
+                            p_textheader_sampleeditboxes->hWnd = CreateWindowExW(NULL, WC_STATIC, L"Sample editboxs:",
+                                                                         WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                         p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                         477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC, NULL, NULL);
+                            if (!p_textheader_sampleeditboxes->hWnd ||
+                                !p_container->addWindow(p_textheader_sampleeditboxes, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_textheader_sampleeditboxes->hWnd); /// End container line 3.
+
+                            // Note text: "(Normal)"
+                            MyWindow *p_textnote_standardeditboxnote = new MyWindow(false);
+                            p_textnote_standardeditboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Normal)",
+                                                                              WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                              p_container->getInitiateWindowPosition(0) + 360, p_container->getInitiateWindowPosition(1) + 5,
+                                                                              80, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC, NULL, NULL);
+                            if (!p_textnote_standardeditboxnote->hWnd ||
+                                !p_container->addWindow(p_textnote_standardeditboxnote, true))
+                                break;
+
+                            // Sample standard editbox.
+                            MyEditNonSharedPropertiesConfig nonshared_config_editbox_standard =
+                                {
+                                    IDC_MAINCONTENT_STANDARDEDITBOX_STATIC,
+                                    IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON,
+                                    false
+                                };
+                            MyWindow *p_editbox_standard = new MyWindow(true);
+                            if (!p_editbox_standard->createEditbox(p_container->pContainerWindow->hWnd, L"", true, true, nonshared_config_editbox_standard, MyEditboxType::Singleline,
+                                                                      p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                      270, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
+                                break;
+                            MyEdit *p_subclass_editbox_standard = static_cast<MyEdit *>(p_editbox_standard->getSubclassPointer());
+                            if (!p_container->addWindow(p_editbox_standard, true))
+                                break;
+
+                            // Standard button: Sample standard editbox's submit button.
+                            MyWindow *p_button_standardeditboxsubmit = new MyWindow(true);
+                            if (!p_button_standardeditboxsubmit->createStandardButton(p_container->pContainerWindow->hWnd, L"OK", true, true,
+                                                                               p_container->getInitiateWindowPosition(0) + 280, p_container->getInitiateWindowPosition(1),
+                                                                               70, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON))
+                                break;
+                            if (!p_container->addWindow(p_button_standardeditboxsubmit, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_subclass_editbox_standard->getStaticHandleRef()); /// End container line 4.
+
+                            // Note text: "(Password)"
+                            MyWindow *p_textnote_passwordeditboxnote = new MyWindow(false);
+                            p_textnote_passwordeditboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Password)",
+                                                                              WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                              p_container->getInitiateWindowPosition(0) + 360, p_container->getInitiateWindowPosition(1) + 5,
+                                                                              95, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC, NULL, NULL);
+                            if (!p_textnote_passwordeditboxnote->hWnd ||
+                                !p_container->addWindow(p_textnote_passwordeditboxnote, true))
+                                break;
+
+                            // Sample password editbox.
+                            MyEditNonSharedPropertiesConfig nonshared_config_editbox_password =
+                                {
+                                    IDC_MAINCONTENT_PASSWORDEDITBOX_STATIC,
+                                    IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON,
+                                    false
+                                };
+                            MyWindow *p_editbox_password = new MyWindow(true);
+                            if (!p_editbox_password->createEditbox(p_container->pContainerWindow->hWnd, L"", true, true, nonshared_config_editbox_password, MyEditboxType::SinglelinePassword,
+                                                                   p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 270, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
+                                break;
+                            if (!p_container->addWindow(p_editbox_password, true))
+                                break;
+                            MyEdit *p_subclass_editbox_password = static_cast<MyEdit *>(p_editbox_password->getSubclassPointer());
+
+                            // Standard button: Sample password editbox's submit button.
+                            MyWindow *p_button_passwordeditboxsubmit = new MyWindow(true);
+                            if (!p_button_passwordeditboxsubmit->createStandardButton(p_container->pContainerWindow->hWnd, L"OK", true, true,
+                                                                               p_container->getInitiateWindowPosition(0) + 280, p_container->getInitiateWindowPosition(1),
+                                                                               70, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON))
+                                break;
+                            if (!p_container->addWindow(p_button_passwordeditboxsubmit, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_subclass_editbox_password->getStaticHandleRef()); /// End container line 5.
+
+                            // Note text: "(Multiline)"
+                            MyWindow *p_textnote_multilineeditboxnote = new MyWindow(false);
+                            p_textnote_multilineeditboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Multiline)",
+                                                                               WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                               p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                               95, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC, NULL, NULL);
+                            if (!p_textnote_multilineeditboxnote->hWnd ||
+                                !p_container->addWindow(p_textnote_multilineeditboxnote, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_textnote_multilineeditboxnote->hWnd); /// End container line 6.
+
+                            // Sample multiline editbox.
+                            MyEditNonSharedPropertiesConfig nonshared_config_editbox_multiline =
+                                {
+                                    IDC_MAINCONTENT_MULTILINEEDITBOX_STATIC,
+                                    NULL,
+                                    false
+                                };
+                            MyWindow *p_editbox_multiline = new MyWindow(true);
+                            if (!p_editbox_multiline->createEditbox(p_container->pContainerWindow->hWnd, L"", true, true, nonshared_config_editbox_multiline, MyEditboxType::Multiline,
+                                                                       p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 478, 200, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
+                                break;
+                            if (!p_container->addWindow(p_editbox_multiline, true))
+                                break;
+                            MyEdit *p_subclass_editbox_multiline = static_cast<MyEdit *>(p_editbox_multiline->getSubclassPointer());
+                            p_container->registerNewHorizontalLine(p_subclass_editbox_multiline->getStaticHandleRef()); /// End container line 7.
+
+                            // Standard button: Sample multiline editbox's submit button.
+                            MyWindow *p_button_multilineeditboxsubmit = new MyWindow(true);
+                            if (!p_button_multilineeditboxsubmit->createStandardButton(p_container->pContainerWindow->hWnd, L"Clear", true, true,
+                                                                                p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1) - 5,
+                                                                                478, 33, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_BUTTON))
+                                break;
+                            if (!p_container->addWindow(p_button_multilineeditboxsubmit, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_button_multilineeditboxsubmit->hWnd); /// End container line 8.
+
+                            // Header text: "Sample comboboxs:"
+                            MyWindow *p_textheader_samplecomboboxes = new MyWindow(false);
+                            p_textheader_samplecomboboxes->hWnd = CreateWindowExW(NULL, WC_STATIC, L"Sample comboboxs:",
+                                                                           WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                           p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                           477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC, NULL, NULL);
+                            if (!p_textheader_samplecomboboxes->hWnd ||
+                                !p_container->addWindow(p_textheader_samplecomboboxes, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_textheader_samplecomboboxes->hWnd); /// End container line 9.
+
+                            // Note text: "(Select theme)"
+                            MyWindow *p_textnote_selectthemecomboboxnote = new MyWindow(false);
+                            p_textnote_selectthemecomboboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Select theme)",
+                                                                                  WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                  p_container->getInitiateWindowPosition(0) + 130, p_container->getInitiateWindowPosition(1) + 9,
+                                                                                  127, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC, NULL, NULL);
+                            if (!p_textnote_selectthemecomboboxnote->hWnd ||
+                                !p_container->addWindow(p_textnote_selectthemecomboboxnote, true))
+                                break;
+
+                            // DDL Combobox: Select theme.
+                            MyWindow *p_ddlcombobox_selecttheme = new MyWindow(true);
+                            if (!p_ddlcombobox_selecttheme->createDDLCombobox(p_container->pContainerWindow->hWnd, true, true,
+                                                                                  p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                                  120, 40, (HMENU)IDC_MAINCONTENT_SELECTTHEME_COMBOBOX))
+                                break;
+                            if (!p_container->addWindow(p_ddlcombobox_selecttheme, true))
+                                break;
+                            p_container->registerNewHorizontalLine(p_ddlcombobox_selecttheme->hWnd); /// End container line 10.
+
+                            // Initialize combobox items (select theme ddl combobox).
+                            {
+                                const UINT total_items = 3;
+                                const UINT longest_item_textlength = 8; // Including null string.
+                                WCHAR item_array[total_items][longest_item_textlength] =
+                                    {
+                                        TEXT("Light"), TEXT("Dark"), TEXT("Monokai")};
+                                WCHAR text_buffer[longest_item_textlength];
+                                memset(&text_buffer, 0, sizeof(text_buffer)); // Memset to ensure the buffer is clean.
+                                for (int i = 0; i < total_items; i++)         // Load items to the combobox.
+                                {
+                                    wcscpy_s(text_buffer, sizeof(text_buffer) / sizeof(WCHAR), (WCHAR *)item_array[i]);
+                                    SendMessageW(p_ddlcombobox_selecttheme->hWnd, CB_ADDSTRING, 0, (LPARAM)text_buffer);
+                                }
+                                // Set default selected item.
+                                switch (g_CurrentAppTheme)
+                                {
+                                case MyTheme::Light:
+                                    SendMessageW(p_ddlcombobox_selecttheme->hWnd, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+                                    break;
+
+                                case MyTheme::Dark:
+                                    SendMessageW(p_ddlcombobox_selecttheme->hWnd, CB_SETCURSEL, (WPARAM)1, (LPARAM)0);
+                                    break;
+
+                                case MyTheme::Monokai:
+                                    SendMessageW(p_ddlcombobox_selecttheme->hWnd, CB_SETCURSEL, (WPARAM)2, (LPARAM)0);
+                                    break;
+                                }
+                            }
+
+                            // Create container vertical scrollbar.
+                            if (!p_container->createVerticalScrollbarWindow(hWnd, false, 0, 0, WINDOW_SCROLLBAR_DEFAULTWIDTH, 0, (HMENU)IDC_MAINCONTENT_CONTAINER_SCROLLBAR))
+                                break;
+
+                            // Set the scroll information for the container vertical scrollbar.
+                            if (!p_container->setVerticalScrollInformations(false))
+                                break;
+                        }
+                        error_message = L"";
+
+                        // Invalidate the container.
+                        if (!p_container->invalidateCheck())
+                        {
+                            error_message = L"The MainContent container is invalid.";
+                            break;
+                        }
+
+                        are_all_operation_success = true;
+                    }
+
+                    if (!are_all_operation_success)
+                    {
+                        WriteLog(error_message, L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitControl()\"]", MyLogType::Error);
+                        return false;
+                    }
+                }
 
                 return true;
             }
@@ -3304,19 +3266,12 @@ namespace nApp
              */
             bool InitEnd(HWND hWnd)
             {
-                // Set the default font for all existing window objects.
-                // EnumChildWindows(hWnd, (WNDENUMPROC)nApp::Window::Utility::SetFontOnChild, (LPARAM)g_pUIElements->fonts.Default.GetHFORef());
-
-                // Set font for non-client window objects.
-                SendMessageW(MyWindow::findWindowInVectorP(g_VectorNonClientWindows, IDC_NONCLIENT_CAPTIONTITLE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.caption.getHFONT(), TRUE);
-
-                // Set font for client window objects.
+                // Set fonts for unmanaged windows.
                 {
                     // Static texts (Heading).
                     SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
                     SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
                     SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_TESTZONE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
 
                     // Static texts (Note).
                     SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
@@ -3325,16 +3280,18 @@ namespace nApp
                     SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
 
                     // Editboxes.
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
+                    //SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
+                    //SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
+                    //SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
                 }
 
                 // Modify standard class (BUTTON) style.
-                nApp::Window::Utility::RemoveWindowStyle(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDBUTTON_BUTTON), CS_DBLCLKS);
+                if (!nApp::Window::Utility::RemoveWindowStyle(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDBUTTON_BUTTON), CS_DBLCLKS))
+                    return false;
 
                 // Update class name for standard controls in containers based on the application theme.
-                Theme::UpdateContainerThemeClass(g_CurrentAppTheme, g_ContainerMainContent);
+                if (!Theme::UpdateContainerThemeClass(g_CurrentAppTheme, g_ContainerMainContent))
+                    return false;
 
                 return true;
             }
@@ -3350,7 +3307,7 @@ namespace nApp
                 for (const auto &window : g_VectorNonClientWindows)
                 {
                     ShowWindow(window->hWnd, SW_NORMAL);
-                }                                                                       // Show non-client controls.
+                }                                                                      // Show non-client controls.
                 ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_NORMAL); // Show container (MainContent).
 
                 if (!IsWindowVisible(g_hWnd))

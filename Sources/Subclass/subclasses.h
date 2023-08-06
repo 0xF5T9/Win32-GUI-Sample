@@ -263,6 +263,8 @@ public:
      * @bried Refresh the button by triggering the animation to the current state.
      *
      * @param hWnd Handle to the button.
+     * 
+     * @return Returns true if the button is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
 };
@@ -521,6 +523,8 @@ public:
      * @bried Refresh the button by triggering the animation to the current state.
      *
      * @param hWnd Handle to the button.
+     * 
+     * @return Returns true if the button is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
 };
@@ -801,6 +805,8 @@ public:
      * @bried Refresh the button by triggering the animation to the current state.
      *
      * @param hWnd Handle to the button.
+     * 
+     * @return Returns true if the button is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
 };

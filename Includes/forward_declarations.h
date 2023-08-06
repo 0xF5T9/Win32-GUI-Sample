@@ -38,13 +38,9 @@ namespace nApp
     }
     namespace Window
     {
-        namespace Creation
-        {
-            void CreateMyFont(HFONT &hFont, std::wstring FontName, INT FontSize, INT FontWeight = FW_DONTCARE, DWORD FontQuality = DEFAULT_QUALITY);
-        }
         namespace Utility
         {
-            void RemoveWindowStyle(HWND hWnd, LONG Style);
+            bool RemoveWindowStyle(HWND hWnd, LONG style);
         }
     }
 }

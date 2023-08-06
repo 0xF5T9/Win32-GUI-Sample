@@ -5974,10 +5974,18 @@ bool MyDDLCombobox::setSubclass(HWND hWnd, INT comboboxHeight)
         }
 
         // Don't want double click message.
-        nApp::Window::Utility::RemoveWindowStyle(this->hWndDDLComboboxDropdownlist, CS_DBLCLKS);
+        if (!nApp::Window::Utility::RemoveWindowStyle(this->hWndDDLComboboxDropdownlist, CS_DBLCLKS))
+        {
+            error_message = L"Failed to remove the window style \"CS_DBLCLKS\".";
+            break;
+        }
 
         // Don't want drop shadow effect.
-        nApp::Window::Utility::RemoveWindowStyle(this->hWndDDLComboboxDropdownlist, CS_DROPSHADOW);
+        if (!nApp::Window::Utility::RemoveWindowStyle(this->hWndDDLComboboxDropdownlist, CS_DROPSHADOW))
+        {
+            error_message = L"Failed to remove the window style \"CS_DROPSHADOW\".";
+            break;
+        }
 
         // Set font for the combobox and its drop-down list window.
         SendMessageW(this->hWndDDLCombobox, WM_SETFONT, reinterpret_cast<WPARAM>(MyDDLCombobox::pFontDefault->getHFONT()), FALSE);

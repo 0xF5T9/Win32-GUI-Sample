@@ -67,9 +67,6 @@
 #define IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC  523
 #define IDC_MAINCONTENT_SELECTTHEME_COMBOBOX    524
 
-#define IDC_MAINCONTENT_TESTZONE_STATIC 525
-#define IDC_MAINCONTENT_TESTIMAGE_BUTTON 526
-
 // Miscellaneous
 #define WINDOW_CAPTIONBAR_DEFAULTHEIGHT 37     // Default window caption bar height (pixel)
 #define WINDOW_BORDER_DEFAULTWIDTH      1      // Default window borders width      (pixel)

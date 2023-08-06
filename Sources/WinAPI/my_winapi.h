@@ -33,7 +33,7 @@ public:
      *
      * @param isManaged Specifies whether the window is unmanaged or managed variant.
      */
-    MyWindow(bool isManaged = false);
+    MyWindow(bool isManaged);
 
     /**
      * @brief Destructor.
@@ -194,8 +194,10 @@ public:
      * @param windowWidth               The editbox width.
      * @param windowHeight              The editbox height.
      * @param windowID                  The editbox ID.
+     * @param windowFont                The editbox font.
+     *                                  If specified as nullptr, the default system font will be used.
      */
-    bool createEditbox(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyEditNonSharedPropertiesConfig configNonSharedProperties, MyEditboxType editboxType, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID);
+    bool createEditbox(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyEditNonSharedPropertiesConfig configNonSharedProperties, MyEditboxType editboxType, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID, HFONT windowFont = nullptr);
 
     /**
      * @brief Create a drop-down list combobox.

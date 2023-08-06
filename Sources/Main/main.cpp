@@ -1818,7 +1818,6 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
         case IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC:
         case IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC:
         case IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC:
-        case IDC_MAINCONTENT_TESTZONE_STATIC:
         {
             SetBkColor(hdc, g_pUIElements->colors.background.getCOLORREF());
             SetTextColor(hdc, g_pUIElements->colors.textActive.getCOLORREF());

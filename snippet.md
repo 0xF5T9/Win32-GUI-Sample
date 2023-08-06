@@ -10,7 +10,7 @@ bool are_all_operation_success = false;
 std::wstring error_message = L"";
 while (!are_all_operation_success)
 {
-    // ...
+    // Operations ...
 
     are_all_operation_success = true;
 }
@@ -18,7 +18,7 @@ while (!are_all_operation_success)
 if (!are_all_operation_success)
 {
     WriteLog(error_message, L"", MyLogType::Error);
-    /// ...
+    /// return false; ?
 }
 // [STRUCT: \"\" | FUNC: \"\"]
 // [CLASS: \"\" | FUNC: \"\"]

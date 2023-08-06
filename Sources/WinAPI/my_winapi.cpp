@@ -377,7 +377,7 @@ bool MyWindow::createRadioButton(HWND hWndParent, std::wstring windowText, bool 
 
     return true;
 }
-bool MyWindow::createEditbox(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyEditNonSharedPropertiesConfig configNonSharedProperties, MyEditboxType editboxType, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID)
+bool MyWindow::createEditbox(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyEditNonSharedPropertiesConfig configNonSharedProperties, MyEditboxType editboxType, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID, HFONT windowFont)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
@@ -440,11 +440,11 @@ bool MyWindow::createEditbox(HWND hWndParent, std::wstring windowText, bool visi
         MyEdit *p_casted_subclass = static_cast<MyEdit *>(this->pSubclass);
 
         // Create the static window using the static window handle from the subclass object.
-        HWND &hWndStatic = p_casted_subclass->getStaticHandleRef();
-        hWndStatic = CreateWindowExW(NULL, WC_STATIC, L"", WS_VISIBLE | WS_CHILD | SS_NOPREFIX, windowPosX, windowPosY, windowWidth, windowHeight, hWndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(configNonSharedProperties.hWndStaticID)), NULL, NULL);
+        HWND &hwnd_static = p_casted_subclass->getStaticHandleRef();
+        hwnd_static = CreateWindowExW(NULL, WC_STATIC, L"", WS_VISIBLE | WS_CHILD | SS_NOPREFIX, windowPosX, windowPosY, windowWidth, windowHeight, hWndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(configNonSharedProperties.hWndStaticID)), NULL, NULL);
 
         // Check if the static window was successfully created.
-        if (!IsWindow(hWndStatic))
+        if (!IsWindow(hwnd_static))
         {
             error_message = L"Failed to create the static window object.";
             break;
@@ -466,6 +466,10 @@ bool MyWindow::createEditbox(HWND hWndParent, std::wstring windowText, bool visi
             error_message = L"Failed to install the subclass callback.";
             break;
         }
+
+        // Set the window font.
+        if (windowFont)
+            SendMessageW(this->hWnd, WM_SETFONT, (WPARAM)windowFont, FALSE);
 
         // Set the window type.
         this->windowType = MyWindowType::Edit;
