@@ -21,15 +21,6 @@
  * IDI_ICON7    MAINICON.ico
 */
 
-// MyIcon identifiers:
-#define MYICON_CROSS_BLACK 1
-#define MYICON_CROSS_GREY  2
-#define MYICON_CROSS_WHITE 3
-#define MYICON_MINUS_BLACK 4
-#define MYICON_MINUS_GREY  5
-#define MYICON_MINUS_WHITE 6
-#define MYICON_MAIN        7
-
 // Timer identifiers.
 #define IDT_ACTIVE_CHECK 1
 
