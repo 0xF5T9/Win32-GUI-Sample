@@ -399,3 +399,4 @@ FodyWeavers.xsd
 *.sln.iml
 .vscode/settings.json
 settings.cfg
+snippet.md
