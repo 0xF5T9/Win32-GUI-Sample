@@ -6,7 +6,7 @@
 */
 
 #pragma once
-#include "./Ex_IatHook.h" // Required for "FixDarkScrollBar()"
+#include "Ex_IatHook.h" // Required for "FixDarkScrollBar()"
 
 enum IMMERSIVE_HC_CACHE_MODE
 {

@@ -13,96 +13,144 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Global">
-      <UniqueIdentifier>{2b1d50cf-bd53-469b-a970-64323d0ed614}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Subclasses">
+    <Filter Include="Source Files\Main">
       <UniqueIdentifier>{770173bb-4e31-4fd2-b866-aa53f1484eaf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Externals">
-      <UniqueIdentifier>{bcf6f064-5a7a-431f-b0c5-cd7ca2960475}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files\Raws">
-      <UniqueIdentifier>{c6968ad7-d94e-42ab-99b0-2ea40669b2bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Object Manager">
+    <Filter Include="Source Files\Subclass">
       <UniqueIdentifier>{64f00a49-b18f-40e2-b576-270d6dddfd88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Resource">
+      <UniqueIdentifier>{2b1d50cf-bd53-469b-a970-64323d0ed614}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Global">
+      <UniqueIdentifier>{c5db9fb4-fca8-4cba-97ac-04a622355767}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resource\Raws">
+      <UniqueIdentifier>{c6968ad7-d94e-42ab-99b0-2ea40669b2bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Includes">
+      <UniqueIdentifier>{ec15881e-80f3-4264-8e00-6ca8e94baf3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Includes\Externals">
+      <UniqueIdentifier>{69adddb0-27db-44a9-943c-b6c13491e1bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{aef7aa2d-4db5-490c-9153-279b4f71ec34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WinAPI">
+      <UniqueIdentifier>{9ac0e1ac-130a-430d-9994-50ec7bbd1c0c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="Sources\Resources\MyApp.exe.manifest">
-      <Filter>Resource Files</Filter>
-    </Manifest>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Sources\main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Sources\Main\main.cpp">
+      <Filter>Source Files\Main</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\global.cpp">
+    <ClCompile Include="Sources\Subclass\subclasses.cpp">
+      <Filter>Source Files\Subclass</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Global\global.cpp">
       <Filter>Source Files\Global</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\subclasses.cpp">
-      <Filter>Source Files\Subclasses</Filter>
+    <ClCompile Include="Sources\UI\ui.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\obj_manager.cpp">
-      <Filter>Source Files\Object Manager</Filter>
+    <ClCompile Include="Sources\WinAPI\my_winapi.cpp">
+      <Filter>Source Files\WinAPI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Sources\Headers\func.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Sources\Main\func.h">
+      <Filter>Source Files\Main</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Headers\global.h">
+    <ClInclude Include="Sources\Subclass\subclasses.h">
+      <Filter>Source Files\Subclass</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Global\global.h">
       <Filter>Source Files\Global</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Headers\c_resources.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Sources\Resource\c_resources.h">
+      <Filter>Source Files\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Headers\Ex_DarkMode.h">
-      <Filter>Header Files\Externals</Filter>
+    <ClInclude Include="Sources\Resource\resource.h">
+      <Filter>Source Files\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Headers\Ex_IatHook.h">
-      <Filter>Header Files\Externals</Filter>
+    <ClInclude Include="Includes\standard_includes.h">
+      <Filter>Header Files\Includes</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Resources\resource.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Includes\Externals\Ex_DarkMode.h">
+      <Filter>Header Files\Includes\Externals</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Headers\subclasses.h">
-      <Filter>Source Files\Subclasses</Filter>
+    <ClInclude Include="Includes\Externals\Ex_IatHook.h">
+      <Filter>Header Files\Includes\Externals</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Headers\obj_manager.h">
-      <Filter>Source Files\Object Manager</Filter>
+    <ClInclude Include="Includes\my_includes.h">
+      <Filter>Header Files\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes\forward_declarations.h">
+      <Filter>Header Files\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes\my_enums.h">
+      <Filter>Header Files\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\UI\ui.h">
+      <Filter>Source Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\WinAPI\my_winapi.h">
+      <Filter>Source Files\WinAPI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Sources\Resources\WindowsProject5.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Sources\Resources\Raws\cross_black.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\cross_black.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
-    <Image Include="Sources\Resources\Raws\cross_grey.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\cross_grey.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
-    <Image Include="Sources\Resources\Raws\cross_white.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\cross_white.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
-    <Image Include="Sources\Resources\Raws\minus_black.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\minus_black.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
-    <Image Include="Sources\Resources\Raws\minus_grey.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\minus_grey.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
-    <Image Include="Sources\Resources\Raws\minus_white.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\minus_white.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
-    <Image Include="Sources\Resources\MAINICON.ico">
-      <Filter>Resource Files\Raws</Filter>
+    <Image Include="Sources\Resource\Raws\cross_grey.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\MAINICON.ico">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\cross_black.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\cross_white.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\minus_black.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\minus_grey.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\minus_white.png">
+      <Filter>Source Files\Resource\Raws</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Sources\Resource\MyApp.exe.manifest">
+      <Filter>Source Files\Resource</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Sources\Resource\WindowsProject5.rc">
+      <Filter>Source Files\Resource</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

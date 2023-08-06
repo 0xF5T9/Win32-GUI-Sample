@@ -1,5 +1,5 @@
 @echo off
-del /Q log.txt
+del /Q log.log
 del /Q settings.cfg
 del /S /Q Build\*
 rmdir /S /Q Build\Output
