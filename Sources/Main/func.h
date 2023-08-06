@@ -925,7 +925,7 @@ namespace nApp
     /**
      * @brief Functions related to API initialization and management.
      * @brief This namespace contains functions that handle the initialization,
-     * @brief deinitialization, and management of various APIs used by the application.
+     * @brief uninitialization, and management of various APIs used by the application.
      */
     namespace API
     {
@@ -2627,7 +2627,7 @@ namespace nApp
 
     /**
      * @brief Functions related to window management.
-     * @brief This namespace contains functions for initialization, deinitialization,
+     * @brief This namespace contains functions for initialization, uninitialization,
      * @brief creations and utility of the application windows.
      */
     namespace Window
@@ -2914,7 +2914,7 @@ namespace nApp
                                 &g_pUIElements->colors.closeButtonBackgroundOnDown,
                                 0, 0, 20, 20, true, false, true};
                         if (!p_imagebutton_close->createImageButton(hWnd, L"", false, true, button_close_nonsharedpropertiesconfig,
-                                                               0, 0, 58, 37, (HMENU)IDC_NONCLIENT_CLOSE_BUTTON))
+                                                                    0, 0, 58, 37, (HMENU)IDC_NONCLIENT_CLOSE_BUTTON))
                         {
                             error_message = L"Failed to create the close button.";
                             break;
@@ -2934,7 +2934,7 @@ namespace nApp
                                 &g_pUIElements->colors.minimizeButtonBackgroundOnDown,
                                 0, 0, 20, 20, true, false, true};
                         if (!p_imagebutton_minimize->createImageButton(hWnd, L"", false, true, button_minimize_nonsharedpropertiesconfig,
-                                                                  0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MINIMIZE_BUTTON))
+                                                                       0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MINIMIZE_BUTTON))
                         {
                             error_message = L"Failed to create the minimize button.";
                             break;
@@ -2953,8 +2953,8 @@ namespace nApp
                         }
                         MyWindow *p_textnormal_title = new MyWindow(false);
                         p_textnormal_title->hWnd = CreateWindowExW(NULL, WC_STATIC, text_buffer, WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                             WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23,
-                                                             hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
+                                                                   WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23,
+                                                                   hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
                         if (!p_textnormal_title->hWnd)
                         {
                             delete[] text_buffer;
@@ -2999,9 +2999,9 @@ namespace nApp
                             // Header text: "Sample buttons:"
                             MyWindow *p_textheader_samplebuttons = new MyWindow(false);
                             p_textheader_samplebuttons->hWnd = CreateWindowExW(NULL, WC_STATIC, L"Sample buttons:",
-                                                                         WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                         p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
-                                                                         477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC, NULL, NULL);
+                                                                               WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                               p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                               477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC, NULL, NULL);
                             if (!p_textheader_samplebuttons->hWnd ||
                                 !p_container->addWindow(p_textheader_samplebuttons, true))
                                 break;
@@ -3010,7 +3010,7 @@ namespace nApp
                             // Standard button: "Standard"
                             MyWindow *p_standardbutton_sample = new MyWindow(true);
                             if (!p_standardbutton_sample->createStandardButton(p_container->pContainerWindow->hWnd, L"Standard", true, true,
-                                                                        p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 130, 40, (HMENU)503))
+                                                                               p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 130, 40, (HMENU)503))
                                 break;
                             if (!p_container->addWindow(p_standardbutton_sample, true))
                                 break;
@@ -3018,8 +3018,8 @@ namespace nApp
                             // Radio button: "First"
                             MyWindow *p_radiobutton_sample_first = new MyWindow(true);
                             if (!p_radiobutton_sample_first->createRadioButton(p_container->pContainerWindow->hWnd, L"First", true, true,
-                                                                             p_container->getInitiateWindowPosition(0) + 140, p_container->getInitiateWindowPosition(1),
-                                                                             86, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_FIRST_BUTTON))
+                                                                               p_container->getInitiateWindowPosition(0) + 140, p_container->getInitiateWindowPosition(1),
+                                                                               86, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_FIRST_BUTTON))
                                 break;
                             if (!SampleRadio.addRadioButton(p_radiobutton_sample_first) ||
                                 !p_container->addWindow(p_radiobutton_sample_first, true))
@@ -3028,18 +3028,18 @@ namespace nApp
                             // Radio button: "Second"
                             MyWindow *p_radiobutton_sample_second = new MyWindow(true);
                             if (!p_radiobutton_sample_second->createRadioButton(p_container->pContainerWindow->hWnd, L"Second", true, true,
-                                                                              p_container->getInitiateWindowPosition(0) + 232, p_container->getInitiateWindowPosition(1),
-                                                                              110, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_SECOND_BUTTON))
+                                                                                p_container->getInitiateWindowPosition(0) + 232, p_container->getInitiateWindowPosition(1),
+                                                                                110, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_SECOND_BUTTON))
                                 break;
                             if (!SampleRadio.addRadioButton(p_radiobutton_sample_second) ||
                                 !p_container->addWindow(p_radiobutton_sample_second, true))
                                 break;
-                            
+
                             // Radio button: "Third"
                             MyWindow *p_radiobutton_sample_third = new MyWindow(true);
                             if (!p_radiobutton_sample_third->createRadioButton(p_container->pContainerWindow->hWnd, L"Third", true, true,
-                                                                             p_container->getInitiateWindowPosition(0) + 346, p_container->getInitiateWindowPosition(1),
-                                                                             92, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_THIRD_BUTTON))
+                                                                               p_container->getInitiateWindowPosition(0) + 346, p_container->getInitiateWindowPosition(1),
+                                                                               92, 40, (HMENU)IDC_MAINCONTENT_RADIO_TEST_THIRD_BUTTON))
                                 break;
                             if (!SampleRadio.addRadioButton(p_radiobutton_sample_third) ||
                                 !p_container->addWindow(p_radiobutton_sample_third, true))
@@ -3049,9 +3049,9 @@ namespace nApp
                             // Header text: "Sample editboxs:"
                             MyWindow *p_textheader_sampleeditboxes = new MyWindow(false);
                             p_textheader_sampleeditboxes->hWnd = CreateWindowExW(NULL, WC_STATIC, L"Sample editboxs:",
-                                                                         WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                         p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
-                                                                         477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC, NULL, NULL);
+                                                                                 WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                 p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                                 477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC, NULL, NULL);
                             if (!p_textheader_sampleeditboxes->hWnd ||
                                 !p_container->addWindow(p_textheader_sampleeditboxes, true))
                                 break;
@@ -3060,9 +3060,9 @@ namespace nApp
                             // Note text: "(Normal)"
                             MyWindow *p_textnote_standardeditboxnote = new MyWindow(false);
                             p_textnote_standardeditboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Normal)",
-                                                                              WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                              p_container->getInitiateWindowPosition(0) + 360, p_container->getInitiateWindowPosition(1) + 5,
-                                                                              80, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC, NULL, NULL);
+                                                                                   WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                   p_container->getInitiateWindowPosition(0) + 360, p_container->getInitiateWindowPosition(1) + 5,
+                                                                                   80, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC, NULL, NULL);
                             if (!p_textnote_standardeditboxnote->hWnd ||
                                 !p_container->addWindow(p_textnote_standardeditboxnote, true))
                                 break;
@@ -3072,12 +3072,11 @@ namespace nApp
                                 {
                                     IDC_MAINCONTENT_STANDARDEDITBOX_STATIC,
                                     IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON,
-                                    false
-                                };
+                                    false};
                             MyWindow *p_editbox_standard = new MyWindow(true);
                             if (!p_editbox_standard->createEditbox(p_container->pContainerWindow->hWnd, L"", true, true, nonshared_config_editbox_standard, MyEditboxType::Singleline,
-                                                                      p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
-                                                                      270, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
+                                                                   p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                   270, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
                                 break;
                             MyEdit *p_subclass_editbox_standard = static_cast<MyEdit *>(p_editbox_standard->getSubclassPointer());
                             if (!p_container->addWindow(p_editbox_standard, true))
@@ -3086,8 +3085,8 @@ namespace nApp
                             // Standard button: Sample standard editbox's submit button.
                             MyWindow *p_button_standardeditboxsubmit = new MyWindow(true);
                             if (!p_button_standardeditboxsubmit->createStandardButton(p_container->pContainerWindow->hWnd, L"OK", true, true,
-                                                                               p_container->getInitiateWindowPosition(0) + 280, p_container->getInitiateWindowPosition(1),
-                                                                               70, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON))
+                                                                                      p_container->getInitiateWindowPosition(0) + 280, p_container->getInitiateWindowPosition(1),
+                                                                                      70, 33, (HMENU)IDC_MAINCONTENT_STANDARDEDITBOX_BUTTON))
                                 break;
                             if (!p_container->addWindow(p_button_standardeditboxsubmit, true))
                                 break;
@@ -3096,9 +3095,9 @@ namespace nApp
                             // Note text: "(Password)"
                             MyWindow *p_textnote_passwordeditboxnote = new MyWindow(false);
                             p_textnote_passwordeditboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Password)",
-                                                                              WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                              p_container->getInitiateWindowPosition(0) + 360, p_container->getInitiateWindowPosition(1) + 5,
-                                                                              95, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC, NULL, NULL);
+                                                                                   WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                   p_container->getInitiateWindowPosition(0) + 360, p_container->getInitiateWindowPosition(1) + 5,
+                                                                                   95, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC, NULL, NULL);
                             if (!p_textnote_passwordeditboxnote->hWnd ||
                                 !p_container->addWindow(p_textnote_passwordeditboxnote, true))
                                 break;
@@ -3108,8 +3107,7 @@ namespace nApp
                                 {
                                     IDC_MAINCONTENT_PASSWORDEDITBOX_STATIC,
                                     IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON,
-                                    false
-                                };
+                                    false};
                             MyWindow *p_editbox_password = new MyWindow(true);
                             if (!p_editbox_password->createEditbox(p_container->pContainerWindow->hWnd, L"", true, true, nonshared_config_editbox_password, MyEditboxType::SinglelinePassword,
                                                                    p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 270, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
@@ -3121,8 +3119,8 @@ namespace nApp
                             // Standard button: Sample password editbox's submit button.
                             MyWindow *p_button_passwordeditboxsubmit = new MyWindow(true);
                             if (!p_button_passwordeditboxsubmit->createStandardButton(p_container->pContainerWindow->hWnd, L"OK", true, true,
-                                                                               p_container->getInitiateWindowPosition(0) + 280, p_container->getInitiateWindowPosition(1),
-                                                                               70, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON))
+                                                                                      p_container->getInitiateWindowPosition(0) + 280, p_container->getInitiateWindowPosition(1),
+                                                                                      70, 33, (HMENU)IDC_MAINCONTENT_PASSWORDEDITBOX_BUTTON))
                                 break;
                             if (!p_container->addWindow(p_button_passwordeditboxsubmit, true))
                                 break;
@@ -3131,9 +3129,9 @@ namespace nApp
                             // Note text: "(Multiline)"
                             MyWindow *p_textnote_multilineeditboxnote = new MyWindow(false);
                             p_textnote_multilineeditboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Multiline)",
-                                                                               WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                               p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
-                                                                               95, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC, NULL, NULL);
+                                                                                    WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                    p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                                    95, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC, NULL, NULL);
                             if (!p_textnote_multilineeditboxnote->hWnd ||
                                 !p_container->addWindow(p_textnote_multilineeditboxnote, true))
                                 break;
@@ -3144,11 +3142,10 @@ namespace nApp
                                 {
                                     IDC_MAINCONTENT_MULTILINEEDITBOX_STATIC,
                                     NULL,
-                                    false
-                                };
+                                    false};
                             MyWindow *p_editbox_multiline = new MyWindow(true);
                             if (!p_editbox_multiline->createEditbox(p_container->pContainerWindow->hWnd, L"", true, true, nonshared_config_editbox_multiline, MyEditboxType::Multiline,
-                                                                       p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 478, 200, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
+                                                                    p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1), 478, 200, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT, g_pUIElements->fonts.editbox.getHFONT()))
                                 break;
                             if (!p_container->addWindow(p_editbox_multiline, true))
                                 break;
@@ -3158,8 +3155,8 @@ namespace nApp
                             // Standard button: Sample multiline editbox's submit button.
                             MyWindow *p_button_multilineeditboxsubmit = new MyWindow(true);
                             if (!p_button_multilineeditboxsubmit->createStandardButton(p_container->pContainerWindow->hWnd, L"Clear", true, true,
-                                                                                p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1) - 5,
-                                                                                478, 33, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_BUTTON))
+                                                                                       p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1) - 5,
+                                                                                       478, 33, (HMENU)IDC_MAINCONTENT_MULTILINEEDITBOX_BUTTON))
                                 break;
                             if (!p_container->addWindow(p_button_multilineeditboxsubmit, true))
                                 break;
@@ -3168,9 +3165,9 @@ namespace nApp
                             // Header text: "Sample comboboxs:"
                             MyWindow *p_textheader_samplecomboboxes = new MyWindow(false);
                             p_textheader_samplecomboboxes->hWnd = CreateWindowExW(NULL, WC_STATIC, L"Sample comboboxs:",
-                                                                           WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                           p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
-                                                                           477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC, NULL, NULL);
+                                                                                  WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                  p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                                  477, 26, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC, NULL, NULL);
                             if (!p_textheader_samplecomboboxes->hWnd ||
                                 !p_container->addWindow(p_textheader_samplecomboboxes, true))
                                 break;
@@ -3179,9 +3176,9 @@ namespace nApp
                             // Note text: "(Select theme)"
                             MyWindow *p_textnote_selectthemecomboboxnote = new MyWindow(false);
                             p_textnote_selectthemecomboboxnote->hWnd = CreateWindowExW(NULL, WC_STATIC, L"(Select theme)",
-                                                                                  WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                                  p_container->getInitiateWindowPosition(0) + 130, p_container->getInitiateWindowPosition(1) + 9,
-                                                                                  127, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC, NULL, NULL);
+                                                                                       WS_VISIBLE | WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                                       p_container->getInitiateWindowPosition(0) + 130, p_container->getInitiateWindowPosition(1) + 9,
+                                                                                       127, 22, p_container->pContainerWindow->hWnd, (HMENU)IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC, NULL, NULL);
                             if (!p_textnote_selectthemecomboboxnote->hWnd ||
                                 !p_container->addWindow(p_textnote_selectthemecomboboxnote, true))
                                 break;
@@ -3189,8 +3186,8 @@ namespace nApp
                             // DDL Combobox: Select theme.
                             MyWindow *p_ddlcombobox_selecttheme = new MyWindow(true);
                             if (!p_ddlcombobox_selecttheme->createDDLCombobox(p_container->pContainerWindow->hWnd, true, true,
-                                                                                  p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
-                                                                                  120, 40, (HMENU)IDC_MAINCONTENT_SELECTTHEME_COMBOBOX))
+                                                                              p_container->getInitiateWindowPosition(0), p_container->getInitiateWindowPosition(1),
+                                                                              120, 40, (HMENU)IDC_MAINCONTENT_SELECTTHEME_COMBOBOX))
                                 break;
                             if (!p_container->addWindow(p_ddlcombobox_selecttheme, true))
                                 break;
@@ -3266,73 +3263,111 @@ namespace nApp
              */
             bool InitEnd(HWND hWnd)
             {
-                // Set fonts for unmanaged windows.
+                bool are_all_operation_success = false;
+                std::wstring error_message = L"";
+                while (!are_all_operation_success)
                 {
-                    // Static texts (Heading).
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
+                    // Set fonts for unmanaged windows.
+                    {
+                        // Static texts (Heading).
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEBUTTONS_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLEEDITBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SAMPLECOMBOBOXES_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.heading.getHFONT(), TRUE);
 
-                    // Static texts (Note).
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
-                    SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                        // Static texts (Note).
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOXNOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                        SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_SELECTTHEMENOTE_STATIC), WM_SETFONT, (WPARAM)g_pUIElements->fonts.note.getHFONT(), TRUE);
+                    }
 
-                    // Editboxes.
-                    //SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
-                    //SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_PASSWORDEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
-                    //SendMessageW(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_MULTILINEEDITBOX_EDIT), WM_SETFONT, (WPARAM)g_pUIElements->fonts.editbox.getHFONT(), TRUE);
+                    // Modify standard class (BUTTON) style.
+                    if (!nApp::Window::Utility::RemoveWindowStyle(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDBUTTON_BUTTON), CS_DBLCLKS))
+                    {
+                        error_message = L"Failed to modify standard class (BUTTON) style.";
+                        break;
+                    }
+
+                    // Update class name for standard controls in containers based on the application theme.
+                    if (!Theme::UpdateContainerThemeClass(g_CurrentAppTheme, g_ContainerMainContent))
+                    {
+                        error_message = L"Failed to update class name for standard controls in containers based on the application theme.";
+                        break;
+                    }
+
+                    are_all_operation_success = true;
                 }
 
-                // Modify standard class (BUTTON) style.
-                if (!nApp::Window::Utility::RemoveWindowStyle(g_ContainerMainContent->findMyWindowByID(IDC_MAINCONTENT_STANDARDBUTTON_BUTTON), CS_DBLCLKS))
+                if (!are_all_operation_success)
+                {
+                    WriteLog(error_message, L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"InitEnd()\"]", MyLogType::Error);
                     return false;
-
-                // Update class name for standard controls in containers based on the application theme.
-                if (!Theme::UpdateContainerThemeClass(g_CurrentAppTheme, g_ContainerMainContent))
-                    return false;
+                }
 
                 return true;
             }
 
             /**
-             * @brief Sets the main window and essential controls to be visible, indicating that the application is ready.
+             * @brief Sets the main window and its essential child windows to be visible, indicating that the application is ready.
              *
-             * @return Returns true if the visibility of the main window and controls is successfully set. Otherwise, returns false.
+             * @return Returns true if the visibility of the main window and its essential child windows are successfully set. Otherwise, returns false.
              */
             bool OnReady()
             {
-                ShowWindow(g_hWnd, SW_NORMAL); // Show main window.
-                for (const auto &window : g_VectorNonClientWindows)
+                bool are_all_operation_success = false;
+                std::wstring error_message = L"";
+                while (!are_all_operation_success)
                 {
-                    ShowWindow(window->hWnd, SW_NORMAL);
-                }                                                                      // Show non-client controls.
-                ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_NORMAL); // Show container (MainContent).
+                    // Show main window.
+                    ShowWindow(g_hWnd, SW_NORMAL);
 
-                if (!IsWindowVisible(g_hWnd))
+                    // Show non-client windows.
+                    for (const auto &window : g_VectorNonClientWindows)
+                    {
+                        ShowWindow(window->hWnd, SW_NORMAL);
+                    }
+
+                    // Show containers.
+                    ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_NORMAL);
+
+                    if (!IsWindowVisible(g_hWnd))
+                    {
+                        error_message = L"Failed to show main window.";
+                        break;
+                    }
+
+                    // Indicate that the application is ready.
+                    g_IsWindowReady = true;
+                    WriteLogEx(L"Application is ready.", L"", MyLogType::Info, 1);
+
+                    // Update container scrollbar visiblity.
+                    if (!g_ContainerMainContent->updateScrollbarsVisibility(g_IsCurrentThemeWantScrollbarsVisible))
+                    {
+                        error_message = L"Failed to update container scrollbar visiblity.";
+                        break;
+                    }
+
+                    // Set the window active check timer to make sure the main window drop-shadow effects are drawn correctly on startup.
+                    SetTimer(g_hWnd, IDT_ACTIVE_CHECK, 50, NULL);
+
+                    are_all_operation_success = true;
+                }
+
+                if (!are_all_operation_success)
+                {
+                    WriteLog(error_message, L" [NAMESPACE: \"nApp::Window::Initialization\" | FUNC: \"OnReady()\"]", MyLogType::Error);
                     return false;
-
-                // Indicate that the application is ready.
-                g_IsWindowReady = true;
-                WriteLogEx(L"Application is ready.", L"", MyLogType::Info, 1);
-
-                // Update container scrollbar visiblity.
-                if (!g_ContainerMainContent->updateScrollbarsVisibility(g_IsCurrentThemeWantScrollbarsVisible))
-                    return false;
-
-                // Set the window active check timer to make sure the main window drop-shadow effects are drawn correctly.
-                SetTimer(g_hWnd, IDT_ACTIVE_CHECK, 50, NULL);
+                }
 
                 return true;
             }
         }
 
         /**
-         * @brief Functions related to application window deinitialization processes.
-         * @brief This namespace contains functions that handle the deinitialization of the application.
+         * @brief Functions related to application window uninitialization processes.
+         * @brief This namespace contains functions that handle the uninitialization of the application.
          */
-        namespace Deinitialization
+        namespace Uninitialization
         {
             /**
              * @brief Perform additional operations on the application window objects before exiting the application.
@@ -3346,93 +3381,79 @@ namespace nApp
                 HRESULT hr = DwmExtendFrameIntoClientArea(g_hWnd, &borders);
                 if (FAILED(hr))
                 {
-                    _com_error COMError(hr);
-                    std::wstring error_message = L"";
-                    std::wstring COMErrorMessage = COMError.ErrorMessage();
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to reverse the extended window frames.\n");
-                    error_message.append(L"Error message (COM): " + COMErrorMessage + L"\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Deinitialization\"\n");
-                    error_message.append(L"FUNC: OnExit()");
-                    MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to reverse the extended window frames", L" [NAMESPACE: \"nApp::Window::Deinitialization\" | FUNC: \"OnExit()\"]", MyLogType::Error);
+                    WriteLog(L"Failed to reverse the extended window frames.", L" [NAMESPACE: \"nApp::Window::Uninitialization\" | FUNC: \"OnExit()\"]", MyLogType::Error);
+                    return;
                 }
-                else
-                    WriteLog(L"Reversed the extended window frames (MARGINS: 0,0,0,0).", L"", MyLogType::Debug);
+                WriteLog(L"Reversed the extended window frames (MARGINS: 0,0,0,0).", L"", MyLogType::Debug);
             }
 
             /**
-             * @brief Perform necessary deallocations and uninitialize global objects, subclasses, and APIs to properly conclude the application.
+             * @brief Perform necessary deallocations and uninitializes of global objects, APIs and related operations to properly conclude the application.
+             *
+             * @return Returns true if all the operations are successful, otherwise false.
              */
-            void OnDestroy()
+            bool OnDestroy()
             {
-                // Destroy application containers.
-                delete g_ContainerMainContent;
-                WriteLog(L"Container(s) destroyed.", L"", MyLogType::Debug);
-
-                // Destroy non-client window objects.
+                bool are_all_operation_success = false;
+                std::wstring error_message = L"";
+                while (!are_all_operation_success)
                 {
-                    const auto TotalWindows = g_VectorNonClientWindows.size();
-                    UINT SuccessCount = 0;
-                    for (auto &window : g_VectorNonClientWindows)
+                    // Destroy containers.
+                    delete g_ContainerMainContent;
+                    WriteLog(L"Container(s) destroyed.", L"", MyLogType::Debug);
+
+                    // Destroy non-client windows.
                     {
-                        if (window)
+                        if (!g_VectorNonClientWindows.empty())
                         {
-                            delete window;
-                            window = nullptr;
+                            for (auto &p_window : g_VectorNonClientWindows)
+                            {
+                                if (p_window)
+                                {
+                                    delete p_window;
+                                }
+                            }
+                            g_VectorNonClientWindows.clear();
                         }
-                        SuccessCount++;
+                        WriteLog(L"Non-client window(s) destroyed.", L"", MyLogType::Debug);
                     }
-                    WriteLog((std::to_wstring(SuccessCount) + L"/" + std::to_wstring(TotalWindows) + L" non-client window object(s) destroyed.").c_str(), L"", MyLogType::Debug);
-                    g_VectorNonClientWindows.clear();
-                }
 
-                // Destroy global objects.
-                delete g_pUIElements;
-                WriteLog(L"Global object(s) destroyed.", L"", MyLogType::Debug);
+                    // Destroy global objects.
+                    delete g_pUIElements;
+                    WriteLog(L"Global object(s) destroyed.", L"", MyLogType::Debug);
 
-                // Uninitialize APIs.
-                if (!nApp::API::UninitWindowAnimationManager())
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to uninitialize Windows Animation Manager API.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Deinitialization\"\n");
-                    error_message.append(L"FUNC: OnDestroy()");
-                    if (g_AppLogLevel >= 2)
-                        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to uninitialize Windows Animation Manager API.", L" [NAMESPACE: \"nApp::Window::Deinitialization\" | FUNC: \"OnDestroy()\"]", MyLogType::Error);
-                }
-                else
+                    // Uninitialize APIs.
+                    if (!nApp::API::UninitWindowAnimationManager())
+                    {
+                        error_message = L"Failed to uninitialize Windows Animation Manager API.";
+                        break;
+                    }
                     WriteLog(L"Windows Animation Manager API uninitialized.", L"", MyLogType::Debug);
-                if (!nApp::API::UninitGraphicAPI(g_APIGDIToken))
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to uninitialize GDI Animation & GDI+ APIs.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Deinitialization\"\n");
-                    error_message.append(L"FUNC: OnDestroy()");
-                    if (g_AppLogLevel >= 2)
-                        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to uninitialize GDI Animation & GDI+ APIs.", L" [NAMESPACE: \"nApp::Window::Deinitialization\" | FUNC: \"OnDestroy()\"]", MyLogType::Error);
-                }
-                else
+                    if (!nApp::API::UninitGraphicAPI(g_APIGDIToken))
+                    {
+                        error_message = L"Failed to uninitialize GDI Animation & GDI+ APIs.";
+                        break;
+                    }
                     WriteLog(L"GDI Animation & GDI+ APIs uninitialized.", L"", MyLogType::Debug);
 
-                // Clears previously set minimum timer resolution.
-                if (timeEndPeriod(15) != TIMERR_NOERROR)
-                {
-                    std::wstring error_message = L"";
-                    error_message.append(L"Error occurred!\n");
-                    error_message.append(L"Failed to clear previously set minimum timer resolution.\n\n");
-                    error_message.append(L"NAMESPACE: \"nApp::Window::Deinitialization\"\n");
-                    error_message.append(L"FUNC: OnDestroy()");
-                    if (g_AppLogLevel >= 2)
-                        MessageBoxW(NULL, error_message.c_str(), L"", MB_OK | MB_ICONERROR);
-                    WriteLog(L"Failed to clear previously set minimum timer resolution.", L" [NAMESPACE: \"nApp::Window::Deinitialization\" | FUNC: \"OnDestroy()\"]", MyLogType::Error);
-                }
-                else
+                    // Clears previously set minimum timer resolution.
+                    if (timeEndPeriod(15) != TIMERR_NOERROR)
+                    {
+                        error_message = L"Failed to clear previously set minimum timer resolution.";
+                        break;
+                    }
                     WriteLog(L"Previously set minimum timer resolution cleared.", L"", MyLogType::Debug);
+
+                    are_all_operation_success = true;
+                }
+
+                if (!are_all_operation_success)
+                {
+                    WriteLog(error_message, L" [NAMESPACE: \"nApp::Window::Uninitialization\" | FUNC: \"OnDestroy()\"]", MyLogType::Error);
+                    return false;
+                }
+
+                return true;
             }
         }
     }

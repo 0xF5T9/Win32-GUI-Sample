@@ -200,14 +200,7 @@ bool MyWindow::createStandardButton(HWND hWndParent, std::wstring windowText, bo
 
     if (!are_all_operation_success)
     {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to create the standard button.\n");
-        message.append(L"Error Message: " + error_message + L"\n");
-        message.append(L"CLASS: MyWindow\n");
-        message.append(L"FUNC: createStandardButton()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
+        WriteLog(error_message, L" [CLASS: \"MyWindow\" | FUNC: \"createStandardButton()\"]", MyLogType::Error);
         return false;
     }
 
@@ -282,14 +275,7 @@ bool MyWindow::createImageButton(HWND hWndParent, std::wstring windowText, bool 
 
     if (!are_all_operation_success)
     {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to create the image button.\n");
-        message.append(L"Error Message: " + error_message + L"\n");
-        message.append(L"CLASS: MyWindow\n");
-        message.append(L"FUNC: createImageButton()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
+        WriteLog(error_message, L" [CLASS: \"MyWindow\" | FUNC: \"createImageButton()\"]", MyLogType::Error);
         return false;
     }
 
@@ -364,13 +350,7 @@ bool MyWindow::createRadioButton(HWND hWndParent, std::wstring windowText, bool 
 
     if (!are_all_operation_success)
     {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to create the radio button.\n");
-        message.append(L"Error Message: " + error_message + L"\n");
-        message.append(L"CLASS: MyWindow\n");
-        message.append(L"FUNC: createRadioButton()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
+        WriteLog(error_message, L" [CLASS: \"MyWindow\" | FUNC: \"createRadioButton()\"]", MyLogType::Error);
 
         return false;
     }
@@ -479,14 +459,7 @@ bool MyWindow::createEditbox(HWND hWndParent, std::wstring windowText, bool visi
 
     if (!are_all_operation_success)
     {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to create the editbox.\n");
-        message.append(L"Error Message: " + error_message + L"\n");
-        message.append(L"CLASS: MyWindow\n");
-        message.append(L"FUNC: createEditbox()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
+        WriteLog(error_message, L" [CLASS: \"MyWindow\" | FUNC: \"createEditbox()\"]", MyLogType::Error);
         return false;
     }
 
@@ -561,14 +534,7 @@ bool MyWindow::createDDLCombobox(HWND hWndParent, bool visibleByDefault, bool us
 
     if (!are_all_operation_success)
     {
-        std::wstring message = L"";
-        message.append(L"Error occurred!\n");
-        message.append(L"Failed to create the drop-down list combobox.\n");
-        message.append(L"Error Message: " + error_message + L"\n");
-        message.append(L"CLASS: MyWindow\n");
-        message.append(L"FUNC: createDDLCombobox()");
-        MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONERROR);
-
+        WriteLog(error_message, L" [CLASS: \"MyWindow\" | FUNC: \"createDDLCombobox()\"]", MyLogType::Error);
         return false;
     }
 

@@ -233,7 +233,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         switch (LOWORD(wParam))
         {
         case IDC_NONCLIENT_CLOSE_BUTTON:
-            nApp::Window::Deinitialization::OnExit();
+            nApp::Window::Uninitialization::OnExit();
             DestroyWindow(hWnd);
             return 0;
 
@@ -854,9 +854,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         if (IsWindow(g_ContainerMainContent->pContainerWindow->hWnd))
         {
             if (!g_ContainerMainContent->updateContainerDimensions(WINDOW_BORDER_DEFAULTWIDTH,
-                                                                    g_pUIElements->rectangles.rectCaption.bottom,
-                                                                    g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),
-                                                                    g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), g_IsCurrentThemeWantScrollbarsVisible, reset_containers_scroll_position))
+                                                                   g_pUIElements->rectangles.rectCaption.bottom,
+                                                                   g_CurrentWindowWidth - (WINDOW_BORDER_DEFAULTWIDTH * 2),
+                                                                   g_CurrentWindowHeight - (WINDOW_BORDER_DEFAULTWIDTH * 2) - (g_pUIElements->rectangles.rectCaption.bottom - g_pUIElements->rectangles.rectCaption.top), g_IsCurrentThemeWantScrollbarsVisible, reset_containers_scroll_position))
             {
                 WriteLog(L"Failed to update the MainContent container's dimensions.", L" [MESSAGE: \"WM_SIZE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
             }
@@ -1391,16 +1391,17 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     // Process WM_CLOSE message to perform additional operations on the application window before destroy the window.
     case WM_CLOSE:
     {
-        nApp::Window::Deinitialization::OnExit();
+        nApp::Window::Uninitialization::OnExit();
         DestroyWindow(hWnd);
         return 0;
     }
 
-    // Process WM_DESTROY message to perform necessary deallocations before exiting the application.
+    // Process WM_DESTROY message to perform necessary deallocations and uninitializes before exiting the application.
     case WM_DESTROY:
     {
-        // Perform necessary deallocations and deinitialize global objects, subclasses, and APIs to properly conclude the application.
-        nApp::Window::Deinitialization::OnDestroy();
+        // Perform necessary deallocations and uninitializes of global objects, APIs and related operations to properly conclude the application.
+        if (!nApp::Window::Uninitialization::OnDestroy())
+            WriteLog(L"The application failed to shutdown properly.", L" [MESSAGE: \"WM_DESTROY\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
         PostQuitMessage(0);
         return 0;
     }
