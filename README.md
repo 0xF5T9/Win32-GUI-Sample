@@ -1,13 +1,13 @@
 # Win32 GUI Sample
 Win32 GUI Example
 
-Compiler: Visual Studio 2022+ (C++17)
+Project: Visual Studio 2022 (C++17)
 
 Architecture: x64
 
 ## Set-up compiler environment:
 Requires:
-- Visual Studio 2022+
+- Visual Studio 2022
 - C++17
 
 VS Project Configurations:
