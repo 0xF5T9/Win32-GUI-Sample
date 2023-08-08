@@ -152,13 +152,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UxTheme.lib;Comctl32.lib;Gdiplus.lib;Dwmapi.lib;Winmm.lib;Powrprof.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UxTheme.lib;Comctl32.lib;Gdiplus.lib;Dwmapi.lib;Winmm.lib;Powrprof.lib;d2d1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Manifest Include="Sources\Resource\MyApp.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sources\Graphic\graphic.cpp" />
     <ClCompile Include="Sources\Global\global.cpp" />
     <ClCompile Include="Sources\Main\main.cpp" />
     <ClCompile Include="Sources\Subclass\subclasses.cpp" />
@@ -166,6 +167,7 @@
     <ClCompile Include="Sources\WinAPI\my_winapi.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Sources\Graphic\graphic.h" />
     <ClInclude Include="Includes\forward_declarations.h" />
     <ClInclude Include="Includes\my_enums.h" />
     <ClInclude Include="Includes\standard_includes.h" />

@@ -30,6 +30,9 @@ bool g_IsWindowMinimized = false;                   // Indicate whether the appl
 bool g_IsWindowMaximized = false;                   // Indicate whether the application window is maximized.
 bool g_IsWindows11BorderAttributeSupported = false; // Indicate whether the DWMWA_BORDER_COLOR attribute flag is supported on the current OS.
 
+// Graphic-related variables:
+MyD2D1Engine *g_pD2D1Engine; // My Direct2D engine object.
+
 // UI-related variables:
 UIElements *g_pUIElements; // UI manager object.
 

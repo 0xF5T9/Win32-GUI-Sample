@@ -24,7 +24,7 @@ struct RGBA
 /**
  * @class MyColor
  *
- * @brief Represents a color. (Wrapped COLORREF, Gdiplus::Color, HBRUSH)
+ * @brief Represents a color. (Wrapped COLORREF, Gdiplus::Color, HBRUSH and D2D1::ColorF)
  */
 class MyColor
 {
@@ -72,9 +72,10 @@ private:
     BYTE red, green, blue, alpha; // Color values.
 
     // Variant(s).
-    COLORREF clr;             // COLORREF variant of the color.
-    Gdiplus::Color gdipColor; // Gdiplus::Color variant of the color.
-    HBRUSH hBrush;            // HBRUSH variant of the color.
+    COLORREF clr;                                               // COLORREF variant of the color.
+    Gdiplus::Color gdipColor;                                   // Gdiplus::Color variant of the color.
+    HBRUSH hBrush;                                              // HBRUSH variant of the color.
+    D2D1::ColorF d2d1Color = D2D1::ColorF(D2D1::ColorF::Black); // D2D1::ColorF variant of the color.
 
 public:
     /// [GENERAL FUNCTIONS]
@@ -126,11 +127,22 @@ public:
 
     /**
      * @brief Get the Gdiplus::Color variant (reference) of the color.
+     *
+     * @returns Returns the Gdiplus::Color variant of the color.
      */
     Gdiplus::Color &getGDIPColor();
 
     /**
+     * @brief Get the D2D1::ColorF variant (reference) of the color.
+     *
+     * @returns Returns the D2D1::ColorF variant of the color.
+     */
+    D2D1::ColorF &getD2D1Color();
+
+    /**
      * @brief Get the HBRUSH variant (reference) of the color.
+     *
+     * @returns Returns the HBRUSH variant of the color.
      */
     HBRUSH &getHBRUSH();
 
@@ -416,12 +428,12 @@ private:
     inline static UINT totalInstances = 0; // Tracks the total number of instances.
 
     // Allocation variable(s).
-    IStream *pStream;     // Pointer to the resource stream.
-    INT resourceID;       // Resource ID of the image.
-    MyImageFormat format; // Format of the image.
+    IStream *pStream = nullptr; // Pointer to the resource stream.
+    INT resourceID;             // Resource ID of the image.
+    MyImageFormat format;       // Format of the image.
 
     // Variant(s).
-    Gdiplus::Image *pImage; // Gdiplus::Image variant of the image.
+    Gdiplus::Image *pImage = nullptr; // Gdiplus::Image variant of the image.
 
 public:
     /// [GENERAL FUNCTIONS]
@@ -784,7 +796,7 @@ class UIPointers
 public:
     /// [APPLICATION UI RELATED POINTERS]
 
-    HBRUSH *pCurrentBorderBrush = nullptr; // Pointer that holds the current application border brush.
+    D2D1::ColorF *pCurrentBorderColor = nullptr; // Pointer that holds the current application border color.
 };
 
 /**

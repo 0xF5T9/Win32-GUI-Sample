@@ -40,6 +40,9 @@
     <Filter Include="Source Files\WinAPI">
       <UniqueIdentifier>{9ac0e1ac-130a-430d-9994-50ec7bbd1c0c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Graphic">
+      <UniqueIdentifier>{62c24eb0-4ff0-46fb-b10f-21caf17e85e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\Main\main.cpp">
@@ -56,6 +59,9 @@
     </ClCompile>
     <ClCompile Include="Sources\WinAPI\my_winapi.cpp">
       <Filter>Source Files\WinAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Graphic\graphic.cpp">
+      <Filter>Source Files\Graphic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="Sources\WinAPI\my_winapi.h">
       <Filter>Source Files\WinAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Graphic\graphic.h">
+      <Filter>Source Files\Graphic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -25,5 +25,6 @@
 #include <UIAnimation.h>             // Windows API: Windows Animation Manager (WAM).
 #include <comdef.h>                  // Windows API: Component Object Model (COM) error handling.
 #include <Powrprof.h>                // Windows API: Power management functions and settings.
+#include <d2d1.h>                    // Windows API: Direct2D (D2D1), hardware-accelerated drawing functions.
 
 #endif // STANDARD_INCLUDES_H

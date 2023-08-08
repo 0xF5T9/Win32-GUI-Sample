@@ -30,6 +30,9 @@ extern bool g_IsWindowMinimized;
 extern bool g_IsWindowMaximized;
 extern bool g_IsWindows11BorderAttributeSupported;
 
+// Graphic-related variables:
+extern MyD2D1Engine *g_pD2D1Engine;
+
 // UI-related variables:
 extern UIElements *g_pUIElements;
 

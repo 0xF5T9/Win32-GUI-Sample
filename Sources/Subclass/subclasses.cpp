@@ -198,6 +198,14 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_button_rgb[0] || !p_transition_button_rgb[1] || !p_transition_button_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Default)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableButtonRGB[0], p_transition_button_rgb[0]);
@@ -338,6 +346,14 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_button_rgb[0] || !p_transition_button_rgb[1] || !p_transition_button_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Hover)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableButtonRGB[0], p_transition_button_rgb[0]);
@@ -477,6 +493,14 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_button_rgb[0] || !p_transition_button_rgb[1] || !p_transition_button_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Down)";
@@ -639,6 +663,16 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_button_rgb[0] || !p_transition_button_rgb[1] || !p_transition_button_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2] ||
+                !p_reverse_transition_button_rgb[0] || !p_reverse_transition_button_rgb[1] || !p_reverse_transition_button_rgb[2] ||
+                !p_reverse_transition_button_border_rgb[0] || !p_reverse_transition_button_border_rgb[1] || !p_reverse_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Flash)";
@@ -894,24 +928,24 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
             gdip_rect_button = Gdiplus::Rect(rect_button.left, rect_button.top, rect_button.right, rect_button.bottom);
 
             // Get the button's text length.
-            INT button_text_length = GetWindowTextLengthW(hWnd);
-            SetLastError(NULL);
-            if (!button_text_length && GetLastError() != NULL)
+            SetLastError(ERROR_SUCCESS);
+            size_t button_text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
+            if (!button_text_length && GetLastError())
             {
                 error_message = L"Failed to get the button text length.";
                 break;
             }
 
             // Get the button's text.
-            WCHAR *text_buffer = new WCHAR[button_text_length + 1];
-            if (!GetWindowTextW(hWnd, text_buffer, button_text_length + 1) && button_text_length != NULL)
+            WCHAR *p_text_buffer = new WCHAR[button_text_length + 1];
+            if (!GetWindowTextW(hWnd, p_text_buffer, static_cast<INT>(button_text_length) + 1) && button_text_length != NULL)
             {
                 error_message = L"Failed to get the button text.";
-                delete[] text_buffer;
+                delete[] p_text_buffer;
                 break;
             }
-            std::wstring button_text(text_buffer);
-            delete[] text_buffer;
+            std::wstring button_text(p_text_buffer);
+            delete[] p_text_buffer;
 
             // Begin the paintings.
             hdc = BeginPaint(hWnd, &ps);
@@ -1533,6 +1567,14 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_background_rgb[0] || !p_transition_background_rgb[1] || !p_transition_background_rgb[2] ||
+                !p_transition_default_icon_opacity || !p_transition_hover_icon_opacity || !p_transition_down_icon_opacity)
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Default)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableBackgroundRGB[0], p_transition_background_rgb[0]);
@@ -1687,6 +1729,14 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_background_rgb[0] || !p_transition_background_rgb[1] || !p_transition_background_rgb[2] ||
+                !p_transition_default_icon_opacity || !p_transition_hover_icon_opacity || !p_transition_down_icon_opacity)
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Hover)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableBackgroundRGB[0], p_transition_background_rgb[0]);
@@ -1840,6 +1890,14 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_background_rgb[0] || !p_transition_background_rgb[1] || !p_transition_background_rgb[2] ||
+                !p_transition_default_icon_opacity || !p_transition_hover_icon_opacity || !p_transition_down_icon_opacity)
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Down)";
@@ -1997,6 +2055,14 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_background_rgb[0] || !p_transition_background_rgb[1] || !p_transition_background_rgb[2] ||
+                !p_reverse_transition_background_rgb[0] || !p_reverse_transition_background_rgb[1] || !p_reverse_transition_background_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Flash)";
@@ -2340,7 +2406,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
             // Delete the bitmap object.
             if (is_bitmap_created)
             {
-                if (!SelectObject(mem_hdc, bitmap_old))
+                if (!bitmap_old || !SelectObject(mem_hdc, bitmap_old))
                 {
                     WriteLog(L"Failed to select the bitmap object.", L" [CLASS: \"MyImageButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
                 }
@@ -2906,6 +2972,15 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Default)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableButtonPrimaryRGB[0], p_transition_button_primary_rgb[0]);
@@ -3079,6 +3154,15 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Hover)";
@@ -3254,6 +3338,15 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Down)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableButtonPrimaryRGB[0], p_transition_button_primary_rgb[0]);
@@ -3427,6 +3520,15 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: Selected)";
@@ -3610,6 +3712,15 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
                 break;
             error_message = L"";
 
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
+
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: SelectedHover)";
             hr = p_storyboard->AddTransition(this->pAnimationVariableButtonPrimaryRGB[0], p_transition_button_primary_rgb[0]);
@@ -3783,6 +3894,15 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: SelectedDown)";
@@ -3989,6 +4109,18 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
             if (FAILED(hr))
                 break;
             error_message = L"";
+
+            // Check if the transition pointers are null.
+            if (!p_transition_button_primary_rgb[0] || !p_transition_button_primary_rgb[1] || !p_transition_button_primary_rgb[2] ||
+                !p_transition_button_secondary_rgb[0] || !p_transition_button_secondary_rgb[1] || !p_transition_button_secondary_rgb[2] ||
+                !p_transition_button_border_rgb[0] || !p_transition_button_border_rgb[1] || !p_transition_button_border_rgb[2] ||
+                !p_reverse_transition_button_primary_rgb[0] || !p_reverse_transition_button_primary_rgb[1] || !p_reverse_transition_button_primary_rgb[2] ||
+                !p_reverse_transition_button_secondary_rgb[0] || !p_reverse_transition_button_secondary_rgb[1] || !p_reverse_transition_button_secondary_rgb[2] ||
+                !p_reverse_transition_button_border_rgb[0] || !p_reverse_transition_button_border_rgb[1] || !p_reverse_transition_button_border_rgb[2])
+            {
+                error_message = L"The transition pointers are null.";
+                break;
+            }
 
             // Add the transition(s) to the storyboard.
             error_message = L"Failed to add the transition(s) to the storyboard. (State: SelectedFlash)";
@@ -4327,24 +4459,24 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
             gdip_rect_button = Gdiplus::Rect(rect_button.left, rect_button.top, rect_button.right, rect_button.bottom);
 
             // Get the button's text length.
-            INT button_text_length = GetWindowTextLengthW(hWnd);
-            SetLastError(NULL);
-            if (!button_text_length && GetLastError() != NULL)
+            SetLastError(ERROR_SUCCESS);
+            size_t button_text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
+            if (!button_text_length && GetLastError())
             {
                 error_message = L"Failed to get the button text length.";
                 break;
             }
 
             // Get the button's text.
-            WCHAR *text_buffer = new WCHAR[button_text_length + 1];
-            if (!GetWindowTextW(hWnd, text_buffer, button_text_length + 1) && button_text_length != NULL)
+            WCHAR* p_text_buffer = new WCHAR[button_text_length + 1];
+            if (!GetWindowTextW(hWnd, p_text_buffer, static_cast<INT>(button_text_length) + 1) && button_text_length != NULL)
             {
                 error_message = L"Failed to get the button text.";
-                delete[] text_buffer;
+                delete[] p_text_buffer;
                 break;
             }
-            std::wstring button_text(text_buffer);
-            delete[] text_buffer;
+            std::wstring button_text(p_text_buffer);
+            delete[] p_text_buffer;
 
             // Begin the paintings.
             hdc = BeginPaint(hWnd, &ps);
@@ -5286,7 +5418,7 @@ LRESULT CALLBACK MyEdit::scMyEditStatic(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
             // Delete the bitmap object.
             if (is_bitmap_created)
             {
-                if (!SelectObject(mem_hdc, bitmap_old))
+                if (!bitmap_old || !SelectObject(mem_hdc, bitmap_old))
                 {
                     WriteLog(L"Failed to select the bitmap object.", L" [CLASS: \"MyEdit\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyEditStatic()\"]", MyLogType::Error);
                 }
@@ -5614,10 +5746,15 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
                 if (current_selected_item_index >= 0)
                 {
                     INT text_length = static_cast<INT>(SendMessageW(hWnd, CB_GETLBTEXTLEN, current_selected_item_index, 0));
-                    WCHAR *text_buffer = new WCHAR[text_length + 1];
-                    SendMessageW(hWnd, CB_GETLBTEXT, current_selected_item_index, (LPARAM)text_buffer);
-                    DrawTextW(mem_hdc, text_buffer, -1, &rect_combobox, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                    delete[] text_buffer;
+                    if (text_length == CB_ERR)
+                    {
+                        error_message = L"Failed to retrieve the combobox item text length.";
+                        break;
+                    }
+                    WCHAR *p_text_buffer = new WCHAR[static_cast<size_t>(text_length) + 1U];
+                    SendMessageW(hWnd, CB_GETLBTEXT, current_selected_item_index, (LPARAM)p_text_buffer);
+                    DrawTextW(mem_hdc, p_text_buffer, -1, &rect_combobox, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                    delete[] p_text_buffer;
                 }
             }
 
@@ -5642,7 +5779,7 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wPa
             // Delete the bitmap object.
             if (is_bitmap_created)
             {
-                if (!SelectObject(mem_hdc, bitmap_old))
+                if (!bitmap_old || !SelectObject(mem_hdc, bitmap_old))
                 {
                     WriteLog(L"Failed to select the bitmap object.", L" [CLASS: \"MyDDLCombobox\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyDDLCombobox()\"]", MyLogType::Error);
                 }

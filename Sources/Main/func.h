@@ -18,6 +18,7 @@
  * #pragma comment(lib, "Dwmapi.lib")
  * #pragma comment(lib, "Winmm.lib")
  * #pragma comment(lib, "Powrprof.lib")
+ * #pragma comment(lib, "d2d1.lib")
  */
 
 /**
@@ -78,15 +79,21 @@ namespace nSol
             HWND parent = GetParent(hWnd);   // Parent of the target window.
 
             // Retrieving the window name.
-            size_t text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd)) + static_cast<size_t>(1);
-            p_text_buffer = new WCHAR[text_length];
-            if (!GetWindowTextW(hWnd, p_text_buffer, static_cast<INT>(text_length)) && text_length != NULL)
+            SetLastError(ERROR_SUCCESS);
+            size_t text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
+            if (!text_length && GetLastError())
+            {
+                error_message = L"Failed to retrieve the window text length.";
+                break;
+            }
+            p_text_buffer = new WCHAR[text_length + 1];
+            if (!GetWindowTextW(hWnd, p_text_buffer, static_cast<INT>(text_length) + 1) && text_length != NULL)
             {
                 delete[] p_text_buffer;
                 error_message = L"Failed to retrieve the window text.";
                 break;
             }
-            std::wstring window_name(p_text_buffer);
+            std::wstring window_text(p_text_buffer);
             delete[] p_text_buffer;
 
             // Retrieving the window class name.
@@ -146,7 +153,7 @@ namespace nSol
 
             // Output the information message.
             std::wstring message = L"";
-            message.append(L"Window name: " + window_name + L"\n");
+            message.append(L"Window text: " + window_text + L"\n");
             message.append(L"Window class name: " + window_class_name + L"\n");
             message.append(L"Window id: " + std::to_wstring(window_id) + L"\n");
             message.append(L"Window Parent id: " + std::to_wstring(parent_id) + L"\n");
@@ -309,22 +316,54 @@ namespace nSol
      *
      * @return Returns the class name of the target window, or an empty string if failed to retrieve the class name.
      */
-    std::wstring GetWindowClassName(HWND hWnd)
+    std::wstring GetWindowClassName(const HWND &hWnd)
     {
         // Allocate the text buffer for the window class name.
-        WCHAR *text_buffer = new WCHAR[MAX_CLASS_NAME_LENGTH];
+        WCHAR *p_text_buffer = new WCHAR[MAX_CLASS_NAME_LENGTH];
 
         // Get the window class name.
-        if (!GetClassNameW(hWnd, text_buffer, MAX_CLASS_NAME_LENGTH))
+        if (!GetClassNameW(hWnd, p_text_buffer, MAX_CLASS_NAME_LENGTH))
         {
+            delete[] p_text_buffer; // Release text buffer on failure.
             WriteLog(L"Failed to retrieve the window class name.", L" [NAMESPACE: \"nSol\" | FUNC: \"GetWindowClassName()\"]", MyLogType::Error);
-            delete[] text_buffer;
             return L"";
         }
-        std::wstring class_name(text_buffer);
-        delete[] text_buffer;
+        std::wstring class_name(p_text_buffer); // Convert the text buffer to a wide string.
+        delete[] p_text_buffer;                 // Release text buffer.
 
         return class_name;
+    }
+
+    /**
+     * @brief Retrieve the text of the target window.
+     *
+     * @param hWnd Handle to the target window (HWND).
+     *
+     * @return Returns the text of the target window, or an empty string if failed to retrieve the text.
+     */
+    std::wstring MGetWindowText(const HWND &hWnd)
+    {
+        // Retrieve the length of the text.
+        SetLastError(ERROR_SUCCESS);
+        size_t text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
+        if (!text_length && GetLastError())
+        {
+            WriteLog(L"Failed to retrieve the window text length.", L" [NAMESPACE: \"nSol\" | FUNC: \"MGetWindowText()\"]", MyLogType::Error);
+            return L"";
+        }
+
+        // Allocate the text buffer for the window text.
+        WCHAR *p_text_buffer = new WCHAR[text_length + 1]; // +1 for the null terminator.
+        if (!GetWindowTextW(hWnd, p_text_buffer, static_cast<INT>(text_length) + 1) && text_length != NULL)
+        {
+            delete[] p_text_buffer; // Release text buffer on failure.
+            WriteLog(L"Failed to retrieve the window text.", L" [NAMESPACE: \"nSol\" | FUNC: \"MGetWindowText()\"]", MyLogType::Error);
+            return L"";
+        }
+        std::wstring window_text(p_text_buffer); // Convert the text buffer to a wide string.
+        delete[] p_text_buffer;                  // Release text buffer.
+
+        return window_text;
     }
 
     /**
@@ -726,7 +765,7 @@ namespace nApp
             bool WriteLog(std::wstring description, std::wstring details, MyLogType logType, bool noLogTypeText)
             {
                 // Set the log level based on the log type.
-                int log_level;
+                int log_level = 1;
                 switch (logType)
                 {
                 case MyLogType::Info:
@@ -976,7 +1015,7 @@ namespace nApp
          *
          * @return Returns true if the GDI Animation API and GDI+ API was successfully initialized, false otherwise.
          */
-        bool InitGraphicAPI(ULONG_PTR *pToken, const Gdiplus::GdiplusStartupInput *pInput)
+        bool InitGDIGraphicAPI(ULONG_PTR *pToken, const Gdiplus::GdiplusStartupInput *pInput)
         {
             bool are_all_operation_success = false;
             std::wstring error_message = L"";
@@ -1002,7 +1041,7 @@ namespace nApp
 
             if (!are_all_operation_success)
             {
-                WriteLog(error_message, L" [NAMESPACE: \"nApp::API\" | FUNC: \"InitGraphicAPI()\"]", MyLogType::Error);
+                WriteLog(error_message, L" [NAMESPACE: \"nApp::API\" | FUNC: \"InitGDIGraphicAPI()\"]", MyLogType::Error);
                 return false;
             }
 
@@ -1016,7 +1055,7 @@ namespace nApp
          *
          * @return Returns true if the GDI Animation API and GDI+ API was successfully uninitialized, false otherwise.
          */
-        bool UninitGraphicAPI(ULONG_PTR token)
+        bool UninitGDIGraphicAPI(ULONG_PTR token)
         {
             // Shutdown GDI+ API.
             Gdiplus::GdiplusShutdown(token);
@@ -1025,7 +1064,7 @@ namespace nApp
             HRESULT hr = BufferedPaintUnInit();
             if (FAILED(hr))
             {
-                WriteLog(L"Failed to uninitialize GDI Animation API.", L" [NAMESPACE: \"nApp::API\" | FUNC: \"UninitGraphicAPI()\"]", MyLogType::Error);
+                WriteLog(L"Failed to uninitialize GDI Animation API.", L" [NAMESPACE: \"nApp::API\" | FUNC: \"UninitGDIGraphicAPI()\"]", MyLogType::Error);
                 return false;
             }
 
@@ -2068,7 +2107,7 @@ namespace nApp
                 }
 
                 // Update application border brush.
-                g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderActive.getHBRUSH();
+                g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderActive.getD2D1Color();
                 if (g_IsWindows11BorderAttributeSupported)
                 {
                     COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
@@ -2707,7 +2746,10 @@ namespace nApp
                 if (!IsWindowMaximized(window))
                     return;
 
-                auto monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONULL);
+                // To be observed behavior:
+                // The MonitorFromWindow() function failed when the window is resotred from minimized state to maximized state.
+                // Set the flag to MONITOR_DEFAULTTONEAREST instead of MONITOR_DEFAULTTONULL fixed the issue.
+                auto monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
                 if (!monitor)
                     return;
 
@@ -2757,32 +2799,54 @@ namespace nApp
                     if (g_WindowsBuildNumber >= 22000)
                         g_IsWindows11BorderAttributeSupported = true;
 
-                    // Initialize DarkMode API.
-                    WriteLog(L"Initializing DarkMode API ...", L"", MyLogType::Debug);
-                    if (!nApp::API::InitDarkModeAPI(hWnd))
+                    // Initialize API(s).
+                    WriteLog(L"Initializing API(s) ...", L"", MyLogType::Debug);
                     {
-                        error_message = L"Failed to initialize DarkMode API.";
-                        break;
-                    }
-                    WriteLog(L"DarkMode API initialized.", L"", MyLogType::Debug);
+                        // DarkMode API.
+                        if (!nApp::API::InitDarkModeAPI(hWnd))
+                        {
+                            error_message = L"Failed to initialize DarkMode API.";
+                            break;
+                        }
+                        WriteLog(L"DarkMode API loaded.", L"", MyLogType::Debug);
 
-                    // Initialize GDI Animation & GDI+ APIs.
-                    WriteLog(L"Initializing GDI Animation & GDI+ APIs ...", L"", MyLogType::Debug);
-                    if (!nApp::API::InitGraphicAPI(&g_APIGDIToken, &g_APIGDIStartupInput))
-                    {
-                        error_message = L"Failed to initialize GDI Animation & GDI+ APIs.";
-                        break;
-                    }
-                    WriteLog(L"GDI Animation & GDI+ APIs initialized.", L"", MyLogType::Debug);
+                        // Windows Animation Manager API.
+                        if (!nApp::API::InitWindowsAnimationManager())
+                        {
+                            error_message = L"Failed to initialize Windows Animation Manager API.";
+                            break;
+                        }
+                        WriteLog(L"Windows Animation Manager API loaded.", L"", MyLogType::Debug);
 
-                    // Initialize the Windows Animation Manager API.
-                    WriteLog(L"Initializing Windows Animation Manager API ...", L"", MyLogType::Debug);
-                    if (!nApp::API::InitWindowsAnimationManager())
+                        // GDI Animation & GDI+ APIs.
+                        if (!nApp::API::InitGDIGraphicAPI(&g_APIGDIToken, &g_APIGDIStartupInput))
+                        {
+                            error_message = L"Failed to initialize GDI Animation & GDI+ APIs.";
+                            break;
+                        }
+                        WriteLog(L"GDI Animation & GDI+ APIs loaded.", L"", MyLogType::Debug);
+
+                        // Direct2D API.
+                        g_pD2D1Engine = new MyD2D1Engine();
+                        if (!g_pD2D1Engine || !g_pD2D1Engine->initialize())
+                        {
+                            error_message = L"Failed to initialize Direct2D API.";
+                            break;
+                        }
+                        WriteLog(L"Direct2D API loaded.", L"", MyLogType::Debug);
+                    }
+                    WriteLog(L"All APIs initialized successfully.", L"", MyLogType::Debug);
+
+                    // Initialize UI-related objects.
+                    WriteLog(L"Initializing UI-related objects ...", L"", MyLogType::Debug);
+                    g_pUIElements = new UIElements();
+                    g_ContainerMainContent = new MyContainer(WINDOW_CONTAINER_DEFAULTPADDING, false, WINDOW_CONTAINER_DEFAULTPADDING, true);
+                    if (!g_pUIElements || !g_ContainerMainContent)
                     {
-                        error_message = L"Failed to initialize Windows Animation Manager API.";
+                        error_message = L"Failed to initialize UI-related objects.";
                         break;
                     }
-                    WriteLog(L"Windows Animation Manager API initialized.", L"", MyLogType::Debug);
+                    WriteLog(L"UI-related objects initialized.", L"", MyLogType::Debug);
 
                     // Initialize my subclass classes.
                     WriteLog(L"Initializing subclass classes ...", L"", MyLogType::Debug);
@@ -2817,17 +2881,6 @@ namespace nApp
                         break;
                     }
                     WriteLog(L"Subclass classes initialized.", L"", MyLogType::Debug);
-
-                    // Initialize global objects.
-                    WriteLog(L"Initializing global objects ...", L"", MyLogType::Debug);
-                    g_pUIElements = new UIElements();
-                    g_ContainerMainContent = new MyContainer(WINDOW_CONTAINER_DEFAULTPADDING, false, WINDOW_CONTAINER_DEFAULTPADDING, true);
-                    if (!g_pUIElements || !g_ContainerMainContent)
-                    {
-                        error_message = L"Failed to initialize global objects.";
-                        break;
-                    }
-                    WriteLog(L"Global objects initialized.", L"", MyLogType::Debug);
 
                     // Extends the window frames into the client area (enabling the window drop-shadow effect).
                     MARGINS borders = {1, 1, 1, 1};
@@ -2922,7 +2975,7 @@ namespace nApp
                         g_VectorNonClientWindows.push_back(p_imagebutton_close);
                         g_pUIElements->miscs.hWndNonClientCloseButton = p_imagebutton_close->hWnd;
 
-                        // Minimize button
+                        // Minimize button.
                         MyWindow *p_imagebutton_minimize = new MyWindow(true);
                         MyImageButtonNonSharedPropertiesConfig button_minimize_nonsharedpropertiesconfig =
                             {
@@ -2942,28 +2995,19 @@ namespace nApp
                         g_VectorNonClientWindows.push_back(p_imagebutton_minimize);
                         g_pUIElements->miscs.hWndNonClientMinimizeButton = p_imagebutton_minimize->hWnd;
 
-                        // Window title
-                        size_t text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
-                        WCHAR *text_buffer = new WCHAR[text_length];
-                        if (!GetWindowTextW(hWnd, text_buffer, text_length + 1) && text_length != NULL)
-                        {
-                            delete[] text_buffer;
-                            error_message = L"Failed to get the window title.";
-                            break;
-                        }
+                        // Window title.
+                        std::wstring text_title = nSol::MGetWindowText(hWnd);
                         MyWindow *p_textnormal_title = new MyWindow(false);
-                        p_textnormal_title->hWnd = CreateWindowExW(NULL, WC_STATIC, text_buffer, WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                        p_textnormal_title->hWnd = CreateWindowExW(NULL, WC_STATIC, text_title.c_str(), WS_CHILD | SS_NOPREFIX | SS_LEFT,
                                                                    WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23,
                                                                    hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
                         if (!p_textnormal_title->hWnd)
                         {
-                            delete[] text_buffer;
                             error_message = L"Failed to create the window title.";
                             break;
                         }
                         SendMessageW(p_textnormal_title->hWnd, WM_SETFONT, (WPARAM)g_pUIElements->fonts.caption.getHFONT(), FALSE);
                         g_VectorNonClientWindows.push_back(p_textnormal_title);
-                        delete[] text_buffer;
 
                         are_all_operation_success = true;
                     }
@@ -3318,6 +3362,21 @@ namespace nApp
                 std::wstring error_message = L"";
                 while (!are_all_operation_success)
                 {
+                    // Set the window border attribute.
+                    // The border color affects the window background color during window opening animation.
+                    // The actual window border color will be restored after the window opening animation is completed (via WM_TIMER/IDT_ACTIVE_CHECK).
+                    if (g_IsWindows11BorderAttributeSupported)
+                    {
+                        COLORREF border_color = g_pUIElements->colors.background.getCOLORREF(); // Use the background color.
+                        // COLORREF border_color = DWMWA_COLOR_NONE; // Or use transparent color.
+                        HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
+                        if (FAILED(hr))
+                        {
+                            error_message = L"Failed to set the window border attribute.";
+                            break;
+                        }
+                    }
+
                     // Show main window.
                     ShowWindow(g_hWnd, SW_NORMAL);
 
@@ -3398,10 +3457,6 @@ namespace nApp
                 std::wstring error_message = L"";
                 while (!are_all_operation_success)
                 {
-                    // Destroy containers.
-                    delete g_ContainerMainContent;
-                    WriteLog(L"Container(s) destroyed.", L"", MyLogType::Debug);
-
                     // Destroy non-client windows.
                     {
                         if (!g_VectorNonClientWindows.empty())
@@ -3418,23 +3473,40 @@ namespace nApp
                         WriteLog(L"Non-client window(s) destroyed.", L"", MyLogType::Debug);
                     }
 
-                    // Destroy global objects.
+                    // Uninitialize UI-related objects.
+                    delete g_ContainerMainContent;
                     delete g_pUIElements;
-                    WriteLog(L"Global object(s) destroyed.", L"", MyLogType::Debug);
+                    WriteLog(L"UI-related objects uninitialized.", L"", MyLogType::Debug);
 
-                    // Uninitialize APIs.
-                    if (!nApp::API::UninitWindowAnimationManager())
+                    // Uninitialize API(s).
                     {
-                        error_message = L"Failed to uninitialize Windows Animation Manager API.";
-                        break;
+                        // Direct2D API.
+                        if (!g_pD2D1Engine->uninitialize())
+                        {
+                            error_message = L"Failed to uninitialize Direct2D API.";
+                            break;
+                        }
+                        delete g_pD2D1Engine;
+                        WriteLog(L"Direct2D API uninitialized.", L"", MyLogType::Debug);
+
+                        // GDI Animation & GDI+ APIs.
+                        if (!nApp::API::UninitGDIGraphicAPI(g_APIGDIToken))
+                        {
+                            error_message = L"Failed to uninitialize GDI Animation & GDI+ APIs.";
+                            break;
+                        }
+                        WriteLog(L"GDI Animation & GDI+ APIs uninitialized.", L"", MyLogType::Debug);
+
+                        // Windows Animation Manager API.
+                        if (!nApp::API::UninitWindowAnimationManager())
+                        {
+                            error_message = L"Failed to uninitialize Windows Animation Manager API.";
+                            break;
+                        }
+                        WriteLog(L"Windows Animation Manager API uninitialized.", L"", MyLogType::Debug);
+
+                        // Dark Mode API doesn't need to be uninitialized.
                     }
-                    WriteLog(L"Windows Animation Manager API uninitialized.", L"", MyLogType::Debug);
-                    if (!nApp::API::UninitGraphicAPI(g_APIGDIToken))
-                    {
-                        error_message = L"Failed to uninitialize GDI Animation & GDI+ APIs.";
-                        break;
-                    }
-                    WriteLog(L"GDI Animation & GDI+ APIs uninitialized.", L"", MyLogType::Debug);
 
                     // Clears previously set minimum timer resolution.
                     if (timeEndPeriod(15) != TIMERR_NOERROR)

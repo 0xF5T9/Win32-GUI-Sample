@@ -246,76 +246,72 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         break;
     }
 
-    // Paint the main window.
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
-        HDC hdc = NULL;
-        HDC mem_hdc = NULL;
-        HBITMAP bitmap = NULL;
-        HBITMAP bitmap_old = NULL;
-        bool is_paint_begined = false;
-        bool is_bitmap_created = false;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
         bool are_all_operation_success = false;
         std::wstring error_message = L"";
         while (!are_all_operation_success)
         {
+            HRESULT hr;
+
             // Get the application client rect.
-            RECT rect_application;
-            if (!GetClientRect(hWnd, &rect_application))
+            RECT rect_window;
+            if (!GetClientRect(hWnd, &rect_window))
             {
                 error_message = L"Failed to retrieve the application window's client rect.";
                 break;
             }
 
-            // Begin the paintings.
-            hdc = BeginPaint(hWnd, &ps);
-            if (!hdc)
+            // Create the Direct2D render target.
+            ID2D1RenderTarget *p_rendertarget = g_pD2D1Engine->createDCRenderTarget(hdc, rect_window);
+            if (!p_rendertarget)
             {
-                error_message = L"Failed to execute \"BeginPaint()\".";
-                break;
-            }
-            is_paint_begined = true;
-
-            // Create memory device context and bitmap object for double buffering.
-            mem_hdc = CreateCompatibleDC(hdc);
-            if (!mem_hdc)
-            {
-                error_message = L"Failed to create the compatible memory device context.";
-                break;
-            }
-            bitmap = CreateCompatibleBitmap(hdc, rect_application.right - rect_application.left, rect_application.bottom - rect_application.top);
-            if (!bitmap)
-            {
-                error_message = L"Failed to create the compatible bitmap object.";
-                break;
-            }
-            is_bitmap_created = true;
-            bitmap_old = reinterpret_cast<HBITMAP>(SelectObject(mem_hdc, bitmap));
-            if (!bitmap_old)
-            {
-                error_message = L"Failed to select the bitmap object.";
+                error_message = L"Failed to create the Direct2D render target.";
                 break;
             }
 
-            // Begin painting to the memory device context.
+            // Prepare objects for drawing.
+            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(1, 1, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+            D2D1_RECT_F d2d1_rect_caption = D2D1::RectF(1, 1, static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.right), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.bottom));
+            D2D1::ColorF d2d1_color_caption_background = g_pUIElements->colors.captionBackground.getD2D1Color();
+            D2D1::ColorF d2d1_color_background = g_pUIElements->colors.background.getD2D1Color();
+            D2D1::ColorF d2d1_color_window_border = *g_pUIElements->pointers.pCurrentBorderColor;
+            ID2D1SolidColorBrush *p_d2d1_brush_caption;
+            ID2D1SolidColorBrush *p_d2d1_brush_border;
+            hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_caption_background, &p_d2d1_brush_caption);
+            if (FAILED(hr))
             {
-                // Draw the window background.
-                FillRect(mem_hdc, &rect_application, g_pUIElements->colors.background.getHBRUSH());
-
-                // Draw the window caption background.
-                FillRect(mem_hdc, &g_pUIElements->rectangles.rectCaption, g_pUIElements->colors.captionBackground.getHBRUSH());
-
-                // Draw the window borders.
-                FrameRect(mem_hdc, &rect_application, *g_pUIElements->pointers.pCurrentBorderBrush);
-            }
-
-            // Draw contents from memory device context to target device context.
-            if (!BitBlt(hdc, 0, 0, rect_application.right - rect_application.left, rect_application.bottom - rect_application.top, mem_hdc, 0, 0, SRCCOPY))
-            {
-                error_message = L"Failed to draw contents from memory device context to target device context.";
+                error_message = L"Failed to create a solid color brush for caption background (D2D1).";
                 break;
             }
+            hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_window_border, &p_d2d1_brush_border);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create a solid color brush for window border (D2D1).";
+                break;
+            }
+
+            // Begin drawing.
+            p_rendertarget->BeginDraw();
+            p_rendertarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED); // Disable D2D1 anti-aliasing to achieve pixel-perfect drawing.
+
+            // Draw the background.
+            p_rendertarget->Clear(d2d1_color_background);
+
+            // Draw the caption.
+            p_rendertarget->FillRectangle(d2d1_rect_caption, p_d2d1_brush_caption);
+
+            // Draw the border.
+            p_rendertarget->DrawRectangle(d2d1_rect_window, p_d2d1_brush_border);
+
+            // End drawing.
+            p_rendertarget->EndDraw();
+            p_d2d1_brush_caption->Release();
+            p_d2d1_brush_border->Release();
+            p_rendertarget->Release();
 
             are_all_operation_success = true;
         }
@@ -325,103 +321,80 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             WriteLog(error_message, L" [MESSAGE: \"WM_PAINT\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
         }
 
-        // Perform necesscary clean up operations.
-        if (is_paint_begined)
-        {
-            // Delete the bitmap object.
-            if (is_bitmap_created)
-            {
-                if (!SelectObject(mem_hdc, bitmap_old))
-                {
-                    WriteLog(L"Failed to select the bitmap object.", L" [MESSAGE: \"WM_PAINT\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-                }
-                if (!DeleteObject(bitmap))
-                {
-                    WriteLog(L"Failed to delete the bitmap object.", L" [MESSAGE: \"WM_PAINT\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-                }
-                bitmap = NULL;
-                bitmap_old = NULL;
-            }
-
-            // Delete the memory device context.
-            if (mem_hdc)
-            {
-                if (!DeleteDC(mem_hdc))
-                {
-                    WriteLog(L"Failed to delete the memory device context.", L" [MESSAGE: \"WM_PAINT\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-                }
-                mem_hdc = NULL;
-            }
-
-            // End the paintings.
-            EndPaint(hWnd, &ps);
-            return 0;
-        }
-
-        break;
+        EndPaint(hWnd, &ps);
+        return 0;
     }
 
     // Process background erase requests.
     case WM_ERASEBKGND:
     {
-        // If the application is not ready yet or is resizing, erase the background manually.
+        // If the application is not ready yet, erase the background manually.
         // This effectively reduces unwanted visual artifacts during resizing and makes the application window appear more smoothly when being opened.
-        if (!g_IsWindowReady || g_IsAppResizing)
+        if (!g_IsWindowReady)
         {
             HDC hdc = reinterpret_cast<HDC>(wParam);
-            HDC mem_hdc = NULL;
-            HBITMAP bitmap = NULL;
-            HBITMAP bitmap_old = NULL;
-            bool is_bitmap_created = false;
+
             bool are_all_operation_success = false;
             std::wstring error_message = L"";
             while (!are_all_operation_success)
             {
+                HRESULT hr;
+
                 // Get the application client rect.
-                RECT rect_application;
-                if (!GetClientRect(hWnd, &rect_application))
+                RECT rect_window;
+                if (!GetClientRect(hWnd, &rect_window))
                 {
                     error_message = L"Failed to retrieve the application window's client rect.";
                     break;
                 }
 
-                // Create memory device context and bitmap object for double buffering.
-                mem_hdc = CreateCompatibleDC(hdc);
-                if (!mem_hdc)
+                // Create the Direct2D render target.
+                ID2D1RenderTarget *p_rendertarget = g_pD2D1Engine->createDCRenderTarget(hdc, rect_window);
+                if (!p_rendertarget)
                 {
-                    error_message = L"Failed to create the compatible memory device context.";
-                    break;
-                }
-                bitmap = CreateCompatibleBitmap(hdc, rect_application.right - rect_application.left, rect_application.bottom - rect_application.top);
-                if (!bitmap)
-                {
-                    error_message = L"Failed to create the compatible bitmap object.";
-                    break;
-                }
-                is_bitmap_created = true;
-                bitmap_old = reinterpret_cast<HBITMAP>(SelectObject(mem_hdc, bitmap));
-                if (!bitmap_old)
-                {
-                    error_message = L"Failed to select the bitmap object.";
+                    error_message = L"Failed to create the Direct2D render target.";
                     break;
                 }
 
-                // Begin painting to the memory device context.
+                // Prepare objects for drawing.
+                D2D1_RECT_F d2d1_rect_window = D2D1::RectF(1, 1, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+                D2D1_RECT_F d2d1_rect_caption = D2D1::RectF(1, 1, static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.right), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.bottom));
+                D2D1::ColorF d2d1_color_caption_background = g_pUIElements->colors.captionBackground.getD2D1Color();
+                D2D1::ColorF d2d1_color_background = g_pUIElements->colors.background.getD2D1Color();
+                D2D1::ColorF d2d1_color_window_border = *g_pUIElements->pointers.pCurrentBorderColor;
+                ID2D1SolidColorBrush *p_d2d1_brush_caption;
+                ID2D1SolidColorBrush *p_d2d1_brush_border;
+                hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_caption_background, &p_d2d1_brush_caption);
+                if (FAILED(hr))
                 {
-                    // Draw the window background.
-                    FillRect(mem_hdc, &rect_application, g_pUIElements->colors.background.getHBRUSH());
-                    // Draw the window caption background.
-                    RECT rect_caption = rect_application;
-                    rect_caption.bottom = WINDOW_CAPTIONBAR_DEFAULTHEIGHT;
-                    FillRect(mem_hdc, &rect_caption, g_pUIElements->colors.captionBackground.getHBRUSH());
-                }
-
-                // Draw contents from memory device context to target device context.
-                if (!BitBlt(hdc, 0, 0, rect_application.right - rect_application.left, rect_application.bottom - rect_application.top, mem_hdc, 0, 0, SRCCOPY))
-                {
-                    error_message = L"Failed to draw contents from memory device context to target device context.";
+                    error_message = L"Failed to create a solid color brush for caption background (D2D1).";
                     break;
                 }
+                hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_window_border, &p_d2d1_brush_border);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create a solid color brush for window border (D2D1).";
+                    break;
+                }
+
+                // Begin drawing.
+                p_rendertarget->BeginDraw();
+                p_rendertarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED); // Disable D2D1 anti-aliasing to achieve pixel-perfect drawing.
+
+                // Draw the background.
+                p_rendertarget->Clear(d2d1_color_background);
+
+                // Draw the caption.
+                p_rendertarget->FillRectangle(d2d1_rect_caption, p_d2d1_brush_caption);
+
+                // Draw the border.
+                p_rendertarget->DrawRectangle(d2d1_rect_window, p_d2d1_brush_border);
+
+                // End drawing.
+                p_rendertarget->EndDraw();
+                p_d2d1_brush_caption->Release();
+                p_d2d1_brush_border->Release();
+                p_rendertarget->Release();
 
                 are_all_operation_success = true;
             }
@@ -429,34 +402,6 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             if (!are_all_operation_success)
             {
                 WriteLog(error_message, L" [MESSAGE: \"WM_ERASEBKGND\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-            }
-
-            // Perform necesscary clean up operations.
-            {
-                // Delete the bitmap object.
-                if (is_bitmap_created)
-                {
-                    if (!SelectObject(mem_hdc, bitmap_old))
-                    {
-                        WriteLog(L"Failed to select the bitmap object.", L" [MESSAGE: \"WM_ERASEBKGND\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-                    }
-                    if (!DeleteObject(bitmap))
-                    {
-                        WriteLog(L"Failed to delete the bitmap object.", L" [MESSAGE: \"WM_ERASEBKGND\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-                    }
-                    bitmap = NULL;
-                    bitmap_old = NULL;
-                }
-
-                // Delete the memory device context.
-                if (mem_hdc)
-                {
-                    if (!DeleteDC(mem_hdc))
-                    {
-                        WriteLog(L"Failed to delete the memory device context.", L" [MESSAGE: \"WM_ERASEBKGND\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
-                    }
-                    mem_hdc = NULL;
-                }
             }
         }
 
@@ -615,6 +560,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         }
         }
 
+        if (!p_background_brush)
+            break;
         return reinterpret_cast<LRESULT>(*p_background_brush);
     }
 
@@ -630,7 +577,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WA_ACTIVE:
         {
             // Update the appropriate border color.
-            g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderActive.getHBRUSH();
+            g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderActive.getD2D1Color();
 
             // If supported, set the border color attribute.
             if (g_IsWindows11BorderAttributeSupported)
@@ -647,7 +594,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WA_INACTIVE:
         {
             // Update the appropriate border color.
-            g_pUIElements->pointers.pCurrentBorderBrush = &g_pUIElements->colors.borderInactive.getHBRUSH();
+            g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderInactive.getD2D1Color();
 
             // If supported, set the border color attribute.
             if (g_IsWindows11BorderAttributeSupported)
@@ -1357,6 +1304,28 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
         case VK_F2:
         {
+            ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_HIDE);
+            for (auto &x : g_VectorNonClientWindows)
+            {
+                ShowWindow(x->hWnd, SW_HIDE);
+            }
+            MessageBeep(MB_OK);
+            return 0;
+        }
+        case VK_F3:
+        {
+            ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_SHOW);
+            for (auto &x : g_VectorNonClientWindows)
+            {
+                ShowWindow(x->hWnd, SW_SHOW);
+            }
+            MessageBeep(MB_OK);
+            return 0;
+        }
+        case VK_F4:
+        {
+            COLORREF border_color = DWMWA_COLOR_NONE;
+            DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
             MessageBeep(MB_OK);
             return 0;
         }
@@ -1373,8 +1342,24 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         // Window active check timer to make sure the main window drop-shadow effects are drawn correctly.
         case IDT_ACTIVE_CHECK:
         {
-            if (GetActiveWindow() == hWnd)
+            if (GetForegroundWindow() == hWnd)
+            {
+                if (g_IsWindows11BorderAttributeSupported)
+                {
+                    COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
+                    HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
+                }
                 SendMessageW(g_hWnd, WM_NCACTIVATE, 1, 0);
+            }
+            else
+            {
+                if (g_IsWindows11BorderAttributeSupported)
+                {
+                    COLORREF border_color = g_pUIElements->colors.borderInactive.getCOLORREF();
+                    HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
+                }
+                SendMessageW(g_hWnd, WM_NCACTIVATE, 0, 0);
+            }
             KillTimer(hWnd, IDT_ACTIVE_CHECK);
 
             return 0;
@@ -1619,25 +1604,8 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     break;
                 }
 
-                // Get the editbox text length.
-                INT text_length = GetWindowTextLengthW(hwnd_editbox);
-                SetLastError(NULL);
-                if (!text_length && GetLastError() != NULL)
-                {
-                    error_message = L"Failed to get the editbox text length.";
-                    break;
-                }
-
                 // Get the editbox text.
-                WCHAR *text_buffer = new WCHAR[text_length + 1];
-                if (!GetWindowTextW(hwnd_editbox, text_buffer, text_length + 1) && text_length != NULL)
-                {
-                    delete[] text_buffer;
-                    error_message = L"Failed to get the editbox text.";
-                    break;
-                }
-                std::wstring editbox_text(text_buffer);
-                delete[] text_buffer;
+                std::wstring editbox_text = nSol::MGetWindowText(hwnd_editbox);
 
                 // Set the editbox text to empty string.
                 if (!SetWindowTextW(hwnd_editbox, L""))
@@ -1679,25 +1647,8 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     break;
                 }
 
-                // Get the editbox text length.
-                INT text_length = GetWindowTextLengthW(hwnd_editbox);
-                SetLastError(NULL);
-                if (!text_length && GetLastError() != NULL)
-                {
-                    error_message = L"Failed to get the editbox text length.";
-                    break;
-                }
-
                 // Get the editbox text.
-                WCHAR *text_buffer = new WCHAR[text_length + 1];
-                if (!GetWindowTextW(hwnd_editbox, text_buffer, text_length + 1) && text_length != NULL)
-                {
-                    delete[] text_buffer;
-                    error_message = L"Failed to get the editbox text.";
-                    break;
-                }
-                std::wstring editbox_text(text_buffer);
-                delete[] text_buffer;
+                std::wstring editbox_text = nSol::MGetWindowText(hwnd_editbox);
 
                 // Set the editbox text to empty string.
                 if (!SetWindowTextW(hwnd_editbox, L""))
@@ -1743,25 +1694,8 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                     break;
                 }
 
-                // Get the editbox text length.
-                INT text_length = GetWindowTextLengthW(hwnd_editbox);
-                SetLastError(NULL);
-                if (!text_length && GetLastError() != NULL)
-                {
-                    error_message = L"Failed to get the editbox text length.";
-                    break;
-                }
-
                 // Get the editbox text.
-                WCHAR *text_buffer = new WCHAR[text_length + 1];
-                if (!GetWindowTextW(hwnd_editbox, text_buffer, text_length + 1) && text_length != NULL)
-                {
-                    delete[] text_buffer;
-                    error_message = L"Failed to get the editbox text.";
-                    break;
-                }
-                std::wstring editbox_text(text_buffer);
-                delete[] text_buffer;
+                std::wstring editbox_text = nSol::MGetWindowText(hwnd_editbox);
 
                 // Set the editbox text to empty string.
                 if (!SetWindowTextW(hwnd_editbox, L""))
@@ -2007,6 +1941,8 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
         }
         }
 
+        if (!p_background_brush)
+            break;
         return reinterpret_cast<LRESULT>(*p_background_brush);
     }
 
@@ -2277,15 +2213,15 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                         }
 
                         // Get the combobox item text.
-                        WCHAR *text_buffer = new WCHAR[static_cast<size_t>(text_length) + static_cast<size_t>(1)];
-                        if (SendMessageW(draw_items_struct->hwndItem, CB_GETLBTEXT, draw_items_struct->itemID, reinterpret_cast<LPARAM>(text_buffer)) == CB_ERR)
+                        WCHAR *p_text_buffer = new WCHAR[static_cast<size_t>(text_length) + 1U];
+                        if (SendMessageW(draw_items_struct->hwndItem, CB_GETLBTEXT, draw_items_struct->itemID, reinterpret_cast<LPARAM>(p_text_buffer)) == CB_ERR)
                         {
-                            delete[] text_buffer;
+                            delete[] p_text_buffer;
                             error_message = L"Failed to retrieve the combobox item text.";
                             break;
                         }
-                        std::wstring text_string(text_buffer);
-                        delete[] text_buffer;
+                        std::wstring text_string(p_text_buffer);
+                        delete[] p_text_buffer;
 
                         // Prepare COLORREF variables for the background and text colors.
                         COLORREF background_color = g_pUIElements->colors.ddlComboboxItemBackground.getCOLORREF();
@@ -2376,7 +2312,7 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
 
                         // Get the combobox drop down list's client rect.
                         RECT rect_dropdownlist;
-                        if (!GetClientRect(hwnd_dropdownlist, &rect_dropdownlist))
+                        if (!hwnd_dropdownlist || !GetClientRect(hwnd_dropdownlist, &rect_dropdownlist))
                         {
                             error_message = L"Failed to retrieve the combobox drop down list's client rect.";
                             break;
@@ -2446,15 +2382,15 @@ LRESULT CALLBACK WindowProcedure_Container_MainContent(HWND hWnd, UINT uMsg, WPA
                         }
 
                         // Get the combobox item text.
-                        WCHAR *text_buffer = new WCHAR[static_cast<size_t>(text_length) + static_cast<size_t>(1)];
-                        if (SendMessageW(draw_items_struct->hwndItem, CB_GETLBTEXT, draw_items_struct->itemID, reinterpret_cast<LPARAM>(text_buffer)) == CB_ERR)
+                        WCHAR *p_text_buffer = new WCHAR[static_cast<size_t>(text_length) + 1U];
+                        if (SendMessageW(draw_items_struct->hwndItem, CB_GETLBTEXT, draw_items_struct->itemID, reinterpret_cast<LPARAM>(p_text_buffer)) == CB_ERR)
                         {
-                            delete[] text_buffer;
+                            delete[] p_text_buffer;
                             error_message = L"Failed to retrieve the combobox item text.";
                             break;
                         }
-                        std::wstring text_string(text_buffer);
-                        delete[] text_buffer;
+                        std::wstring text_string(p_text_buffer);
+                        delete[] p_text_buffer;
 
                         // Prepare COLORREF variables for the background and text colors.
                         COLORREF background_color = RGB(255, 255, 255);

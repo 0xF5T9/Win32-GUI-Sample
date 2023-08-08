@@ -13,6 +13,7 @@ MyColor::MyColor(BYTE red, BYTE green, BYTE blue, BYTE alpha) : red(red), green(
     // Variant(s).
     this->clr = RGB(this->red, this->green, this->blue);
     this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->d2d1Color = D2D1::ColorF(this->red / 255.0f, this->green / 255.0f, this->blue / 255.0f, this->alpha / 255.0f);
     this->hBrush = CreateSolidBrush(this->clr);
     if (!this->hBrush)
         WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"MyColor()\"]", MyLogType::Error);
@@ -24,6 +25,7 @@ MyColor::MyColor(RGBA colors) : red(colors.red), green(colors.green), blue(color
     // Variant(s).
     this->clr = RGB(this->red, this->green, this->blue);
     this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->d2d1Color = D2D1::ColorF(this->red / 255.0f, this->green / 255.0f, this->blue / 255.0f, this->alpha / 255.0f);
     this->hBrush = CreateSolidBrush(this->clr);
     if (!this->hBrush)
         WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"MyColor()\"]", MyLogType::Error);
@@ -36,6 +38,7 @@ MyColor::MyColor(const MyColor &other) : red(other.red), green(other.green), blu
     // Variant(s).
     this->clr = RGB(this->red, this->green, this->blue);
     this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->d2d1Color = D2D1::ColorF(this->red / 255.0f, this->green / 255.0f, this->blue / 255.0f, this->alpha / 255.0f);
     this->hBrush = CreateSolidBrush(this->clr);
     if (!this->hBrush)
         WriteLog(L"Failed to create the brush object.", L" [CLASS: \"MyColor\" | FUNC: \"MyColor()\"]", MyLogType::Error);
@@ -58,6 +61,7 @@ MyColor &MyColor::operator=(const MyColor &other)
     // Variant(s).
     this->clr = RGB(this->red, this->green, this->blue);
     this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+    this->d2d1Color = D2D1::ColorF(this->red / 255.0f, this->green / 255.0f, this->blue / 255.0f, this->alpha / 255.0f);
     if (this->hBrush)
     {
         if (!DeleteObject(this->hBrush))
@@ -113,6 +117,10 @@ Gdiplus::Color &MyColor::getGDIPColor()
 {
     return this->gdipColor;
 }
+D2D1::ColorF &MyColor::getD2D1Color()
+{
+    return this->d2d1Color;
+}
 HBRUSH &MyColor::getHBRUSH()
 {
     return this->hBrush;
@@ -132,6 +140,7 @@ bool MyColor::update(BYTE red, BYTE green, BYTE blue, BYTE alpha)
         // Variant(s).
         this->clr = RGB(this->red, this->green, this->blue);
         this->gdipColor = Gdiplus::Color(this->alpha, this->red, this->green, this->blue);
+        this->d2d1Color = D2D1::ColorF(this->red / 255.0f, this->green / 255.0f, this->blue / 255.0f, this->alpha / 255.0f);
         if (this->hBrush)
         {
             if (!DeleteObject(this->hBrush))
