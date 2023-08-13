@@ -28,9 +28,11 @@ extern bool g_IsCurrentThemeWantScrollbarsVisible;
 extern bool g_IsAppResizing;
 extern bool g_IsWindowMinimized;
 extern bool g_IsWindowMaximized;
+extern bool g_IsWindowActive;
 extern bool g_IsWindows11BorderAttributeSupported;
 
 // Graphic-related variables:
+extern MyGDIPEngine *g_pGDIPEngine;
 extern MyD2D1Engine *g_pD2D1Engine;
 
 // UI-related variables:
@@ -52,9 +54,6 @@ extern KeyToggle g_KeyToggleENTER;
 
 // Initialization variables:
 extern const LPCWSTR g_WindowClassName;
-
-extern Gdiplus::GdiplusStartupInput g_APIGDIStartupInput;
-extern ULONG_PTR g_APIGDIToken;
 
 extern IUIAnimationManager *g_pAnimationManager;
 extern IUIAnimationTimer *g_pAnimationTimer;

@@ -475,9 +475,243 @@ public:
      * @param resourceID  The resource ID of the image.
      * @param format      The format of the image.
      *
-     * @return Returns true if the color values were successfully updated, false otherwise.
+     * @return Returns true if the image values were successfully updated, false otherwise.
      */
     bool update(INT resourceID, MyImageFormat format);
+};
+
+/**
+ * @class MyDWTextFormat
+ *
+ * @brief Represents a text format. (Wrapped IDWriteTextFormat)
+ * @note IDWriteTextFormat can be used by GDI, GDI+, Direct2D, Direct3D draw text functions.
+ */
+class MyDWTextFormat
+{
+public:
+    /**
+     * @brief Default constructor.
+     *
+     * @param fontFamilyName The name of the font family.
+     * @param fontSize       The size of the font.
+     * @param fontWeight     The weight of the font.
+     * @param fontStyle      The style of the font.
+     * @param fontStretch    The stretch of the font.
+     */
+    MyDWTextFormat(std::wstring fontFamilyName, float fontSize, DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL,
+                   DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH fontStretch = DWRITE_FONT_STRETCH_NORMAL);
+
+    /**
+     * @brief Copy constructor.
+     *
+     * @param other The MyDWTextFormat object to be copied.
+     */
+    MyDWTextFormat(const MyDWTextFormat &other);
+
+    /**
+     * @brief Assignment operator.
+     *
+     * @param other The MyDWTextFormat object to be assigned.
+     */
+    MyDWTextFormat &operator=(const MyDWTextFormat &other);
+
+    /**
+     * @brief Destructor for the MyDWTextFormat object.
+     */
+    ~MyDWTextFormat();
+
+private:
+    inline static UINT totalInstances = 0; // Tracks the total number of instances.
+
+    // Allocation variable(s).
+    std::wstring fontFamilyName;     // Name of the font family.
+    float fontSize;                  // Size of the font.
+    DWRITE_FONT_WEIGHT fontWeight;   // Weight of the font.
+    DWRITE_FONT_STYLE fontStyle;     // Style of the font.
+    DWRITE_FONT_STRETCH fontStretch; // Stretch of the font.
+
+    // Variant(s).
+    IDWriteTextFormat *pTextFormat = nullptr; // IDWriteTextFormat variant of the text format.
+
+public:
+    /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Get the total instances of MyDWTextFormat.
+     *
+     * @return Returns the total instances of MyDWTextFormat.
+     */
+    inline static UINT getTotalInstances();
+
+public:
+    /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Get the name of the font family.
+     *
+     * @return Returns the name of the font family.
+     */
+    std::wstring getFontFamilyName() const;
+
+    /**
+     * @brief Get the size of the font.
+     *
+     * @return Returns the size of the font.
+     */
+    float getFontSize() const;
+
+    /**
+     * @brief Get the weight of the font.
+     *
+     * @return Returns the weight of the font.
+     */
+    DWRITE_FONT_WEIGHT getFontWeight() const;
+
+    /**
+     * @brief Get the style of the font.
+     *
+     * @return Returns the style of the font.
+     */
+    DWRITE_FONT_STYLE getFontStyle() const;
+
+    /**
+     * @brief Get the stretch of the font.
+     *
+     * @return Returns the stretch of the font.
+     */
+    DWRITE_FONT_STRETCH getFontStretch() const;
+
+    /**
+     * @brief Get the IDWriteTextFormat variant of the text format.
+     *
+     * @returns Returns the IDWriteTextFormat variant of the text format.
+     */
+    IDWriteTextFormat *getTextFormat() const;
+
+    /**
+     * @brief Update the text format values.
+     *
+     * @param fontFamilyName The name of the font family.
+     * @param fontSize       The size of the font.
+     * @param fontWeight     The weight of the font.
+     * @param fontStyle      The style of the font.
+     * @param fontStretch    The stretch of the font.
+     *
+     * @return Returns true if the text format values were successfully updated, false otherwise.
+     */
+    bool update(std::wstring fontFamilyName, float fontSize, DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL,
+                DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH fontStretch = DWRITE_FONT_STRETCH_NORMAL);
+};
+
+/**
+ * @class MyD2D1Image
+ *
+ * @brief Represents a image. (Wrapped IWICBitmapSource)
+ * @note IWICBitmapSource is used to create ID2D1Bitmap.
+ */
+class MyD2D1Image
+{
+public:
+    /**
+     * @brief Default constructor.
+     *
+     * @param resourceID   The resource ID of the image.
+     * @param resourceType The resource type of the image.
+     * @param imageWidth   The width of the image.
+     * @param imageHeight  The height of the image.
+     */
+    MyD2D1Image(INT resourceID, std::wstring resourceType, UINT imageWidth, UINT imageHeight);
+
+    /**
+     * @brief Copy constructor.
+     *
+     * @param other The MyD2D1Image object to be copied.
+     */
+    MyD2D1Image(const MyD2D1Image &other);
+
+    /**
+     * @brief Assignment operator.
+     *
+     * @param other The MyD2D1Image object to be assigned.
+     */
+    MyD2D1Image &operator=(const MyD2D1Image &other);
+
+    /**
+     * @brief Destructor for the MyD2D1Image object.
+     */
+    ~MyD2D1Image();
+
+private:
+    inline static UINT totalInstances = 0; // Tracks the total number of instances.
+
+    // Allocation variable(s).
+    INT resourceID;            // Resource ID of the image.
+    std::wstring resourceType; // Resource type of the image.
+    UINT imageWidth;           // Width of the image.
+    UINT imageHeight;          // Height of the image.
+
+    // Variant(s).
+    IWICBitmapSource *pBitmapSource = nullptr; // IWICBitmapSource variant of the image.
+
+public:
+    /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Get the total instances of MyD2D1Image.
+     *
+     * @return Returns the total instances of MyD2D1Image.
+     */
+    inline static UINT getTotalInstances();
+
+public:
+    /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Get the resource ID of the image.
+     *
+     * @return Returns the resource ID of the image.
+     */
+    INT getResourceID() const;
+
+    /**
+     * @brief Get the resource type of the image.
+     *
+     * @return Returns the resource type of the image.
+     */
+    std::wstring getResourceType() const;
+
+    /**
+     * @brief Get the width of the image.
+     *
+     * @return Returns the width of the image.
+     */
+    UINT getImageWidth() const;
+
+    /**
+     * @brief Get the height of the image.
+     *
+     * @return Returns the height of the image.
+     */
+    UINT getImageHeight() const;
+
+    /**
+     * @brief Get the IWICBitmapSource variant of the image.
+     *
+     * @returns Returns the IWICBitmapSource variant of the image.
+     */
+    IWICBitmapSource *getBitmapSource() const;
+
+    /**
+     * @brief Update the image values.
+     *
+     * @param resourceID   The resource ID of the image.
+     * @param resourceType The resource type of the image.
+     * @param imageWidth   The width of the image.
+     * @param imageHeight  The height of the image.
+     *
+     * @return Returns true if the image values were successfully updated, false otherwise.
+     */
+    bool update(INT resourceID, std::wstring resourceType, UINT imageWidth, UINT imageHeight);
 };
 
 /**
@@ -666,14 +900,14 @@ public:
 /**
  * @class UIFonts
  *
- * @brief Singleton class encapsulating and managing the UI font objects.
+ * @brief Singleton class encapsulating and managing the UI font/text format objects.
  *
  * @note This class is used by UIElements class.
  */
 class UIFonts
 {
 public:
-    /// [DEFAULT APPLICATION UI FONTS]
+    /// [DEFAULT APPLICATION UI FONTS/TEXT FORMATS]
 
     MyFont caption = MyFont(L"Tahoma", 23, FW_NORMAL, CLEARTYPE_QUALITY);     // Caption font.
     MyFont button = MyFont(L"Tahoma", 24, FW_NORMAL, CLEARTYPE_QUALITY);      // Button font.
@@ -681,6 +915,9 @@ public:
     MyFont ddlCombobox = MyFont(L"Tahoma", 24, FW_NORMAL, CLEARTYPE_QUALITY); // Drop-down list combobox font.
     MyFont heading = MyFont(L"Tahoma", 26, FW_MEDIUM, CLEARTYPE_QUALITY);     // Heading font.
     MyFont note = MyFont(L"Tahoma", 22, FW_NORMAL, CLEARTYPE_QUALITY);        // Note font.
+
+    // DirectWrite text formats.
+    MyDWTextFormat buttonTextFormat = MyDWTextFormat(L"Tahoma", 20, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL);
 
 public:
     /// [GENERAL FUNCTIONS]
@@ -736,14 +973,20 @@ public:
     const std::unique_ptr<MyImage> pMinusGrey = std::make_unique<MyImage>(IDB_PNG4, MyImageFormat::PNG);
     const std::unique_ptr<MyImage> pMinusWhite = std::make_unique<MyImage>(IDB_PNG5, MyImageFormat::PNG);
     const std::unique_ptr<MyImage> pMinusBlack = std::make_unique<MyImage>(IDB_PNG6, MyImageFormat::PNG);
+    const std::unique_ptr<MyD2D1Image> pWICCrossGrey = std::make_unique<MyD2D1Image>(IDB_PNG1, L"PNG", 20, 20);
+    const std::unique_ptr<MyD2D1Image> pWICCrossWhite = std::make_unique<MyD2D1Image>(IDB_PNG2, L"PNG", 20, 20);
+    const std::unique_ptr<MyD2D1Image> pWICCrossBlack = std::make_unique<MyD2D1Image>(IDB_PNG3, L"PNG", 20, 20);
+    const std::unique_ptr<MyD2D1Image> pWICMinusGrey = std::make_unique<MyD2D1Image>(IDB_PNG4, L"PNG", 20, 20);
+    const std::unique_ptr<MyD2D1Image> pWICMinusWhite = std::make_unique<MyD2D1Image>(IDB_PNG5, L"PNG", 20, 20);
+    const std::unique_ptr<MyD2D1Image> pWICMinusBlack = std::make_unique<MyD2D1Image>(IDB_PNG6, L"PNG", 20, 20);
 
     // Non-client images.
-    std::unique_ptr<MyImage> pNonClientCloseButtonDefault;
-    std::unique_ptr<MyImage> pNonClientCloseButtonHover;
-    std::unique_ptr<MyImage> pNonClientCloseButtonDown;
-    std::unique_ptr<MyImage> pNonClientMinimizeButtonDefault;
-    std::unique_ptr<MyImage> pNonClientMinimizeButtonHover;
-    std::unique_ptr<MyImage> pNonClientMinimizeButtonDown;
+    std::unique_ptr<MyD2D1Image> pNonClientCloseButtonDefault;
+    std::unique_ptr<MyD2D1Image> pNonClientCloseButtonHover;
+    std::unique_ptr<MyD2D1Image> pNonClientCloseButtonDown;
+    std::unique_ptr<MyD2D1Image> pNonClientMinimizeButtonDefault;
+    std::unique_ptr<MyD2D1Image> pNonClientMinimizeButtonHover;
+    std::unique_ptr<MyD2D1Image> pNonClientMinimizeButtonDown;
 
 public:
     /// [GENERAL FUNCTIONS]
@@ -758,8 +1001,8 @@ public:
      * @param nonClientMinimizeButtonHover    The non-client minimize button hover image.
      * @param nonClientMinimizeButtonDown     The non-client minimize button down image.
      */
-    void updateNonClientButtonImages(MyImage &nonClientCloseButtonDefault, MyImage &nonClientCloseButtonHover, MyImage &nonClientCloseButtonDown,
-                                     MyImage &nonClientMinimizeButtonDefault, MyImage &nonClientMinimizeButtonHover, MyImage &nonClientMinimizeButtonDown);
+    void updateNonClientButtonImages(MyD2D1Image &nonClientCloseButtonDefault, MyD2D1Image &nonClientCloseButtonHover, MyD2D1Image &nonClientCloseButtonDown,
+                                     MyD2D1Image &nonClientMinimizeButtonDefault, MyD2D1Image &nonClientMinimizeButtonHover, MyD2D1Image &nonClientMinimizeButtonDown);
 };
 
 /**
@@ -796,7 +1039,9 @@ class UIPointers
 public:
     /// [APPLICATION UI RELATED POINTERS]
 
-    D2D1::ColorF *pCurrentBorderColor = nullptr; // Pointer that holds the current application border color.
+    // Reserved code, likely to be removed in the future.
+    // Pointer that holds the current application border color.
+    // D2D1::ColorF *pCurrentBorderColor = nullptr;
 };
 
 /**
@@ -824,8 +1069,26 @@ public:
 class UIElements
 {
 public:
+    /**
+     * @brief Default constructor, checks if my GDI+ and Direct2D engine is initialized.
+     * @note This constructor exists to prevent the creation of UIElements object before the initialization of my GDI+ and Direct2D engine.
+     *
+     * @param pMyGDIPEngine Pointer to my GDI+ engine.
+     * @param pMyD2D1Engine Pointer to my Direct2D engine.
+     */
+    UIElements(MyGDIPEngine *pMyGDIPEngine, MyD2D1Engine *pMyD2D1Engine);
+
+public:
     /// [APPLICATION UI ELEMENTS]
 
+    // Application Direct2D main render target and its device-dependent resources.
+    ID2D1DCRenderTarget *pRenderTarget;
+    ID2D1SolidColorBrush *pSolidColorBrushCaptionBackground;
+    ID2D1SolidColorBrush *pSolidColorBrushBackground;
+    ID2D1SolidColorBrush *pSolidColorBrushBorderActive;
+    ID2D1SolidColorBrush *pSolidColorBrushBorderInactive;
+
+    // Application UI-related interfaces.
     UIColors colors;
     UIFonts fonts;
     UIIcons icons;
@@ -841,6 +1104,24 @@ public:
      * @brief Show the total number of instances (Color, font, icon, image objects).
      */
     static void showTotalInstances();
+
+public:
+    // [GENERAL FUNCTIONS]
+
+    /**
+     * @brief (Re)create the D2D1 device resources.
+     *
+     * @param hWnd                 Handle to the main window.
+     * @param recreateRenderTarget Specifies whether to recreate the render target.
+     *
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget);
+
+    /**
+     * @brief Release the D2D1 device resources.
+     */
+    void releaseD2D1DeviceResources();
 };
 
 #endif // UI_H

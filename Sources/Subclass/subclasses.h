@@ -79,6 +79,7 @@ struct MyStandardButtonSharedPropertiesConfig
     MyColor *pColorBackground = nullptr;                  // Pointer to the standard button background color.
     MyColor *pColorFocus = nullptr;                       // Pointer to the standard button focus color.
     MyFont *pFontDefault = nullptr;                       // Pointer to the standard button font.
+    MyDWTextFormat *pDWTextFormatDefault = nullptr;       // Pointer to the standard button default text format.
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -89,7 +90,7 @@ struct MyStandardButtonSharedPropertiesConfig
     {
         return (this->pColorStandardButtonDefault && this->pColorStandardButtonHover && this->pColorStandardButtonDown &&
                 this->pColorStandardButtonBorderDefault && this->pColorStandardButtonBorderHover && this->pColorStandardButtonBorderDown &&
-                this->pColorTextDefault && this->pColorTextHighlight && this->pColorBackground && this->pColorFocus && this->pFontDefault);
+                this->pColorTextDefault && this->pColorTextHighlight && this->pColorBackground && this->pColorFocus && this->pFontDefault && this->pDWTextFormatDefault);
     }
 };
 /**
@@ -144,6 +145,7 @@ private:
     inline static MyColor *pColorBackground = nullptr;                  // Pointer to the standard button background color.
     inline static MyColor *pColorFocus = nullptr;                       // Pointer to the standard button focus color.
     inline static MyFont *pFontDefault = nullptr;                       // Pointer to the standard button font.
+    inline static MyDWTextFormat *pDWTextFormatDefault = nullptr;       // Pointer to the standard button default text format.
 
     // Animation variables.
     inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
@@ -163,8 +165,24 @@ private:
     bool isHoverState = false;                                                                // Indicate whether the button is hovered.
     bool isDownState = false;                                                                 // Indicate whether the button is pressed down.
 
+    // D2D1 variables.
+    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr;                // D2D1 DC render target.
+    ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr;         // D2D1 solid color brush of the focus color.
+    ID2D1SolidColorBrush *pD2D1SolidColorBrushTextDefault = nullptr;   // D2D1 solid color brush of the default text color.
+    ID2D1SolidColorBrush *pD2D1SolidColorBrushTextHighlight = nullptr; // D2D1 solid color brush of the highlight text color.
+
 private:
     /// [INTERNAL FUNCTIONS]
+
+    /**
+     * @brief (Re)create the D2D1 device resources.
+     *
+     * @param hWnd                 Handle to the button.
+     * @param recreateRenderTarget Specifies whether to recreate the render target.
+     *
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget);
 
     /**
      * @brief Initialize an animation variable pointer and set its basic parameters.
@@ -263,7 +281,7 @@ public:
      * @bried Refresh the button by triggering the animation to the current state.
      *
      * @param hWnd Handle to the button.
-     * 
+     *
      * @return Returns true if the button is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
@@ -320,19 +338,19 @@ struct MyImageButtonSharedPropertiesConfig
  */
 struct MyImageButtonNonSharedPropertiesConfig
 {
-    std::unique_ptr<MyImage> *pImageDefault = nullptr; // Pointer to the image button default state image.
-    std::unique_ptr<MyImage> *pImageHover = nullptr;   // Pointer to the image button hover state image.
-    std::unique_ptr<MyImage> *pImageDown = nullptr;    // Pointer to the image button down state image.
-    MyColor *pColorBackgroundDefault = nullptr;        // Pointer to the image button default state background color.
-    MyColor *pColorBackgroundHover = nullptr;          // Pointer to the image button hover state background color.
-    MyColor *pColorBackgroundDown = nullptr;           // Pointer to the image button down state background color.
-    INT imagePosX = 0;                                 // The image relative x position.
-    INT imagePosY = 0;                                 // The image relative y position.
-    INT imageWidth = 0;                                // The image width.
-    INT imageHeight = 0;                               // The image height.
-    bool centering = false;                            // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;              // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;               // Indicate whether to skip the down state animation.
+    std::unique_ptr<MyD2D1Image> *pImageDefault = nullptr; // Pointer to the image button default state image.
+    std::unique_ptr<MyD2D1Image> *pImageHover = nullptr;   // Pointer to the image button hover state image.
+    std::unique_ptr<MyD2D1Image> *pImageDown = nullptr;    // Pointer to the image button down state image.
+    MyColor *pColorBackgroundDefault = nullptr;            // Pointer to the image button default state background color.
+    MyColor *pColorBackgroundHover = nullptr;              // Pointer to the image button hover state background color.
+    MyColor *pColorBackgroundDown = nullptr;               // Pointer to the image button down state background color.
+    INT imagePosX = 0;                                     // The image relative x position.
+    INT imagePosY = 0;                                     // The image relative y position.
+    INT imageWidth = 0;                                    // The image width.
+    INT imageHeight = 0;                                   // The image height.
+    bool centering = false;                                // Indicate whether to centering the image.
+    bool skipHoverAnimationState = false;                  // Indicate whether to skip the hover state animation.
+    bool skipDownAnimationState = false;                   // Indicate whether to skip the down state animation.
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -389,19 +407,19 @@ private:
     inline static MyColor *pColorFocus = nullptr; // Pointer to the image button focus color.
 
     // Non-shared properties.
-    std::unique_ptr<MyImage> *pImageDefault = nullptr; // Pointer to the image button default state image.
-    std::unique_ptr<MyImage> *pImageHover = nullptr;   // Pointer to the image button hover state image.
-    std::unique_ptr<MyImage> *pImageDown = nullptr;    // Pointer to the image button down state image.
-    MyColor *pColorBackgroundDefault = nullptr;        // Pointer to the image button default state background color.
-    MyColor *pColorBackgroundHover = nullptr;          // Pointer to the image button hover state background color.
-    MyColor *pColorBackgroundDown = nullptr;           // Pointer to the image button down state background color.
-    INT imagePosX = 0;                                 // The image relative x position.
-    INT imagePosY = 0;                                 // The image relative y position.
-    INT imageWidth = 0;                                // The image width.
-    INT imageHeight = 0;                               // The image height.
-    bool isCentering = false;                          // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;              // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;               // Indicate whether to skip the down state animation.
+    std::unique_ptr<MyD2D1Image> *pImageDefault = nullptr; // Pointer to the image button default state image.
+    std::unique_ptr<MyD2D1Image> *pImageHover = nullptr;   // Pointer to the image button hover state image.
+    std::unique_ptr<MyD2D1Image> *pImageDown = nullptr;    // Pointer to the image button down state image.
+    MyColor *pColorBackgroundDefault = nullptr;            // Pointer to the image button default state background color.
+    MyColor *pColorBackgroundHover = nullptr;              // Pointer to the image button hover state background color.
+    MyColor *pColorBackgroundDown = nullptr;               // Pointer to the image button down state background color.
+    INT imagePosX = 0;                                     // The image relative x position.
+    INT imagePosY = 0;                                     // The image relative y position.
+    INT imageWidth = 0;                                    // The image width.
+    INT imageHeight = 0;                                   // The image height.
+    bool isCentering = false;                              // Indicate whether to centering the image.
+    bool skipHoverAnimationState = false;                  // Indicate whether to skip the hover state animation.
+    bool skipDownAnimationState = false;                   // Indicate whether to skip the down state animation.
 
     // Animation variables.
     inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
@@ -416,14 +434,31 @@ private:
         Flash
     } currentAnimationState = ButtonAnimationState::Default;                                // The current animation state.
     IUIAnimationVariable *pAnimationVariableBackgroundRGB[3] = {nullptr, nullptr, nullptr}; // The RGB values of the background.
-    IUIAnimationVariable *pAnimationVariableDefaultIconOpacity = nullptr;                   // The opacity value of the default icon.
-    IUIAnimationVariable *pAnimationVariableHoverIconOpacity = nullptr;                     // The opacity value of the hover icon.
-    IUIAnimationVariable *pAnimationVariableDownIconOpacity = nullptr;                      // The opacity value of the down icon.
+    IUIAnimationVariable *pAnimationVariableDefaultImageOpacity = nullptr;                  // The opacity value of the default image.
+    IUIAnimationVariable *pAnimationVariableHoverImageOpacity = nullptr;                    // The opacity value of the hover image.
+    IUIAnimationVariable *pAnimationVariableDownImageOpacity = nullptr;                     // The opacity value of the down image.
     bool isHoverState = false;                                                              // Indicate whether the button is hovered.
     bool isDownState = false;                                                               // Indicate whether the button is pressed down.
 
+    // D2D1 variables.
+    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr;        // D2D1 DC render target.
+    ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr; // D2D1 solid color brush of the focus color.
+    ID2D1Bitmap *pD2D1BitmapDefaultImage = nullptr;            // D2D1 bitmap of the default image.
+    ID2D1Bitmap *pD2D1BitmapHoverImage = nullptr;              // D2D1 bitmap of the hover image.
+    ID2D1Bitmap *pD2D1BitmapDownImage = nullptr;               // D2D1 bitmap of the down image.
+
 private:
     /// [INTERNAL FUNCTIONS]
+
+    /**
+     * @brief (Re)create the D2D1 device resources.
+     *
+     * @param hWnd                 Handle to the button.
+     * @param recreateRenderTarget Specifies whether to recreate the render target.
+     *
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget);
 
     /**
      * @brief Initialize an animation variable pointer and set its basic parameters.
@@ -523,7 +558,7 @@ public:
      * @bried Refresh the button by triggering the animation to the current state.
      *
      * @param hWnd Handle to the button.
-     * 
+     *
      * @return Returns true if the button is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
@@ -805,7 +840,7 @@ public:
      * @bried Refresh the button by triggering the animation to the current state.
      *
      * @param hWnd Handle to the button.
-     * 
+     *
      * @return Returns true if the button is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);

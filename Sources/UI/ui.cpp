@@ -987,6 +987,366 @@ bool MyImage::update(INT resourceID, MyImageFormat format)
     return true;
 }
 
+/// @class MyDWTextFormat definitions:
+// Constructors:
+MyDWTextFormat::MyDWTextFormat(std::wstring fontFamilyName, float fontSize, DWRITE_FONT_WEIGHT fontWeight,
+                               DWRITE_FONT_STYLE fontStyle, DWRITE_FONT_STRETCH fontStretch) : fontFamilyName(fontFamilyName), fontSize(fontSize), fontWeight(fontWeight), fontStyle(fontStyle), fontStretch(fontStretch)
+{
+    // Variant(s).
+    {
+        // Create the text format object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            if (!g_pD2D1Engine->createTextFormat(this->pTextFormat, this->fontFamilyName, this->fontSize, this->fontWeight, this->fontStyle, this->fontStretch))
+            {
+                error_message = L"Failed to create the text format object.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the text format object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the text format object.", L" [CLASS: \"MyDWTextFormat\" | FUNC: \"MyDWTextFormat()\"]", MyLogType::Error);
+        }
+    }
+
+    MyDWTextFormat::totalInstances++;
+}
+// Copy constructor:
+MyDWTextFormat::MyDWTextFormat(const MyDWTextFormat &other) : fontFamilyName(other.fontFamilyName), fontSize(other.fontSize), fontWeight(other.fontWeight), fontStyle(other.fontStyle), fontStretch(other.fontStretch)
+{
+    // Variant(s).
+    {
+        // Create the text format object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            if (!g_pD2D1Engine->createTextFormat(this->pTextFormat, this->fontFamilyName, this->fontSize, this->fontWeight, this->fontStyle, this->fontStretch))
+            {
+                error_message = L"Failed to create the text format object.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the text format object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the text format object.", L" [CLASS: \"MyDWTextFormat\" | FUNC: \"MyDWTextFormat()\"]", MyLogType::Error);
+        }
+    }
+
+    MyDWTextFormat::totalInstances++;
+}
+// Assignment operator:
+MyDWTextFormat &MyDWTextFormat::operator=(const MyDWTextFormat &other)
+{
+    // Check if self assignment.
+    if (this == &other)
+        return *this;
+
+    // Allocation variable(s).
+    this->fontFamilyName = other.fontFamilyName;
+    this->fontSize = other.fontSize;
+    this->fontWeight = other.fontWeight;
+    this->fontStyle = other.fontStyle;
+    this->fontStretch = other.fontStretch;
+
+    // Variant(s).
+    if (this->pTextFormat)
+    {
+        this->pTextFormat->Release();
+        this->pTextFormat = nullptr;
+    }
+    {
+        // Create the text format object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            if (!g_pD2D1Engine->createTextFormat(this->pTextFormat, this->fontFamilyName, this->fontSize, this->fontWeight, this->fontStyle, this->fontStretch))
+            {
+                error_message = L"Failed to create the text format object.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the text format object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the text format object.", L" [CLASS: \"MyDWTextFormat\" | FUNC: \"&operator=()\"]", MyLogType::Error);
+        }
+    }
+
+    return *this;
+}
+// Destructor:
+MyDWTextFormat::~MyDWTextFormat()
+{
+    // Deallocation of unmanaged object(s).
+    if (this->pTextFormat)
+    {
+        this->pTextFormat->Release();
+        this->pTextFormat = nullptr;
+    }
+
+    MyDWTextFormat::totalInstances--;
+}
+// Public static member function(s) [GENERAL FUNCTIONS]:
+UINT MyDWTextFormat::getTotalInstances()
+{
+    return MyDWTextFormat::totalInstances;
+}
+// Public member function(s) [GENERAL FUNCTIONS]:
+std::wstring MyDWTextFormat::getFontFamilyName() const
+{
+    return this->fontFamilyName;
+}
+float MyDWTextFormat::getFontSize() const
+{
+    return this->fontSize;
+}
+DWRITE_FONT_WEIGHT MyDWTextFormat::getFontWeight() const
+{
+    return this->fontWeight;
+}
+DWRITE_FONT_STYLE MyDWTextFormat::getFontStyle() const
+{
+    return this->fontStyle;
+}
+DWRITE_FONT_STRETCH MyDWTextFormat::getFontStretch() const
+{
+    return this->fontStretch;
+}
+IDWriteTextFormat *MyDWTextFormat::getTextFormat() const
+{
+    return this->pTextFormat;
+}
+bool MyDWTextFormat::update(std::wstring fontFamilyName, float fontSize, DWRITE_FONT_WEIGHT fontWeight,
+                            DWRITE_FONT_STYLE fontStyle, DWRITE_FONT_STRETCH fontStretch)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        // Allocation variable(s).
+        this->fontFamilyName = fontFamilyName;
+        this->fontSize = fontSize;
+        this->fontWeight = fontWeight;
+        this->fontStyle = fontStyle;
+        this->fontStretch = fontStretch;
+
+        // Variant(s).
+        if (this->pTextFormat)
+        {
+            this->pTextFormat->Release();
+            this->pTextFormat = nullptr;
+        }
+        {
+            if (!g_pD2D1Engine->createTextFormat(this->pTextFormat, this->fontFamilyName, this->fontSize, this->fontWeight, this->fontStyle, this->fontStretch))
+            {
+                error_message = L"Failed to create the text format object.";
+                break;
+            }
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyDWTextFormat\" | FUNC: \"update()\"]", MyLogType::Error);
+        return false;
+    }
+
+    return true;
+}
+
+/// @class MyD2D1Image definitions:
+// Constructors:
+MyD2D1Image::MyD2D1Image(INT resourceID, std::wstring resourceType, UINT imageWidth, UINT imageHeight) : resourceID(resourceID), resourceType(resourceType), imageWidth(imageWidth), imageHeight(imageHeight)
+{
+    // Variant(s).
+    {
+        // Create the image object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            if (!g_pD2D1Engine->createWicBitmapSourceFromResource(this->pBitmapSource, MAKEINTRESOURCEW(this->resourceID), this->resourceType.c_str(), this->imageWidth, this->imageHeight))
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the image object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the image object.", L" [CLASS: \"MyD2D1Image\" | FUNC: \"MyD2D1Image()\"]", MyLogType::Error);
+        }
+    }
+
+    MyD2D1Image::totalInstances++;
+}
+// Copy constructor:
+MyD2D1Image::MyD2D1Image(const MyD2D1Image &other) : resourceID(other.resourceID), resourceType(other.resourceType), imageWidth(other.imageWidth), imageHeight(other.imageHeight)
+{
+    // Variant(s).
+    {
+        // Create the image object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            if (!g_pD2D1Engine->createWicBitmapSourceFromResource(this->pBitmapSource, MAKEINTRESOURCEW(this->resourceID), this->resourceType.c_str(), this->imageWidth, this->imageHeight))
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the image object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the image object.", L" [CLASS: \"MyD2D1Image\" | FUNC: \"MyD2D1Image()\"]", MyLogType::Error);
+        }
+    }
+
+    MyD2D1Image::totalInstances++;
+}
+// Assignment operator:
+MyD2D1Image &MyD2D1Image::operator=(const MyD2D1Image &other)
+{
+    // Check if self assignment.
+    if (this == &other)
+        return *this;
+
+    // Allocation variable(s).
+    this->resourceID = other.resourceID;
+    this->resourceType = other.resourceType;
+    this->imageWidth = other.imageWidth;
+    this->imageHeight = other.imageHeight;
+
+    // Variant(s).
+    if (this->pBitmapSource)
+    {
+        this->pBitmapSource->Release();
+        this->pBitmapSource = nullptr;
+    }
+    {
+        // Create the image object.
+        bool are_all_operation_success = false;
+        std::wstring error_message = L"";
+        while (!are_all_operation_success)
+        {
+            if (!g_pD2D1Engine->createWicBitmapSourceFromResource(this->pBitmapSource, MAKEINTRESOURCEW(this->resourceID), this->resourceType.c_str(), this->imageWidth, this->imageHeight))
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        // Check if the image object was successfully created.
+        if (!are_all_operation_success)
+        {
+            WriteLog(L"Failed to create the image object.", L" [CLASS: \"MyD2D1Image\" | FUNC: \"&operator=()\"]", MyLogType::Error);
+        }
+    }
+
+    return *this;
+}
+// Destructor:
+MyD2D1Image::~MyD2D1Image()
+{
+    // Deallocation of unmanaged object(s).
+    if (this->pBitmapSource)
+    {
+        this->pBitmapSource->Release();
+        this->pBitmapSource = nullptr;
+    }
+
+    MyD2D1Image::totalInstances--;
+}
+// Public static member function(s) [GENERAL FUNCTIONS]:
+UINT MyD2D1Image::getTotalInstances()
+{
+    return MyD2D1Image::totalInstances;
+}
+// Public member function(s) [GENERAL FUNCTIONS]:
+INT MyD2D1Image::getResourceID() const
+{
+    return this->resourceID;
+}
+std::wstring MyD2D1Image::getResourceType() const
+{
+    return this->resourceType;
+}
+UINT MyD2D1Image::getImageWidth() const
+{
+    return this->imageWidth;
+}
+UINT MyD2D1Image::getImageHeight() const
+{
+    return this->imageHeight;
+}
+IWICBitmapSource *MyD2D1Image::getBitmapSource() const
+{
+    return this->pBitmapSource;
+}
+bool MyD2D1Image::update(INT resourceID, std::wstring resourceType, UINT imageWidth, UINT imageHeight)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        // Allocation variable(s).
+        this->resourceID = resourceID;
+        this->resourceType = resourceType;
+        this->imageWidth = imageWidth;
+        this->imageHeight = imageHeight;
+
+        // Variant(s).
+        if (this->pBitmapSource)
+        {
+            this->pBitmapSource->Release();
+            this->pBitmapSource = nullptr;
+        }
+        {
+            if (!g_pD2D1Engine->createWicBitmapSourceFromResource(this->pBitmapSource, MAKEINTRESOURCEW(this->resourceID), this->resourceType.c_str(), this->imageWidth, this->imageHeight))
+            {
+                error_message = L"Failed to load the resource.";
+                break;
+            }
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyD2D1Image\" | FUNC: \"update()\"]", MyLogType::Error);
+        return false;
+    }
+
+    return true;
+}
+
 /// @class UIColors definitions:
 // Public member function(s) [GENERAL FUNCTIONS]:
 void UIColors::updateMainColors(RGBA primary, RGBA secondary, RGBA borderActive, RGBA borderInactive,
@@ -1084,15 +1444,15 @@ void UIFonts::updateFonts(MyFont caption, MyFont editbox, MyFont ddlCombobox, My
 
 /// @class UIImages definitions:
 // Public member function(s) [GENERAL FUNCTIONS]:
-void UIImages::updateNonClientButtonImages(MyImage &nonClientCloseButtonDefault, MyImage &nonClientCloseButtonHover, MyImage &nonClientCloseButtonDown,
-                                           MyImage &nonClientMinimizeButtonDefault, MyImage &nonClientMinimizeButtonHover, MyImage &nonClientMinimizeButtonDown)
+void UIImages::updateNonClientButtonImages(MyD2D1Image &nonClientCloseButtonDefault, MyD2D1Image &nonClientCloseButtonHover, MyD2D1Image &nonClientCloseButtonDown,
+                                           MyD2D1Image &nonClientMinimizeButtonDefault, MyD2D1Image &nonClientMinimizeButtonHover, MyD2D1Image &nonClientMinimizeButtonDown)
 {
-    this->pNonClientCloseButtonDefault = std::make_unique<MyImage>(nonClientCloseButtonDefault);
-    this->pNonClientCloseButtonHover = std::make_unique<MyImage>(nonClientCloseButtonHover);
-    this->pNonClientCloseButtonDown = std::make_unique<MyImage>(nonClientCloseButtonDown);
-    this->pNonClientMinimizeButtonDefault = std::make_unique<MyImage>(nonClientMinimizeButtonDefault);
-    this->pNonClientMinimizeButtonHover = std::make_unique<MyImage>(nonClientMinimizeButtonHover);
-    this->pNonClientMinimizeButtonDown = std::make_unique<MyImage>(nonClientMinimizeButtonDown);
+    this->pNonClientCloseButtonDefault = std::make_unique<MyD2D1Image>(nonClientCloseButtonDefault);
+    this->pNonClientCloseButtonHover = std::make_unique<MyD2D1Image>(nonClientCloseButtonHover);
+    this->pNonClientCloseButtonDown = std::make_unique<MyD2D1Image>(nonClientCloseButtonDown);
+    this->pNonClientMinimizeButtonDefault = std::make_unique<MyD2D1Image>(nonClientMinimizeButtonDefault);
+    this->pNonClientMinimizeButtonHover = std::make_unique<MyD2D1Image>(nonClientMinimizeButtonHover);
+    this->pNonClientMinimizeButtonDown = std::make_unique<MyD2D1Image>(nonClientMinimizeButtonDown);
 }
 
 /// @class UIRectangles definitions:
@@ -1146,6 +1506,23 @@ UIRectangles::UIRectangles()
 }
 
 /// @class UIElements definitions:
+// Constructor:
+UIElements::UIElements(MyGDIPEngine *pMyGDIPEngine, MyD2D1Engine *pMyD2D1Engine)
+{
+    // Check if the pointer to the GDI+ engine object is null or the engine is not ready.
+    if (!pMyGDIPEngine || !pMyGDIPEngine->isReady())
+    {
+        WriteLog(L"Pointer to the GDI+ engine object is null or the engine is not ready.", L" [CLASS: \"UIElements\" | FUNC: \"UIElements()\"]", MyLogType::Error);
+        throw std::runtime_error("Pointer to the GDI+ engine object is null or the engine is not ready.");
+    }
+
+    // Check if the pointer to the Direct2D engine object is null or the engine is not ready.
+    if (!pMyD2D1Engine || !pMyD2D1Engine->isReady())
+    {
+        WriteLog(L"Pointer to the Direct2D engine object is null or the engine is not ready.", L" [CLASS: \"UIElements\" | FUNC: \"UIElements()\"]", MyLogType::Error);
+        throw std::runtime_error("Pointer to the Direct2D engine object is null or the engine is not ready.");
+    }
+}
 // Public static member function(s) [GENERAL FUNCTIONS]:
 void UIElements::showTotalInstances()
 {
@@ -1161,4 +1538,151 @@ void UIElements::showTotalInstances()
     message.append(L"- Icons: " + std::to_wstring(total_icon_instances) + L"\n");
     message.append(L"- Images: " + std::to_wstring(total_image_instances) + L"\n");
     MessageBoxW(NULL, message.c_str(), L"", MB_OK | MB_ICONINFORMATION);
+}
+// Public member function(s) [GENERAL FUNCTIONS]:
+bool UIElements::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        HRESULT hr;
+
+        // Get the device context.
+        HDC hdc = GetDC(hWnd);
+        if (!hdc)
+        {
+            error_message = L"Failed to get the device context.";
+            break;
+        }
+
+        // Get the client area of the window.
+        RECT rect_window;
+        if (!GetClientRect(hWnd, &rect_window))
+        {
+            error_message = L"Failed to get the client area of the window.";
+            break;
+        }
+
+        // (Re)create the render target.
+        if (recreateRenderTarget)
+        {
+            // Release the render target if it exists.
+            if (this->pRenderTarget)
+            {
+                this->pRenderTarget->Release();
+                this->pRenderTarget = nullptr;
+            }
+
+            this->pRenderTarget = g_pD2D1Engine->createDCRenderTarget();
+            if (!this->pRenderTarget)
+            {
+                error_message = L"Failed to create the render target.";
+                break;
+            }
+        }
+
+        // Bind the device context to the render target.
+        hr = this->pRenderTarget->BindDC(hdc, &rect_window);
+        if (FAILED(hr))
+        {
+            error_message = L"Failed to bind the device context to the render target.";
+            break;
+        }
+
+        // (Re)create the device-dependent resources.
+        {
+            // Release device-dependent resources if they exist.
+            if (this->pSolidColorBrushCaptionBackground)
+            {
+                this->pSolidColorBrushCaptionBackground->Release();
+                this->pSolidColorBrushCaptionBackground = nullptr;
+            }
+            if (this->pSolidColorBrushBackground)
+            {
+                this->pSolidColorBrushBackground->Release();
+                this->pSolidColorBrushBackground = nullptr;
+            }
+            if (this->pSolidColorBrushBorderActive)
+            {
+                this->pSolidColorBrushBorderActive->Release();
+                this->pSolidColorBrushBorderActive = nullptr;
+            }
+            if (this->pSolidColorBrushBorderInactive)
+            {
+                this->pSolidColorBrushBorderInactive->Release();
+                this->pSolidColorBrushBorderInactive = nullptr;
+            }
+
+            // Create device-dependent resources.
+            hr = this->pRenderTarget->CreateSolidColorBrush(this->colors.captionBackground.getD2D1Color(), &this->pSolidColorBrushCaptionBackground);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the caption bar background.";
+                break;
+            }
+            hr = this->pRenderTarget->CreateSolidColorBrush(this->colors.background.getD2D1Color(), &this->pSolidColorBrushBackground);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the background.";
+                break;
+            }
+            hr = this->pRenderTarget->CreateSolidColorBrush(this->colors.borderActive.getD2D1Color(), &this->pSolidColorBrushBorderActive);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the active border.";
+                break;
+            }
+            hr = this->pRenderTarget->CreateSolidColorBrush(this->colors.borderInactive.getD2D1Color(), &this->pSolidColorBrushBorderInactive);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the inactive border.";
+                break;
+            }
+        }
+
+        // Release the device context.
+        if (!ReleaseDC(hWnd, hdc))
+        {
+            error_message = L"Failed to release the device context.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"UIElements\" | FUNC: \"createD2D1DeviceResources()\"]", MyLogType::Error);
+    }
+
+    return are_all_operation_success;
+}
+void UIElements::releaseD2D1DeviceResources()
+{
+    if (this->pSolidColorBrushCaptionBackground)
+    {
+        this->pSolidColorBrushCaptionBackground->Release();
+        this->pSolidColorBrushCaptionBackground = nullptr;
+    }
+    if (this->pSolidColorBrushBackground)
+    {
+        this->pSolidColorBrushBackground->Release();
+        this->pSolidColorBrushBackground = nullptr;
+    }
+    if (this->pSolidColorBrushBorderActive)
+    {
+        this->pSolidColorBrushBorderActive->Release();
+        this->pSolidColorBrushBorderActive = nullptr;
+    }
+    if (this->pSolidColorBrushBorderInactive)
+    {
+        this->pSolidColorBrushBorderInactive->Release();
+        this->pSolidColorBrushBorderInactive = nullptr;
+    }
+    if (this->pRenderTarget)
+    {
+        this->pRenderTarget->Release();
+        this->pRenderTarget = nullptr;
+    }
 }

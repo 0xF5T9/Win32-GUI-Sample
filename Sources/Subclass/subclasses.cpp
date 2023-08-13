@@ -30,25 +30,140 @@ KeyToggle::operator bool()
 // Destructor:
 MyStandardButton::~MyStandardButton()
 {
-    // Note:
-    // If the animation manager created these variables no longer exists,
-    // No need to perform any cleanup as the COM objects already released along with its animation manager.
-    if (!MyStandardButton::pAnimationManager)
-        return;
-
-    // Release the COM objects (Animation variables).
-    for (int i = 0; i < 3; i++)
+    // Release D2D1 resources.
     {
-        if (this->pAnimationVariableButtonRGB[i])
-            this->pAnimationVariableButtonRGB[i]->Release();
+        if (this->pD2D1DCRenderTarget)
+            this->pD2D1DCRenderTarget->Release();
     }
-    for (int i = 0; i < 3; i++)
+    // Release animation variables.
     {
-        if (this->pAnimationVariableButtonBorderRGB[i])
-            this->pAnimationVariableButtonBorderRGB[i]->Release();
+        // Note:
+        // If the animation manager created these variables no longer exists,
+        // No need to perform any cleanup as the COM objects already released along with its animation manager.
+        if (!MyStandardButton::pAnimationManager)
+            return;
+
+        // Release animation variables.
+        for (int i = 0; i < 3; i++)
+        {
+            if (this->pAnimationVariableButtonRGB[i])
+                this->pAnimationVariableButtonRGB[i]->Release();
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            if (this->pAnimationVariableButtonBorderRGB[i])
+                this->pAnimationVariableButtonBorderRGB[i]->Release();
+        }
     }
 }
 // Private member function(s) [INTERNAL FUNCTIONS]:
+bool MyStandardButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        HRESULT hr;
+
+        // Get the device context.
+        HDC hdc = GetDC(hWnd);
+        if (!hdc)
+        {
+            error_message = L"Failed to get the device context.";
+            break;
+        }
+
+        // Get the client area of the window.
+        RECT rect_window;
+        if (!GetClientRect(hWnd, &rect_window))
+        {
+            error_message = L"Failed to get the client area of the window.";
+            break;
+        }
+
+        // (Re)create the render target.
+        if (recreateRenderTarget)
+        {
+            // Release the render target if it exists.
+            if (this->pD2D1DCRenderTarget)
+            {
+                this->pD2D1DCRenderTarget->Release();
+                this->pD2D1DCRenderTarget = nullptr;
+            }
+
+            this->pD2D1DCRenderTarget = g_pD2D1Engine->createDCRenderTarget();
+            if (!this->pD2D1DCRenderTarget)
+            {
+                error_message = L"Failed to create the render target.";
+                break;
+            }
+        }
+
+        // Bind the device context to the render target.
+        hr = this->pD2D1DCRenderTarget->BindDC(hdc, &rect_window);
+        if (FAILED(hr))
+        {
+            error_message = L"Failed to bind the device context to the render target.";
+            break;
+        }
+
+        // (Re)create the device-dependent resources.
+        {
+            // Release device-dependent resources if they exist.
+            if (this->pD2D1SolidColorBrushFocus)
+            {
+                this->pD2D1SolidColorBrushFocus->Release();
+                this->pD2D1SolidColorBrushFocus = nullptr;
+            }
+            if (this->pD2D1SolidColorBrushTextDefault)
+            {
+                this->pD2D1SolidColorBrushTextDefault->Release();
+                this->pD2D1SolidColorBrushTextDefault = nullptr;
+            }
+            if (this->pD2D1SolidColorBrushTextHighlight)
+            {
+                this->pD2D1SolidColorBrushTextHighlight->Release();
+                this->pD2D1SolidColorBrushTextHighlight = nullptr;
+            }
+
+            // Create device-dependent resources.
+            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(this->pColorFocus->getD2D1Color(), &this->pD2D1SolidColorBrushFocus);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the focus.";
+                break;
+            }
+            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(this->pColorTextDefault->getD2D1Color(), &this->pD2D1SolidColorBrushTextDefault);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the default text.";
+                break;
+            }
+            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(this->pColorTextHighlight->getD2D1Color(), &this->pD2D1SolidColorBrushTextHighlight);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the highlight text.";
+                break;
+            }
+        }
+
+        // Release the device context.
+        if (!ReleaseDC(hWnd, hdc))
+        {
+            error_message = L"Failed to release the device context.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyStandardButton\" | FUNC: \"createD2D1DeviceResources()\"]", MyLogType::Error);
+    }
+
+    return are_all_operation_success;
+}
 bool MyStandardButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
 {
     bool are_all_operation_success = false;
@@ -879,19 +994,20 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
     // Override paint messages.
     case WM_PAINT:
     {
-        HRESULT hr;
+        // In Direct2D, there may be some scenarios where D2D1 render target is lost but can be re-created.
+        // If failed to re-create the render target too many times, indicate an error.
+        USHORT paint_attempts = 1;
+
         PAINTSTRUCT ps;
-        HDC hdc = NULL;
-        HDC mem_hdc = NULL;
-        HBITMAP bitmap = NULL;
-        HBITMAP bitmap_old = NULL;
-        bool is_paint_begined = false;
-        bool is_bitmap_created = false;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
         bool are_all_operation_success = false;
         std::wstring error_message = L"";
         while (!are_all_operation_success)
         {
-            // Get the animation values.
+            HRESULT hr;
+
+            // Get the latest animation values.
             INT32 button_rgb[3] = {0, 0, 0};
             INT32 button_border_rgb[3] = {0, 0, 0};
             error_message = L"Failed to retrieve the animation values.";
@@ -913,19 +1029,15 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
             hr = p_this->pAnimationVariableButtonBorderRGB[2]->GetIntegerValue(&button_border_rgb[2]);
             if (FAILED(hr))
                 break;
-            Gdiplus::Color button_color(255, button_rgb[0], button_rgb[1], button_rgb[2]);
-            Gdiplus::Color button_border_color(255, button_border_rgb[0], button_border_rgb[1], button_border_rgb[2]);
             error_message = L"";
 
-            // Get the button's client rects.
-            RECT rect_button;
-            Gdiplus::Rect gdip_rect_button;
-            if (!GetClientRect(hWnd, &rect_button))
+            // Get the window client rect.
+            RECT rect_window;
+            if (!GetClientRect(hWnd, &rect_window))
             {
-                error_message = L"Failed to get the client rects.";
+                error_message = L"Failed to retrieve the window's client rect.";
                 break;
             }
-            gdip_rect_button = Gdiplus::Rect(rect_button.left, rect_button.top, rect_button.right, rect_button.bottom);
 
             // Get the button's text length.
             SetLastError(ERROR_SUCCESS);
@@ -947,146 +1059,88 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
             std::wstring button_text(p_text_buffer);
             delete[] p_text_buffer;
 
-            // Begin the paintings.
-            hdc = BeginPaint(hWnd, &ps);
-            if (!hdc)
+            // Bind the render target to the window's device context.
+            hr = p_this->pD2D1DCRenderTarget->BindDC(hdc, &rect_window);
+            if (FAILED(hr))
             {
-                error_message = L"Failed to execute \"BeginPaint()\".";
-                break;
-            }
-            is_paint_begined = true;
-
-            // Create memory device context and bitmap object for double buffering.
-            mem_hdc = CreateCompatibleDC(hdc);
-            if (!mem_hdc)
-            {
-                error_message = L"Failed to create the compatible memory device context.";
-                break;
-            }
-            bitmap = CreateCompatibleBitmap(hdc, rect_button.right - rect_button.left, rect_button.bottom - rect_button.top);
-            if (!bitmap)
-            {
-                error_message = L"Failed to create the compatible bitmap object.";
-                break;
-            }
-            is_bitmap_created = true;
-            bitmap_old = reinterpret_cast<HBITMAP>(SelectObject(mem_hdc, bitmap));
-            if (!bitmap_old)
-            {
-                error_message = L"Failed to select the bitmap object.";
+                error_message = L"Failed to bind the render target to the window's device context.";
                 break;
             }
 
-            // Create Gdiplus::Graphics object for GDI+ drawing operations.
-            Gdiplus::Graphics gdip_graphics(mem_hdc);
-
-            // Set GDI+ smoothing mode.
-            if (gdip_graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality))
+            // Prepare objects for drawing.
+            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(0, 0, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+            D2D1::ColorF d2d1_color_button = D2D1::ColorF(button_rgb[0] / 255.0f, button_rgb[1] / 255.0f, button_rgb[2] / 255.0f, 1.0);
+            D2D1::ColorF d2d1_color_button_border = D2D1::ColorF(button_border_rgb[0] / 255.0f, button_border_rgb[1] / 255.0f, button_border_rgb[2] / 255.0f, 1.0);
+            auto text_format = MyStandardButton::pDWTextFormatDefault->getTextFormat();
+            ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_button;
+            ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_button_border;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = p_this->pD2D1SolidColorBrushFocus;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_button_text = (p_this->isHoverState ? p_this->pD2D1SolidColorBrushTextHighlight : p_this->pD2D1SolidColorBrushTextDefault);
+            hr = p_this->pD2D1DCRenderTarget->CreateSolidColorBrush(d2d1_color_button, &p_d2d1_solidcolorbrush_button);
+            if (FAILED(hr))
             {
-                error_message = L"Failed to set GDI+ smoothing mode.";
+                error_message = L"Failed to create the solid color brush for the button.";
+                break;
+            }
+            hr = p_this->pD2D1DCRenderTarget->CreateSolidColorBrush(d2d1_color_button_border, &p_d2d1_solidcolorbrush_button_border);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the button border.";
                 break;
             }
 
-            // Set background mode.
-            if (!SetBkMode(mem_hdc, TRANSPARENT))
-            {
-                error_message = L"Failed to set the background mode.";
-                break;
-            }
+            // Begin drawing.
+            p_this->pD2D1DCRenderTarget->BeginDraw();
+            p_this->pD2D1DCRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE); // Set antialiasing mode to per-primitive.
 
-            // Select font object.
-            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyStandardButton::pFontDefault->getHFONT())))
-            {
-                error_message = L"Failed to select the font object.";
-                break;
-            }
+            // Draw the background.
+            p_this->pD2D1DCRenderTarget->Clear(MyStandardButton::pColorBackground->getD2D1Color());
 
-            // Set text color.
-            if (SetTextColor(mem_hdc, (p_this->isHoverState || p_this->isDownState ? MyStandardButton::pColorTextHighlight->getCOLORREF() : MyStandardButton::pColorTextDefault->getCOLORREF())) == CLR_INVALID)
-            {
-                error_message = L"Failed to set the text color.";
-                break;
-            }
+            // Draw the button.
+            g_pD2D1Engine->drawFillRoundRectangle(p_this->pD2D1DCRenderTarget, d2d1_rect_window, 5, 5, p_d2d1_solidcolorbrush_button, (GetFocus() == hWnd ? p_d2d1_solidcolorbrush_focus_border : p_d2d1_solidcolorbrush_button_border), 1.0);
 
-            // Begin painting to the memory device context.
+            // Draw the button text.
+            g_pD2D1Engine->drawText(p_this->pD2D1DCRenderTarget, text_format, d2d1_rect_window, button_text, p_d2d1_solidcolorbrush_button_text, 0, 0, true);
+
+            // End drawing.
+            hr = p_this->pD2D1DCRenderTarget->EndDraw();
+            if (hr == D2DERR_RECREATE_TARGET)
             {
-                // Draw the button's background.
-                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &MyStandardButton::pColorBackground->getGDIPColor()))
+                if (p_d2d1_solidcolorbrush_button)
+                    p_d2d1_solidcolorbrush_button->Release();
+                if (p_d2d1_solidcolorbrush_button_border)
+                    p_d2d1_solidcolorbrush_button_border->Release();
+                if (!p_this->createD2D1DeviceResources(hWnd, true))
                 {
-                    error_message = L"Failed to draw the button's background.";
+                    error_message = L"Failed to recreate the render target.";
                     break;
                 }
-
-                // Draw the button.
-                if (!MyDraw_FillRoundRect(&gdip_graphics, gdip_rect_button, 4, &button_color, &button_border_color))
+                if (paint_attempts > 10)
                 {
-                    error_message = L"Failed to draw the button.";
+                    error_message = L"Failed to recreate the render target after 10 attempts.";
                     break;
                 }
-
-                // Draw the button's text.
-                DrawTextW(mem_hdc, button_text.c_str(), -1, &rect_button, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-                // Draw the button's focus border.
-                if (GetFocus() == hWnd)
-                {
-                    if (!MyDraw_DrawRoundRect(&gdip_graphics, gdip_rect_button, 4, 1, MyStandardButton::pColorFocus->getGDIPColor()))
-                    {
-                        error_message = L"Failed to draw the button focus border.";
-                        break;
-                    }
-                }
+                paint_attempts++;
+                continue; // Repeat the paint operation.
             }
-
-            // Draw contents from memory device context to target device context.
-            if (!BitBlt(hdc, 0, 0, rect_button.right - rect_button.left, rect_button.bottom - rect_button.top, mem_hdc, 0, 0, SRCCOPY))
+            else if (FAILED(hr))
             {
-                error_message = L"Failed to draw contents from memory device context to target device context.";
+                error_message = L"Failed to end drawing.";
                 break;
             }
+            p_d2d1_solidcolorbrush_button->Release();
+            p_d2d1_solidcolorbrush_button_border->Release();
 
             are_all_operation_success = true;
         }
 
         if (!are_all_operation_success)
         {
-            WriteLog(error_message, L" [CLASS: \"MyStandardButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyStandardButton()\"]", MyLogType::Error);
+            WriteLog(error_message, L" [CLASS: \"MyImageButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
         }
 
-        // Perform necesscary clean up operations.
-        if (is_paint_begined)
-        {
-            // Delete the bitmap object.
-            if (is_bitmap_created)
-            {
-                if (!SelectObject(mem_hdc, bitmap_old))
-                {
-                    WriteLog(L"Failed to select the bitmap object.", L" [CLASS: \"MyStandardButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyStandardButton()\"]", MyLogType::Error);
-                }
-                if (!DeleteObject(bitmap))
-                {
-                    WriteLog(L"Failed to delete the bitmap object.", L" [CLASS: \"MyStandardButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyStandardButton()\"]", MyLogType::Error);
-                }
-                bitmap = NULL;
-                bitmap_old = NULL;
-            }
-
-            // Delete the memory device context.
-            if (mem_hdc)
-            {
-                if (!DeleteDC(mem_hdc))
-                {
-                    WriteLog(L"Failed to delete the memory device context.", L" [CLASS: \"MyStandardButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyStandardButton()\"]", MyLogType::Error);
-                }
-                mem_hdc = NULL;
-            }
-
-            // End the paintings.
-            EndPaint(hWnd, &ps);
-            return 0;
-        }
-
-        break;
+        EndPaint(hWnd, &ps);
+        return 0;
     }
 
     // Suppress all system background erase requests.
@@ -1324,6 +1378,7 @@ bool MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfi
         MyStandardButton::pColorBackground = configSharedProperties.pColorBackground;
         MyStandardButton::pColorFocus = configSharedProperties.pColorFocus;
         MyStandardButton::pFontDefault = configSharedProperties.pFontDefault;
+        MyStandardButton::pDWTextFormatDefault = configSharedProperties.pDWTextFormatDefault;
 
         // Update initialization state.
         MyStandardButton::isSharedPropertiesSet = true;
@@ -1376,6 +1431,13 @@ bool MyStandardButton::setSubclass(HWND hWnd)
             break;
         }
 
+        // Create the Direct2D device resources.
+        if (!this->createD2D1DeviceResources(hWnd, true))
+        {
+            error_message = L"Failed to create the Direct2D device resources.";
+            break;
+        }
+
         are_all_operation_success = true;
     }
 
@@ -1389,6 +1451,12 @@ bool MyStandardButton::setSubclass(HWND hWnd)
 }
 bool MyStandardButton::refresh(HWND hWnd)
 {
+    if (!createD2D1DeviceResources(hWnd, true))
+    {
+        WriteLog(L"Failed to create the Direct2D device resources.", L" [CLASS: \"MyImageButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
+        return false;
+    }
+
     if (!this->startAnimation(hWnd, this->currentAnimationState))
     {
         WriteLog(L"Failed to start the button animation.", L" [CLASS: \"MyStandardButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
@@ -1402,26 +1470,159 @@ bool MyStandardButton::refresh(HWND hWnd)
 // Destructor:
 MyImageButton::~MyImageButton()
 {
-    // Note:
-    // If the animation manager created these variables no longer exists,
-    // No need to perform any cleanup as the COM objects already released along with its animation manager.
-    if (!MyImageButton::pAnimationManager)
-        return;
-
-    // Release the COM objects (Animation variables).
-    for (int i = 0; i < 3; i++)
+    // Release D2D1 resources.
     {
-        if (this->pAnimationVariableBackgroundRGB[i])
-            this->pAnimationVariableBackgroundRGB[i]->Release();
+        if (this->pD2D1BitmapDefaultImage)
+            this->pD2D1BitmapDefaultImage->Release();
+        if (this->pD2D1BitmapHoverImage)
+            this->pD2D1BitmapHoverImage->Release();
+        if (this->pD2D1BitmapDownImage)
+            this->pD2D1BitmapDownImage->Release();
+        if (this->pD2D1DCRenderTarget)
+            this->pD2D1DCRenderTarget->Release();
     }
-    if (this->pAnimationVariableDefaultIconOpacity)
-        this->pAnimationVariableDefaultIconOpacity->Release();
-    if (this->pAnimationVariableHoverIconOpacity)
-        this->pAnimationVariableHoverIconOpacity->Release();
-    if (this->pAnimationVariableDownIconOpacity)
-        this->pAnimationVariableDownIconOpacity->Release();
+
+    // Release animation variables.
+    {
+        // Note:
+        // If the animation manager created these animation variables no longer exists,
+        // No need to perform any cleanup as the animation variables already released along with its animation manager.
+        if (!MyImageButton::pAnimationManager)
+            return;
+
+        // Release animation variables.
+        for (int i = 0; i < 3; i++)
+        {
+            if (this->pAnimationVariableBackgroundRGB[i])
+                this->pAnimationVariableBackgroundRGB[i]->Release();
+        }
+        if (this->pAnimationVariableDefaultImageOpacity)
+            this->pAnimationVariableDefaultImageOpacity->Release();
+        if (this->pAnimationVariableHoverImageOpacity)
+            this->pAnimationVariableHoverImageOpacity->Release();
+        if (this->pAnimationVariableDownImageOpacity)
+            this->pAnimationVariableDownImageOpacity->Release();
+    }
 }
 // Private member function(s) [INTERNAL FUNCTIONS]:
+bool MyImageButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        HRESULT hr;
+
+        // Get the device context.
+        HDC hdc = GetDC(hWnd);
+        if (!hdc)
+        {
+            error_message = L"Failed to get the device context.";
+            break;
+        }
+
+        // Get the client area of the window.
+        RECT rect_window;
+        if (!GetClientRect(hWnd, &rect_window))
+        {
+            error_message = L"Failed to get the client area of the window.";
+            break;
+        }
+
+        // (Re)create the render target.
+        if (recreateRenderTarget)
+        {
+            // Release the render target if it exists.
+            if (this->pD2D1DCRenderTarget)
+            {
+                this->pD2D1DCRenderTarget->Release();
+                this->pD2D1DCRenderTarget = nullptr;
+            }
+
+            this->pD2D1DCRenderTarget = g_pD2D1Engine->createDCRenderTarget();
+            if (!this->pD2D1DCRenderTarget)
+            {
+                error_message = L"Failed to create the render target.";
+                break;
+            }
+        }
+
+        // Bind the device context to the render target.
+        hr = this->pD2D1DCRenderTarget->BindDC(hdc, &rect_window);
+        if (FAILED(hr))
+        {
+            error_message = L"Failed to bind the device context to the render target.";
+            break;
+        }
+
+        // (Re)create the device-dependent resources.
+        {
+            // Release device-dependent resources if they exist.
+            if (pD2D1SolidColorBrushFocus)
+            {
+                pD2D1SolidColorBrushFocus->Release();
+                pD2D1SolidColorBrushFocus = nullptr;
+            }
+            if (this->pD2D1BitmapDefaultImage)
+            {
+                this->pD2D1BitmapDefaultImage->Release();
+                this->pD2D1BitmapDefaultImage = nullptr;
+            }
+            if (this->pD2D1BitmapHoverImage)
+            {
+                this->pD2D1BitmapHoverImage->Release();
+                this->pD2D1BitmapHoverImage = nullptr;
+            }
+            if (this->pD2D1BitmapDownImage)
+            {
+                this->pD2D1BitmapDownImage->Release();
+                this->pD2D1BitmapDownImage = nullptr;
+            }
+
+            // Create device-dependent resources.
+            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyImageButton::pColorFocus->getD2D1Color(), &this->pD2D1SolidColorBrushFocus);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the focus border.";
+                break;
+            }
+            hr = this->pD2D1DCRenderTarget->CreateBitmapFromWicBitmap((*(*this->pImageDefault)).getBitmapSource(), &this->pD2D1BitmapDefaultImage);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the default image bitmap.";
+                break;
+            }
+            hr = this->pD2D1DCRenderTarget->CreateBitmapFromWicBitmap((*(*this->pImageHover)).getBitmapSource(), &this->pD2D1BitmapHoverImage);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the hover image bitmap.";
+                break;
+            }
+            hr = this->pD2D1DCRenderTarget->CreateBitmapFromWicBitmap((*(*this->pImageDown)).getBitmapSource(), &this->pD2D1BitmapDownImage);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the down image bitmap.";
+                break;
+            }
+        }
+
+        // Release the device context.
+        if (!ReleaseDC(hWnd, hdc))
+        {
+            error_message = L"Failed to release the device context.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyImageButton\" | FUNC: \"createD2D1DeviceResources()\"]", MyLogType::Error);
+    }
+
+    return are_all_operation_success;
+}
 bool MyImageButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
 {
     bool are_all_operation_success = false;
@@ -1499,11 +1700,11 @@ bool MyImageButton::installSubclass(HWND hWnd)
                                                this->pColorBackgroundDefault->getGDIPColor().GetBlue(),
                                                0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableDefaultIconOpacity, 1.0, 0.0, 1.0))
+        if (!this->initializeAnimationVariable(this->pAnimationVariableDefaultImageOpacity, 1.0, 0.0, 1.0))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableHoverIconOpacity, 0.0, 0.0, 1.0))
+        if (!this->initializeAnimationVariable(this->pAnimationVariableHoverImageOpacity, 0.0, 0.0, 1.0))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableDownIconOpacity, 0.0, 0.0, 1.0))
+        if (!this->initializeAnimationVariable(this->pAnimationVariableDownImageOpacity, 0.0, 0.0, 1.0))
             break;
         error_message = L"";
 
@@ -1586,13 +1787,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
             hr = p_storyboard->AddTransition(this->pAnimationVariableBackgroundRGB[2], p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableDefaultIconOpacity, p_transition_default_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableDefaultImageOpacity, p_transition_default_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableHoverIconOpacity, p_transition_hover_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableHoverImageOpacity, p_transition_hover_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableDownIconOpacity, p_transition_down_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableDownImageOpacity, p_transition_down_icon_opacity);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -1748,13 +1949,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
             hr = p_storyboard->AddTransition(this->pAnimationVariableBackgroundRGB[2], p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableDefaultIconOpacity, p_transition_default_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableDefaultImageOpacity, p_transition_default_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableHoverIconOpacity, p_transition_hover_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableHoverImageOpacity, p_transition_hover_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableDownIconOpacity, p_transition_down_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableDownImageOpacity, p_transition_down_icon_opacity);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -1910,13 +2111,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
             hr = p_storyboard->AddTransition(this->pAnimationVariableBackgroundRGB[2], p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableDefaultIconOpacity, p_transition_default_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableDefaultImageOpacity, p_transition_default_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableHoverIconOpacity, p_transition_hover_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableHoverImageOpacity, p_transition_hover_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_storyboard->AddTransition(this->pAnimationVariableDownIconOpacity, p_transition_down_icon_opacity);
+            hr = p_storyboard->AddTransition(this->pAnimationVariableDownImageOpacity, p_transition_down_icon_opacity);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -2249,23 +2450,24 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
     // Override paint messages.
     case WM_PAINT:
     {
-        HRESULT hr;
+        // In Direct2D, there may be some scenarios where D2D1 render target is lost but can be re-created.
+        // If failed to re-create the render target too many times, indicate an error.
+        USHORT paint_attempts = 1;
+
         PAINTSTRUCT ps;
-        HDC hdc = NULL;
-        HDC mem_hdc = NULL;
-        HBITMAP bitmap = NULL;
-        HBITMAP bitmap_old = NULL;
-        bool is_paint_begined = false;
-        bool is_bitmap_created = false;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
         bool are_all_operation_success = false;
         std::wstring error_message = L"";
         while (!are_all_operation_success)
         {
-            // Get the animation values.
+            HRESULT hr;
+
+            // Get the latest animation values.
             INT32 background_rgb[3] = {0, 0, 0};
-            DOUBLE default_icon_opacity = 0.0;
-            DOUBLE hover_icon_opacity = 0.0;
-            DOUBLE down_icon_opacity = 0.0;
+            DOUBLE default_image_opacity = 0.0;
+            DOUBLE hover_image_opacity = 0.0;
+            DOUBLE down_image_opacity = 0.0;
             error_message = L"Failed to retrieve the animation values.";
             hr = p_this->pAnimationVariableBackgroundRGB[0]->GetIntegerValue(&background_rgb[0]);
             if (FAILED(hr))
@@ -2276,119 +2478,88 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
             hr = p_this->pAnimationVariableBackgroundRGB[2]->GetIntegerValue(&background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = p_this->pAnimationVariableDefaultIconOpacity->GetValue(&default_icon_opacity);
+            hr = p_this->pAnimationVariableDefaultImageOpacity->GetValue(&default_image_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_this->pAnimationVariableHoverIconOpacity->GetValue(&hover_icon_opacity);
+            hr = p_this->pAnimationVariableHoverImageOpacity->GetValue(&hover_image_opacity);
             if (FAILED(hr))
                 break;
-            hr = p_this->pAnimationVariableDownIconOpacity->GetValue(&down_icon_opacity);
+            hr = p_this->pAnimationVariableDownImageOpacity->GetValue(&down_image_opacity);
             if (FAILED(hr))
                 break;
-            Gdiplus::Color background_color(255, background_rgb[0], background_rgb[1], background_rgb[2]);
             error_message = L"";
 
-            // Get the button's client rects.
-            RECT rect_button;
-            Gdiplus::Rect gdip_rect_button;
-            if (!GetClientRect(hWnd, &rect_button))
+            // Get the window client rect.
+            RECT rect_window;
+            if (!GetClientRect(hWnd, &rect_window))
             {
-                error_message = L"Failed to get the client rects.";
-                break;
-            }
-            gdip_rect_button = Gdiplus::Rect(rect_button.left, rect_button.top, rect_button.right, rect_button.bottom);
-
-            // Begin the paintings.
-            hdc = BeginPaint(hWnd, &ps);
-            if (!hdc)
-            {
-                error_message = L"Failed to execute \"BeginPaint()\".";
-                break;
-            }
-            is_paint_begined = true;
-
-            // Create memory device context and bitmap object for double buffering.
-            mem_hdc = CreateCompatibleDC(hdc);
-            if (!mem_hdc)
-            {
-                error_message = L"Failed to create the compatible memory device context.";
-                break;
-            }
-            bitmap = CreateCompatibleBitmap(hdc, rect_button.right - rect_button.left, rect_button.bottom - rect_button.top);
-            if (!bitmap)
-            {
-                error_message = L"Failed to create the compatible bitmap object.";
-                break;
-            }
-            is_bitmap_created = true;
-            bitmap_old = reinterpret_cast<HBITMAP>(SelectObject(mem_hdc, bitmap));
-            if (!bitmap_old)
-            {
-                error_message = L"Failed to select the bitmap object.";
+                error_message = L"Failed to retrieve the window's client rect.";
                 break;
             }
 
-            // Create Gdiplus::Graphics object for GDI+ drawing operations.
-            Gdiplus::Graphics gdip_graphics(mem_hdc);
-
-            // Set GDI+ smoothing mode.
-            if (gdip_graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality))
+            // Bind the render target to the window's device context.
+            hr = p_this->pD2D1DCRenderTarget->BindDC(hdc, &rect_window);
+            if (FAILED(hr))
             {
-                error_message = L"Failed to set GDI+ smoothing mode.";
+                error_message = L"Failed to bind the render target to the window's device context.";
                 break;
             }
 
-            // Begin painting to the memory device context.
+            // Prepare objects for drawing.
+            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(0, 0, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+            D2D1::ColorF d2d1_color_background = D2D1::ColorF(background_rgb[0] / 255.0f, background_rgb[1] / 255.0f, background_rgb[2] / 255.0f, 1.0);
+            ID2D1Bitmap *&p_d2d1_bitmap_defaultimage = p_this->pD2D1BitmapDefaultImage;
+            ID2D1Bitmap *&p_d2d1_bitmap_hoverimage = p_this->pD2D1BitmapHoverImage;
+            ID2D1Bitmap *&p_d2d1_bitmap_downimage = p_this->pD2D1BitmapDownImage;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = p_this->pD2D1SolidColorBrushFocus;
+
+            // Begin drawing.
+            p_this->pD2D1DCRenderTarget->BeginDraw();
+            p_this->pD2D1DCRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE); // Set antialiasing mode to per-primitive.
+
+            // Draw the background.
+            p_this->pD2D1DCRenderTarget->Clear(d2d1_color_background);
+
+            // Draw the button default image.
+            g_pD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_defaultimage, d2d1_rect_window, static_cast<FLOAT>(default_image_opacity), 0, 0, 20, 20, true);
+
+            // Draw the button hover image.
+            if (!p_this->skipHoverAnimationState && hover_image_opacity > 0.0)
             {
-                // Draw the button's background.
-                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &background_color))
+                g_pD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_hoverimage, d2d1_rect_window, static_cast<FLOAT>(hover_image_opacity), 0, 0, 20, 20, true);
+            }
+
+            if (!p_this->skipDownAnimationState && down_image_opacity > 0.0)
+            {
+                g_pD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_downimage, d2d1_rect_window, static_cast<FLOAT>(down_image_opacity), 0, 0, 20, 20, true);
+            }
+
+            // Draw the button focus's border.
+            if (GetFocus() == hWnd)
+            {
+                g_pD2D1Engine->drawRectangle(p_this->pD2D1DCRenderTarget, d2d1_rect_window, p_d2d1_solidcolorbrush_focus_border);
+            }
+
+            // End drawing.
+            hr = p_this->pD2D1DCRenderTarget->EndDraw();
+            if (hr == D2DERR_RECREATE_TARGET)
+            {
+                if (!p_this->createD2D1DeviceResources(hWnd, true))
                 {
-                    error_message = L"Failed to draw the button's background.";
+                    error_message = L"Failed to recreate the render target.";
                     break;
                 }
-
-                // Draw the button default image.
-                if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, (*(*p_this->pImageDefault)).getGDIPImage(), static_cast<FLOAT>(default_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
+                if (paint_attempts > 10)
                 {
-                    error_message = L"Failed to draw the button's default image.";
+                    error_message = L"Failed to recreate the render target after 10 attempts.";
                     break;
                 }
-
-                // Draw the button hover image.
-                if (!p_this->skipHoverAnimationState)
-                {
-                    if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, (*(*p_this->pImageHover)).getGDIPImage(), static_cast<FLOAT>(hover_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
-                    {
-                        error_message = L"Failed to draw the button's hover image.";
-                        break;
-                    }
-                }
-
-                // Draw the button down image.
-                if (!p_this->skipDownAnimationState)
-                {
-                    if (!MyDraw_DrawImage(&gdip_graphics, gdip_rect_button, (*(*p_this->pImageDown)).getGDIPImage(), static_cast<FLOAT>(down_icon_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering))
-                    {
-                        error_message = L"Failed to draw the button's down image.";
-                        break;
-                    }
-                }
-
-                // Draw the button's focus border.
-                if (GetFocus() == hWnd)
-                {
-                    if (!FrameRect(mem_hdc, &rect_button, MyImageButton::pColorFocus->getHBRUSH()))
-                    {
-                        error_message = L"Failed to draw the button's focus border.";
-                        break;
-                    }
-                }
+                paint_attempts++;
+                continue; // Repeat the paint operation.
             }
-
-            // Draw contents from memory device context to target device context.
-            if (!BitBlt(hdc, 0, 0, rect_button.right - rect_button.left, rect_button.bottom - rect_button.top, mem_hdc, 0, 0, SRCCOPY))
+            else if (FAILED(hr))
             {
-                error_message = L"Failed to draw contents from memory device context to target device context.";
+                error_message = L"Failed to end drawing.";
                 break;
             }
 
@@ -2400,40 +2571,8 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
             WriteLog(error_message, L" [CLASS: \"MyImageButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
         }
 
-        // Perform necesscary clean up operations.
-        if (is_paint_begined)
-        {
-            // Delete the bitmap object.
-            if (is_bitmap_created)
-            {
-                if (!bitmap_old || !SelectObject(mem_hdc, bitmap_old))
-                {
-                    WriteLog(L"Failed to select the bitmap object.", L" [CLASS: \"MyImageButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
-                }
-                if (!DeleteObject(bitmap))
-                {
-                    WriteLog(L"Failed to delete the bitmap object.", L" [CLASS: \"MyImageButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
-                }
-                bitmap = NULL;
-                bitmap_old = NULL;
-            }
-
-            // Delete the memory device context.
-            if (mem_hdc)
-            {
-                if (!DeleteDC(mem_hdc))
-                {
-                    WriteLog(L"Failed to delete the memory device context.", L" [CLASS: \"MyImageButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
-                }
-                mem_hdc = NULL;
-            }
-
-            // End the paintings.
-            EndPaint(hWnd, &ps);
-            return 0;
-        }
-
-        break;
+        EndPaint(hWnd, &ps);
+        return 0;
     }
 
     // Suppress all system background erase requests.
@@ -2751,6 +2890,13 @@ bool MyImageButton::setSubclass(HWND hWnd, MyImageButtonNonSharedPropertiesConfi
             break;
         }
 
+        // Create the Direct2D device resources.
+        if (!this->createD2D1DeviceResources(hWnd, true))
+        {
+            error_message = L"Failed to create the Direct2D device resources.";
+            break;
+        }
+
         are_all_operation_success = true;
     }
 
@@ -2764,6 +2910,12 @@ bool MyImageButton::setSubclass(HWND hWnd, MyImageButtonNonSharedPropertiesConfi
 }
 bool MyImageButton::refresh(HWND hWnd)
 {
+    if (!createD2D1DeviceResources(hWnd, true))
+    {
+        WriteLog(L"Failed to create the Direct2D device resources.", L" [CLASS: \"MyImageButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
+        return false;
+    }
+
     if (!this->startAnimation(hWnd, this->currentAnimationState))
     {
         WriteLog(L"Failed to start the button animation.", L" [CLASS: \"MyImageButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
@@ -4411,7 +4563,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
         std::wstring error_message = L"";
         while (!are_all_operation_success)
         {
-            // Get the animation values.
+            // Get the latest animation values.
             INT32 button_primary_rgb[3] = {0, 0, 0};
             INT32 button_secondary_rgb[3] = {0, 0, 0};
             INT32 button_border_rgb[3] = {0, 0, 0};
@@ -4468,7 +4620,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
             }
 
             // Get the button's text.
-            WCHAR* p_text_buffer = new WCHAR[button_text_length + 1];
+            WCHAR *p_text_buffer = new WCHAR[button_text_length + 1];
             if (!GetWindowTextW(hWnd, p_text_buffer, static_cast<INT>(button_text_length) + 1) && button_text_length != NULL)
             {
                 error_message = L"Failed to get the button text.";
@@ -5972,12 +6124,11 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLComboboxDropdownlist(HWND hWnd, UINT uMsg
         return 0;
     }
 
-    // Suppress WM_PRINT & WM_PRINTCLIENT messages and perform an additional invalidate.
+    // Suppress WM_PRINT & WM_PRINTCLIENT messages.
     // This removes the drop-down list opening animation.
     case WM_PRINT:
     case WM_PRINTCLIENT:
     {
-        // Perform an additional invalidate or otherwise the combobox items won't be rendered.
         return 0;
     }
 

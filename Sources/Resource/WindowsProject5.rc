@@ -76,12 +76,24 @@ IDI_ICON7               ICON                    "Raws\\MAINICON.ico"
 //
 
 IDB_PNG1                PNG                     "Raws\\cross_grey.png"
+
 IDB_PNG2                PNG                     "Raws\\cross_white.png"
+
 IDB_PNG3                PNG                     "Raws\\cross_black.png"
+
 IDB_PNG4                PNG                     "Raws\\minus_grey.png"
+
 IDB_PNG5                PNG                     "Raws\\minus_white.png"
+
 IDB_PNG6                PNG                     "Raws\\minus_black.png"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// IMAGE
+//
+
+IDR_IMAGE1             IMAGE                   "Raws\\test.png"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

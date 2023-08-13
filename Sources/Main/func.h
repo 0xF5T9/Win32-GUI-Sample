@@ -19,6 +19,8 @@
  * #pragma comment(lib, "Winmm.lib")
  * #pragma comment(lib, "Powrprof.lib")
  * #pragma comment(lib, "d2d1.lib")
+ * #pragma comment(lib, "dwrite.lib")
+ * #pragma comment(lib, "windowscodecs.lib")
  */
 
 /**
@@ -1001,70 +1003,6 @@ namespace nApp
             if (!are_all_operation_success)
             {
                 WriteLog(error_message, L" [NAMESPACE: \"nApp::API\" | FUNC: \"InitDarkModeAPI()\"]", MyLogType::Error);
-                return false;
-            }
-
-            return true;
-        }
-
-        /**
-         * @brief Initialize GDI Animation API and GDI+ API.
-         *
-         * @param pToken Pointer to a ULONG_PTR that receives a token.
-         * @param pInput Pointer to a GdiplusStartupInput structure.
-         *
-         * @return Returns true if the GDI Animation API and GDI+ API was successfully initialized, false otherwise.
-         */
-        bool InitGDIGraphicAPI(ULONG_PTR *pToken, const Gdiplus::GdiplusStartupInput *pInput)
-        {
-            bool are_all_operation_success = false;
-            std::wstring error_message = L"";
-            while (!are_all_operation_success)
-            {
-                // Initialize GDI Animation API.
-                HRESULT hr = BufferedPaintInit();
-                if (FAILED(hr))
-                {
-                    error_message = L"Failed to initialize GDI Animation API.";
-                    break;
-                }
-
-                // Initialize GDI+ API.
-                if (Gdiplus::GdiplusStartup(pToken, pInput, NULL))
-                {
-                    error_message = L"Failed to initialize GDI+ API.";
-                    break;
-                }
-
-                are_all_operation_success = true;
-            }
-
-            if (!are_all_operation_success)
-            {
-                WriteLog(error_message, L" [NAMESPACE: \"nApp::API\" | FUNC: \"InitGDIGraphicAPI()\"]", MyLogType::Error);
-                return false;
-            }
-
-            return true;
-        }
-
-        /**
-         * @brief Uninitialize GDI Animation API and GDI+ API.
-         *
-         * @param token Token returned by a previous call to GdiplusStartup.
-         *
-         * @return Returns true if the GDI Animation API and GDI+ API was successfully uninitialized, false otherwise.
-         */
-        bool UninitGDIGraphicAPI(ULONG_PTR token)
-        {
-            // Shutdown GDI+ API.
-            Gdiplus::GdiplusShutdown(token);
-
-            // Uninitialize GDI Animation API.
-            HRESULT hr = BufferedPaintUnInit();
-            if (FAILED(hr))
-            {
-                WriteLog(L"Failed to uninitialize GDI Animation API.", L" [NAMESPACE: \"nApp::API\" | FUNC: \"UninitGDIGraphicAPI()\"]", MyLogType::Error);
                 return false;
             }
 
@@ -2107,7 +2045,8 @@ namespace nApp
                 }
 
                 // Update application border brush.
-                g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderActive.getD2D1Color();
+                // g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderActive.getD2D1Color(); // // Reserved code, likely to be removed in the future.
+                g_IsWindowActive = true;
                 if (g_IsWindows11BorderAttributeSupported)
                 {
                     COLORREF border_color = g_pUIElements->colors.borderActive.getCOLORREF();
@@ -2215,12 +2154,12 @@ namespace nApp
                                                                   RGBA(0, 0, 0),        // DDL combobox default item text color.
                                                                   RGBA(255, 255, 255)); // DDL combobox selected item text color.
 
-                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossBlack,  // Close button default image.
-                                                                      *g_pUIElements->images.pCrossWhite,  // Close button hover image.
-                                                                      *g_pUIElements->images.pCrossWhite,  // Close button down image.
-                                                                      *g_pUIElements->images.pMinusBlack,  // Minimize button default image.
-                                                                      *g_pUIElements->images.pMinusBlack,  // Minimize button hover image.
-                                                                      *g_pUIElements->images.pMinusBlack); // Minimize button down image.
+                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pWICCrossBlack,  // Close button default image.
+                                                                      *g_pUIElements->images.pWICCrossWhite,  // Close button hover image.
+                                                                      *g_pUIElements->images.pWICCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pWICMinusBlack,  // Minimize button default image.
+                                                                      *g_pUIElements->images.pWICMinusBlack,  // Minimize button hover image.
+                                                                      *g_pUIElements->images.pWICMinusBlack); // Minimize button down image.
 
                     // Update standard button class.
                     MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
@@ -2235,7 +2174,8 @@ namespace nApp
                             &g_pUIElements->colors.textHighlight,
                             &g_pUIElements->colors.background,
                             &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button};
+                            &g_pUIElements->fonts.button,
+                            &g_pUIElements->fonts.buttonTextFormat};
                     if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     {
                         error_message = L"Failed to update standard button class.";
@@ -2374,12 +2314,12 @@ namespace nApp
                                                                   RGBA(162, 162, 162),  // DDL combobox default item text color.
                                                                   RGBA(255, 255, 255)); // DDL combobox selected item text color.
 
-                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
-                                                                      *g_pUIElements->images.pCrossWhite,  // Close button hover image.
-                                                                      *g_pUIElements->images.pCrossWhite,  // Close button down image.
-                                                                      *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
-                                                                      *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
-                                                                      *g_pUIElements->images.pMinusWhite); // Minimize button down image.
+                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pWICCrossGrey,   // Close button default image.
+                                                                      *g_pUIElements->images.pWICCrossWhite,  // Close button hover image.
+                                                                      *g_pUIElements->images.pWICCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pWICMinusGrey,   // Minimize button default image.
+                                                                      *g_pUIElements->images.pWICMinusWhite,  // Minimize button hover image.
+                                                                      *g_pUIElements->images.pWICMinusWhite); // Minimize button down image.
 
                     // Update standard button class.
                     MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
@@ -2394,7 +2334,8 @@ namespace nApp
                             &g_pUIElements->colors.textHighlight,
                             &g_pUIElements->colors.background,
                             &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button};
+                            &g_pUIElements->fonts.button,
+                            &g_pUIElements->fonts.buttonTextFormat};
                     if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     {
                         error_message = L"Failed to update standard button class.";
@@ -2533,12 +2474,12 @@ namespace nApp
                                                                   RGBA(237, 237, 235),  // DDL combobox default item text color.
                                                                   RGBA(225, 216, 102)); // DDL combobox selected item text color.
 
-                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pCrossGrey,   // Close button default image.
-                                                                      *g_pUIElements->images.pCrossWhite,  // Close button hover image.
-                                                                      *g_pUIElements->images.pCrossWhite,  // Close button down image.
-                                                                      *g_pUIElements->images.pMinusGrey,   // Minimize button default image.
-                                                                      *g_pUIElements->images.pMinusWhite,  // Minimize button hover image.
-                                                                      *g_pUIElements->images.pMinusWhite); // Minimize button down image.
+                    g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pWICCrossGrey,   // Close button default image.
+                                                                      *g_pUIElements->images.pWICCrossWhite,  // Close button hover image.
+                                                                      *g_pUIElements->images.pWICCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pWICMinusGrey,   // Minimize button default image.
+                                                                      *g_pUIElements->images.pWICMinusWhite,  // Minimize button hover image.
+                                                                      *g_pUIElements->images.pWICMinusWhite); // Minimize button down image.
 
                     // Update standard button class.
                     MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
@@ -2553,7 +2494,8 @@ namespace nApp
                             &g_pUIElements->colors.textHighlight,
                             &g_pUIElements->colors.background,
                             &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button};
+                            &g_pUIElements->fonts.button,
+                            &g_pUIElements->fonts.buttonTextFormat};
                     if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
                     {
                         error_message = L"Failed to update standard button class.";
@@ -2635,7 +2577,7 @@ namespace nApp
                 if (is_switch_failed)
                     break;
 
-                // If the window is not ready, then we don't need to update containers.
+                // If the window is not ready, then we don't need to update containers and update main window D2D1 device-dependent resources.
                 if (!g_IsWindowReady)
                 {
                     WriteLogEx(L"Default application theme: ", (L"\"" + theme_name + L"\"").c_str(), MyLogType::Info, 1);
@@ -2649,6 +2591,14 @@ namespace nApp
                     error_message = L"Failed to update containers.";
                     break;
                 }
+
+                // Update main window D2D1 device-dependent resources.
+                if (!g_pUIElements->createD2D1DeviceResources(g_hWnd, false))
+                {
+                    error_message = L"Failed to update main window D2D1 device-dependent resources.";
+                    break;
+                }
+
                 WriteLogEx(L"Application theme changed: ", (L"\"" + theme_name + L"\"").c_str(), MyLogType::Info, 1);
 
                 are_all_operation_success = true;
@@ -2818,13 +2768,14 @@ namespace nApp
                         }
                         WriteLog(L"Windows Animation Manager API loaded.", L"", MyLogType::Debug);
 
-                        // GDI Animation & GDI+ APIs.
-                        if (!nApp::API::InitGDIGraphicAPI(&g_APIGDIToken, &g_APIGDIStartupInput))
+                        // GDI+ API.
+                        g_pGDIPEngine = new MyGDIPEngine();
+                        if (!g_pGDIPEngine || !g_pGDIPEngine->initialize())
                         {
-                            error_message = L"Failed to initialize GDI Animation & GDI+ APIs.";
+                            error_message = L"Failed to initialize GDI+ API.";
                             break;
                         }
-                        WriteLog(L"GDI Animation & GDI+ APIs loaded.", L"", MyLogType::Debug);
+                        WriteLog(L"GDI+ API loaded.", L"", MyLogType::Debug);
 
                         // Direct2D API.
                         g_pD2D1Engine = new MyD2D1Engine();
@@ -2839,7 +2790,7 @@ namespace nApp
 
                     // Initialize UI-related objects.
                     WriteLog(L"Initializing UI-related objects ...", L"", MyLogType::Debug);
-                    g_pUIElements = new UIElements();
+                    g_pUIElements = new UIElements(g_pGDIPEngine, g_pD2D1Engine);
                     g_ContainerMainContent = new MyContainer(WINDOW_CONTAINER_DEFAULTPADDING, false, WINDOW_CONTAINER_DEFAULTPADDING, true);
                     if (!g_pUIElements || !g_ContainerMainContent)
                     {
@@ -2955,6 +2906,20 @@ namespace nApp
                     std::wstring error_message = L"";
                     while (!are_all_operation_success)
                     {
+                        // Window title.
+                        std::wstring text_title = nSol::MGetWindowText(hWnd);
+                        MyWindow *p_textnormal_title = new MyWindow(false);
+                        p_textnormal_title->hWnd = CreateWindowExW(NULL, WC_STATIC, text_title.c_str(), WS_CHILD | SS_NOPREFIX | SS_LEFT,
+                                                                   WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23,
+                                                                   hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
+                        if (!p_textnormal_title->hWnd)
+                        {
+                            error_message = L"Failed to create the window title.";
+                            break;
+                        }
+                        SendMessageW(p_textnormal_title->hWnd, WM_SETFONT, (WPARAM)g_pUIElements->fonts.caption.getHFONT(), FALSE);
+                        g_VectorNonClientWindows.push_back(p_textnormal_title);
+
                         // Close button.
                         MyWindow *p_imagebutton_close = new MyWindow(true);
                         MyImageButtonNonSharedPropertiesConfig button_close_nonsharedpropertiesconfig =
@@ -2994,20 +2959,6 @@ namespace nApp
                         }
                         g_VectorNonClientWindows.push_back(p_imagebutton_minimize);
                         g_pUIElements->miscs.hWndNonClientMinimizeButton = p_imagebutton_minimize->hWnd;
-
-                        // Window title.
-                        std::wstring text_title = nSol::MGetWindowText(hWnd);
-                        MyWindow *p_textnormal_title = new MyWindow(false);
-                        p_textnormal_title->hWnd = CreateWindowExW(NULL, WC_STATIC, text_title.c_str(), WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                                   WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 383, 23,
-                                                                   hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL);
-                        if (!p_textnormal_title->hWnd)
-                        {
-                            error_message = L"Failed to create the window title.";
-                            break;
-                        }
-                        SendMessageW(p_textnormal_title->hWnd, WM_SETFONT, (WPARAM)g_pUIElements->fonts.caption.getHFONT(), FALSE);
-                        g_VectorNonClientWindows.push_back(p_textnormal_title);
 
                         are_all_operation_success = true;
                     }
@@ -3362,19 +3313,11 @@ namespace nApp
                 std::wstring error_message = L"";
                 while (!are_all_operation_success)
                 {
-                    // Set the window border attribute.
-                    // The border color affects the window background color during window opening animation.
-                    // The actual window border color will be restored after the window opening animation is completed (via WM_TIMER/IDT_ACTIVE_CHECK).
-                    if (g_IsWindows11BorderAttributeSupported)
+                    // Create the main window render target and its device-dependent resources.
+                    if (!g_pUIElements->createD2D1DeviceResources(g_hWnd, true))
                     {
-                        COLORREF border_color = g_pUIElements->colors.background.getCOLORREF(); // Use the background color.
-                        // COLORREF border_color = DWMWA_COLOR_NONE; // Or use transparent color.
-                        HRESULT hr = DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
-                        if (FAILED(hr))
-                        {
-                            error_message = L"Failed to set the window border attribute.";
-                            break;
-                        }
+                        error_message = L"Failed to create the main window render target and its device-dependent resources.";
+                        break;
                     }
 
                     // Show main window.
@@ -3388,7 +3331,6 @@ namespace nApp
 
                     // Show containers.
                     ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_NORMAL);
-
                     if (!IsWindowVisible(g_hWnd))
                     {
                         error_message = L"Failed to show main window.";
@@ -3406,8 +3348,16 @@ namespace nApp
                         break;
                     }
 
+                    /*
+                     * The WM_NCACTIVATE message of the main window no longer be suppressed.
+                     * It was suppressed to prevent un-wanted non-client paints during window startup animation.
+                     * The non-client paint artifacts disappeared after replacing the main window's paint operations with Direct2D.
+                     * Drawing performance has improved drastically, eliminating any remaining flickering.
+                     * Therefore, the IDT_ACTIVE_CHECK timer is no longer needed.
+                     * This code is reserved and likely to be removed in the future.
+                     */
                     // Set the window active check timer to make sure the main window drop-shadow effects are drawn correctly on startup.
-                    SetTimer(g_hWnd, IDT_ACTIVE_CHECK, 50, NULL);
+                    // SetTimer(g_hWnd, IDT_ACTIVE_CHECK, 50, NULL);
 
                     are_all_operation_success = true;
                 }
@@ -3457,6 +3407,10 @@ namespace nApp
                 std::wstring error_message = L"";
                 while (!are_all_operation_success)
                 {
+                    // Destroy the main window render target and its device-dependent resources.
+                    g_pUIElements->releaseD2D1DeviceResources();
+                    WriteLog(L"Main window render target and its device-dependent resources released.", L"", MyLogType::Debug);
+
                     // Destroy non-client windows.
                     {
                         if (!g_VectorNonClientWindows.empty())
@@ -3489,12 +3443,13 @@ namespace nApp
                         delete g_pD2D1Engine;
                         WriteLog(L"Direct2D API uninitialized.", L"", MyLogType::Debug);
 
-                        // GDI Animation & GDI+ APIs.
-                        if (!nApp::API::UninitGDIGraphicAPI(g_APIGDIToken))
+                        // GDI+ API.
+                        if (!g_pGDIPEngine->uninitialize())
                         {
-                            error_message = L"Failed to uninitialize GDI Animation & GDI+ APIs.";
+                            error_message = L"Failed to uninitialize GDI+ API.";
                             break;
                         }
+                        delete g_pGDIPEngine;
                         WriteLog(L"GDI Animation & GDI+ APIs uninitialized.", L"", MyLogType::Debug);
 
                         // Windows Animation Manager API.

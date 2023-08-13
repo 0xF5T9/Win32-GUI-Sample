@@ -246,8 +246,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         break;
     }
 
+    // Process WM_PAINT messages.
     case WM_PAINT:
     {
+        // In Direct2D, there may be some scenarios where D2D1 render target is lost but can be re-created.
+        // If failed to re-create the render target too many times, indicate an error.
+        USHORT paint_attempts = 1;
+
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
@@ -257,7 +262,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
             HRESULT hr;
 
-            // Get the application client rect.
+            // Get the application window client rect.
             RECT rect_window;
             if (!GetClientRect(hWnd, &rect_window))
             {
@@ -265,53 +270,55 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                 break;
             }
 
-            // Create the Direct2D render target.
-            ID2D1RenderTarget *p_rendertarget = g_pD2D1Engine->createDCRenderTarget(hdc, rect_window);
-            if (!p_rendertarget)
+            // Bind the render target to the window's device context.
+            hr = g_pUIElements->pRenderTarget->BindDC(hdc, &rect_window);
+            if (FAILED(hr))
             {
-                error_message = L"Failed to create the Direct2D render target.";
+                error_message = L"Failed to bind the render target to the application window's device context.";
                 break;
             }
 
             // Prepare objects for drawing.
-            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(1, 1, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
-            D2D1_RECT_F d2d1_rect_caption = D2D1::RectF(1, 1, static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.right), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.bottom));
-            D2D1::ColorF d2d1_color_caption_background = g_pUIElements->colors.captionBackground.getD2D1Color();
-            D2D1::ColorF d2d1_color_background = g_pUIElements->colors.background.getD2D1Color();
-            D2D1::ColorF d2d1_color_window_border = *g_pUIElements->pointers.pCurrentBorderColor;
-            ID2D1SolidColorBrush *p_d2d1_brush_caption;
-            ID2D1SolidColorBrush *p_d2d1_brush_border;
-            hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_caption_background, &p_d2d1_brush_caption);
-            if (FAILED(hr))
-            {
-                error_message = L"Failed to create a solid color brush for caption background (D2D1).";
-                break;
-            }
-            hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_window_border, &p_d2d1_brush_border);
-            if (FAILED(hr))
-            {
-                error_message = L"Failed to create a solid color brush for window border (D2D1).";
-                break;
-            }
+            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(static_cast<FLOAT>(rect_window.left), static_cast<FLOAT>(rect_window.top), static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+            D2D1_RECT_F d2d1_rect_caption = D2D1::RectF(static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.left), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.top), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.right), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.bottom));
+            D2D1::ColorF &d2d1_color_background = g_pUIElements->colors.background.getD2D1Color();
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_caption = g_pUIElements->pSolidColorBrushCaptionBackground;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_border = (g_IsWindowActive ? g_pUIElements->pSolidColorBrushBorderActive : g_pUIElements->pSolidColorBrushBorderInactive);
 
             // Begin drawing.
-            p_rendertarget->BeginDraw();
-            p_rendertarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED); // Disable D2D1 anti-aliasing to achieve pixel-perfect drawing.
+            g_pUIElements->pRenderTarget->BeginDraw();
 
-            // Draw the background.
-            p_rendertarget->Clear(d2d1_color_background);
+            // Draw the window background.
+            g_pUIElements->pRenderTarget->Clear(d2d1_color_background);
 
-            // Draw the caption.
-            p_rendertarget->FillRectangle(d2d1_rect_caption, p_d2d1_brush_caption);
+            // Draw the caption background.
+            g_pD2D1Engine->drawFillRectangle(g_pUIElements->pRenderTarget, d2d1_rect_caption, p_d2d1_solidcolorbrush_caption);
 
-            // Draw the border.
-            p_rendertarget->DrawRectangle(d2d1_rect_window, p_d2d1_brush_border);
+            // Draw the window border.
+            g_pD2D1Engine->drawRectangle(g_pUIElements->pRenderTarget, d2d1_rect_window, p_d2d1_solidcolorbrush_border);
 
             // End drawing.
-            p_rendertarget->EndDraw();
-            p_d2d1_brush_caption->Release();
-            p_d2d1_brush_border->Release();
-            p_rendertarget->Release();
+            hr = g_pUIElements->pRenderTarget->EndDraw();
+            if (hr == D2DERR_RECREATE_TARGET)
+            {
+                if (!g_pUIElements->createD2D1DeviceResources(hWnd, true))
+                {
+                    error_message = L"Failed to recreate the render target and its device-dependent resources.";
+                    break;
+                }
+                if (paint_attempts > 10)
+                {
+                    error_message = L"Failed to recreate the render target after 10 attempts.";
+                    break;
+                }
+                paint_attempts++;
+                continue; // Repeat the paint operation.
+            }
+            else if (FAILED(hr))
+            {
+                error_message = L"Failed to end drawing.";
+                break;
+            }
 
             are_all_operation_success = true;
         }
@@ -332,6 +339,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         // This effectively reduces unwanted visual artifacts during resizing and makes the application window appear more smoothly when being opened.
         if (!g_IsWindowReady)
         {
+            // In Direct2D, there may be some scenarios where D2D1 render target is lost but can be re-created.
+            // If failed to re-create the render target too many times, indicate an error.
+            USHORT paint_attempts = 1;
+
             HDC hdc = reinterpret_cast<HDC>(wParam);
 
             bool are_all_operation_success = false;
@@ -340,7 +351,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             {
                 HRESULT hr;
 
-                // Get the application client rect.
+                // Get the application window client rect.
                 RECT rect_window;
                 if (!GetClientRect(hWnd, &rect_window))
                 {
@@ -348,53 +359,55 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                     break;
                 }
 
-                // Create the Direct2D render target.
-                ID2D1RenderTarget *p_rendertarget = g_pD2D1Engine->createDCRenderTarget(hdc, rect_window);
-                if (!p_rendertarget)
+                // Bind the render target to the window's device context.
+                hr = g_pUIElements->pRenderTarget->BindDC(hdc, &rect_window);
+                if (FAILED(hr))
                 {
-                    error_message = L"Failed to create the Direct2D render target.";
+                    error_message = L"Failed to bind the render target to the application window's device context.";
                     break;
                 }
 
                 // Prepare objects for drawing.
-                D2D1_RECT_F d2d1_rect_window = D2D1::RectF(1, 1, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
-                D2D1_RECT_F d2d1_rect_caption = D2D1::RectF(1, 1, static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.right), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.bottom));
-                D2D1::ColorF d2d1_color_caption_background = g_pUIElements->colors.captionBackground.getD2D1Color();
-                D2D1::ColorF d2d1_color_background = g_pUIElements->colors.background.getD2D1Color();
-                D2D1::ColorF d2d1_color_window_border = *g_pUIElements->pointers.pCurrentBorderColor;
-                ID2D1SolidColorBrush *p_d2d1_brush_caption;
-                ID2D1SolidColorBrush *p_d2d1_brush_border;
-                hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_caption_background, &p_d2d1_brush_caption);
-                if (FAILED(hr))
-                {
-                    error_message = L"Failed to create a solid color brush for caption background (D2D1).";
-                    break;
-                }
-                hr = p_rendertarget->CreateSolidColorBrush(d2d1_color_window_border, &p_d2d1_brush_border);
-                if (FAILED(hr))
-                {
-                    error_message = L"Failed to create a solid color brush for window border (D2D1).";
-                    break;
-                }
+                D2D1_RECT_F d2d1_rect_window = D2D1::RectF(static_cast<FLOAT>(rect_window.left), static_cast<FLOAT>(rect_window.top), static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+                D2D1_RECT_F d2d1_rect_caption = D2D1::RectF(static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.left), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.top), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.right), static_cast<FLOAT>(g_pUIElements->rectangles.rectCaption.bottom));
+                D2D1::ColorF &d2d1_color_background = g_pUIElements->colors.background.getD2D1Color();
+                ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_caption = g_pUIElements->pSolidColorBrushCaptionBackground;
+                ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_border = (g_IsWindowActive ? g_pUIElements->pSolidColorBrushBorderActive : g_pUIElements->pSolidColorBrushBorderInactive);
 
                 // Begin drawing.
-                p_rendertarget->BeginDraw();
-                p_rendertarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED); // Disable D2D1 anti-aliasing to achieve pixel-perfect drawing.
+                g_pUIElements->pRenderTarget->BeginDraw();
 
-                // Draw the background.
-                p_rendertarget->Clear(d2d1_color_background);
+                // Draw the window background.
+                g_pUIElements->pRenderTarget->Clear(d2d1_color_background);
 
-                // Draw the caption.
-                p_rendertarget->FillRectangle(d2d1_rect_caption, p_d2d1_brush_caption);
+                // Draw the caption background.
+                g_pD2D1Engine->drawFillRectangle(g_pUIElements->pRenderTarget, d2d1_rect_caption, p_d2d1_solidcolorbrush_caption);
 
-                // Draw the border.
-                p_rendertarget->DrawRectangle(d2d1_rect_window, p_d2d1_brush_border);
+                // Draw the window border.
+                g_pD2D1Engine->drawRectangle(g_pUIElements->pRenderTarget, d2d1_rect_window, p_d2d1_solidcolorbrush_border);
 
                 // End drawing.
-                p_rendertarget->EndDraw();
-                p_d2d1_brush_caption->Release();
-                p_d2d1_brush_border->Release();
-                p_rendertarget->Release();
+                hr = g_pUIElements->pRenderTarget->EndDraw();
+                if (hr == D2DERR_RECREATE_TARGET)
+                {
+                    if (!g_pUIElements->createD2D1DeviceResources(hWnd, true))
+                    {
+                        error_message = L"Failed to recreate the render target and its device-dependent resources.";
+                        break;
+                    }
+                    if (paint_attempts > 10)
+                    {
+                        error_message = L"Failed to recreate the render target after 10 attempts.";
+                        break;
+                    }
+                    paint_attempts++;
+                    continue; // Repeat the paint operation.
+                }
+                else if (FAILED(hr))
+                {
+                    error_message = L"Failed to end drawing.";
+                    break;
+                }
 
                 are_all_operation_success = true;
             }
@@ -577,7 +590,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WA_ACTIVE:
         {
             // Update the appropriate border color.
-            g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderActive.getD2D1Color();
+            // g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderActive.getD2D1Color(); // Reserved code, likely to be removed in the future.
+            g_IsWindowActive = true;
 
             // If supported, set the border color attribute.
             if (g_IsWindows11BorderAttributeSupported)
@@ -594,7 +608,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WA_INACTIVE:
         {
             // Update the appropriate border color.
-            g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderInactive.getD2D1Color();
+            // g_pUIElements->pointers.pCurrentBorderColor = &g_pUIElements->colors.borderInactive.getD2D1Color(); // Reserved code, likely to be removed in the future.
+            g_IsWindowActive = false;
 
             // If supported, set the border color attribute.
             if (g_IsWindows11BorderAttributeSupported)
@@ -627,8 +642,13 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     // Suppress WM_NCACTIVATE messages to prevent unnecessary non-client paints.
     case WM_NCACTIVATE:
     {
-        if (!g_IsWindowReady)
-            return 0;
+        /*
+         * The non-client paint artifacts disappeared after replacing the main window's paint operations with Direct2D.
+         * Drawing performance has improved drastically, eliminating any remaining flickering.
+         * This code is reserved and likely to be removed in the future.
+         */
+        // if (!g_IsWindowReady)
+        //    return 0;
 
         break;
     }
@@ -758,11 +778,6 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         // Stop all animations during resize event.
         {
             HRESULT hr;
-
-            // GDI Animations.
-            hr = BufferedPaintStopAllAnimations(hWnd);
-            if (FAILED(hr))
-                WriteLog(L"Failed to execute \"BufferedPaintStopAllAnimations()\" function.", L" [MESSAGE: \"WM_SIZE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
 
             // Windows Animation Manager animations.
             if (g_pAnimationManager)
@@ -1273,6 +1288,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                 std::wstring is_window_ready_string = (g_IsWindowReady ? L"Yes" : L"No");
                 std::wstring is_window_minimized_string = (g_IsWindowMinimized ? L"Yes" : L"No");
                 std::wstring is_window_maximized_string = (g_IsWindowMaximized ? L"Yes" : L"No");
+                std::wstring is_window_active_string = (g_IsWindowActive ? L"Yes" : L"No");
                 std::wstring is_current_theme_want_scrollbar_hidden_string = (g_IsCurrentThemeWantScrollbarsVisible ? L"Yes" : L"No");
                 std::wstring is_windows11_border_attribute_supported = (g_IsWindows11BorderAttributeSupported ? L"Yes" : L"No");
 
@@ -1286,6 +1302,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
                 debug_message.append(L"IsWindowReady: " + is_window_ready_string + L"\n");
                 debug_message.append(L"IsWindowMinimized: " + is_window_minimized_string + L"\n");
                 debug_message.append(L"IsWindowMaximized: " + is_window_maximized_string + L"\n");
+                debug_message.append(L"IsWindowActive: " + is_window_active_string + L"\n");
                 debug_message.append(L"IsCurrentThemeWantScrollbarsVisible: " + is_current_theme_want_scrollbar_hidden_string + L"\n");
                 debug_message.append(L"IsWindows11BorderAttributeSupported: " + is_windows11_border_attribute_supported + L"\n");
                 debug_message.append(L"Sample radio state: " + sample_radio_state_string);
@@ -1305,27 +1322,25 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case VK_F2:
         {
             ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_HIDE);
-            for (auto &x : g_VectorNonClientWindows)
-            {
-                ShowWindow(x->hWnd, SW_HIDE);
-            }
+            // for (auto &x : g_VectorNonClientWindows)
+            // {
+            //     ShowWindow(x->hWnd, SW_HIDE);
+            // }
             MessageBeep(MB_OK);
             return 0;
         }
         case VK_F3:
         {
             ShowWindow(g_ContainerMainContent->pContainerWindow->hWnd, SW_SHOW);
-            for (auto &x : g_VectorNonClientWindows)
-            {
-                ShowWindow(x->hWnd, SW_SHOW);
-            }
+            // for (auto &x : g_VectorNonClientWindows)
+            // {
+            //     ShowWindow(x->hWnd, SW_SHOW);
+            // }
             MessageBeep(MB_OK);
             return 0;
         }
         case VK_F4:
         {
-            COLORREF border_color = DWMWA_COLOR_NONE;
-            DwmSetWindowAttribute(g_hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
             MessageBeep(MB_OK);
             return 0;
         }
@@ -1337,6 +1352,15 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     // Process WM_TIMER messages.
     case WM_TIMER:
     {
+        /*
+         * The WM_NCACTIVATE message of the main window no longer be suppressed.
+         * It was suppressed to prevent un-wanted non-client paints during window startup animation.
+         * The non-client paint artifacts disappeared after replacing the main window's paint operations with Direct2D.
+         * Drawing performance has improved drastically, eliminating any remaining flickering.
+         * Therefore, the IDT_ACTIVE_CHECK timer is no longer needed.
+         * This code is reserved and likely to be removed in the future.
+         */
+        /*
         switch (wParam)
         {
         // Window active check timer to make sure the main window drop-shadow effects are drawn correctly.
@@ -1370,6 +1394,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             break;
         }
         }
+        */
+
         break;
     }
 

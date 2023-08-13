@@ -26,5 +26,7 @@
 #include <comdef.h>                  // Windows API: Component Object Model (COM) error handling.
 #include <Powrprof.h>                // Windows API: Power management functions and settings.
 #include <d2d1.h>                    // Windows API: Direct2D (D2D1), hardware-accelerated drawing functions.
+#include <dwrite.h>                  // Windows API: DirectWrite (DWrite), hardware-accelerated text rendering.
+#include <wincodec.h>                // Windows API: Windows Imaging Component (WIC), image processing.
 
 #endif // STANDARD_INCLUDES_H

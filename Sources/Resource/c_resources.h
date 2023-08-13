@@ -22,7 +22,7 @@
 */
 
 // Timer identifiers.
-#define IDT_ACTIVE_CHECK 1
+// #define IDT_ACTIVE_CHECK 1 // Reserved and likely to be removed in the future.
 
 // Window identifiers. (non-client)
 #define IDC_NONCLIENT_CLOSE_BUTTON        101

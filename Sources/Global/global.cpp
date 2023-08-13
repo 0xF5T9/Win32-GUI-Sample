@@ -28,9 +28,11 @@ bool g_IsCurrentThemeWantScrollbarsVisible = false; // Indicate whether the curr
 bool g_IsAppResizing = false;                       // Indicate whether the application is resizing.
 bool g_IsWindowMinimized = false;                   // Indicate whether the application window is maximized.
 bool g_IsWindowMaximized = false;                   // Indicate whether the application window is maximized.
+bool g_IsWindowActive = false;                      // Indicate whether the application window is active.
 bool g_IsWindows11BorderAttributeSupported = false; // Indicate whether the DWMWA_BORDER_COLOR attribute flag is supported on the current OS.
 
 // Graphic-related variables:
+MyGDIPEngine *g_pGDIPEngine; // My GDI+ engine object.
 MyD2D1Engine *g_pD2D1Engine; // My Direct2D engine object.
 
 // UI-related variables:
@@ -52,9 +54,6 @@ KeyToggle g_KeyToggleENTER(VK_RETURN);
 
 // Initialization variables:
 extern const LPCWSTR g_WindowClassName = L"Win32GUISample"; // Main window's class name.
-
-GdiplusStartupInput g_APIGDIStartupInput; // GDI+ startup input. (GDI+ initialization variable)
-ULONG_PTR g_APIGDIToken;                  // GDI+ token.         (GDI+ initialization variable)
 
 IUIAnimationManager *g_pAnimationManager;            // WAM global animation manager.
 IUIAnimationTimer *g_pAnimationTimer;                // WAM global animation timer.
