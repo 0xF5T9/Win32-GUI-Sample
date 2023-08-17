@@ -206,7 +206,7 @@ bool MyWindow::createStandardButton(HWND hWndParent, std::wstring windowText, bo
 
     return true;
 }
-bool MyWindow::createImageButton(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyImageButtonNonSharedPropertiesConfig configNonSharedProperties, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID)
+bool MyWindow::createImageButton(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyImageButtonNonSharedAttributesConfig configNonSharedProperties, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";

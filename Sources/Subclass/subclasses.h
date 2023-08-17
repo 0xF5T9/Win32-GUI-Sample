@@ -43,10 +43,26 @@ public:
  */
 struct MyStandardButtonInitializeConfig
 {
-    KeyToggle *pEnterKeyToggle = nullptr;                          // Pointer to the ENTER key-down state capture object.
-    IUIAnimationManager **ppAnimationManager = nullptr;            // Reference to pointer that point to the initialized animation manager.
-    IUIAnimationTimer **ppAnimationTimer = nullptr;                // Reference to pointer that point to the initialized animation timer.
-    IUIAnimationTransitionLibrary **ppTransitionLibrary = nullptr; // Reference to pointer that point to the initialized transition library.
+public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pAnimationManager  Pointer to the initialized animation manager.
+     * @param pAnimationTimer    Pointer to the initialized animation timer.
+     * @param pTransitionLibrary Pointer to the initialized transition library.
+     * @param pMyD2D1Engine      Pointer to the initialized MyD2D1Engine object.
+     */
+    MyStandardButtonInitializeConfig(IUIAnimationManager *&pAnimationManager, IUIAnimationTimer *&pAnimationTimer, IUIAnimationTransitionLibrary *&pTransitionLibrary, MyD2D1Engine *pMyD2D1Engine)
+        : pAnimationManager(pAnimationManager), pAnimationTimer(pAnimationTimer), pTransitionLibrary(pTransitionLibrary), pMyD2D1Engine(pMyD2D1Engine) {}
+
+public:
+    IUIAnimationManager *&pAnimationManager;
+    IUIAnimationTimer *&pAnimationTimer;
+    IUIAnimationTransitionLibrary *&pTransitionLibrary;
+    MyD2D1Engine *pMyD2D1Engine;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -55,31 +71,54 @@ struct MyStandardButtonInitializeConfig
      */
     bool isValid()
     {
-        return (this->pEnterKeyToggle &&
-                this->ppAnimationManager && *this->ppAnimationManager &&
-                this->ppAnimationTimer && *this->ppAnimationTimer &&
-                this->ppTransitionLibrary && *this->ppTransitionLibrary);
+        return (this->pAnimationManager && this->pAnimationTimer && this->pTransitionLibrary && this->pMyD2D1Engine && this->pMyD2D1Engine->isReady());
     }
 };
 /**
- * @struct MyStandardButtonSharedPropertiesConfig
+ * @struct MyStandardButtonSharedAttributesConfig
  *
- * @brief This configuration structure is used to set the shared properties of the class MyStandardButton.
+ * @brief This configuration structure is used to set the shared attributes of the class MyStandardButton.
  */
-struct MyStandardButtonSharedPropertiesConfig
+struct MyStandardButtonSharedAttributesConfig
 {
-    MyColor *pColorStandardButtonDefault = nullptr;       // Pointer to the standard button default state color.
-    MyColor *pColorStandardButtonHover = nullptr;         // Pointer to the standard button hover state color.
-    MyColor *pColorStandardButtonDown = nullptr;          // Pointer to the standard button down state color.
-    MyColor *pColorStandardButtonBorderDefault = nullptr; // Pointer to the standard button default state border color.
-    MyColor *pColorStandardButtonBorderHover = nullptr;   // Pointer to the standard button hover state border color.
-    MyColor *pColorStandardButtonBorderDown = nullptr;    // Pointer to the standard button down state border color.
-    MyColor *pColorTextDefault = nullptr;                 // Pointer to the standard button default text color.
-    MyColor *pColorTextHighlight = nullptr;               // Pointer to the standard button highlight text color.
-    MyColor *pColorBackground = nullptr;                  // Pointer to the standard button background color.
-    MyColor *pColorFocus = nullptr;                       // Pointer to the standard button focus color.
-    MyFont *pFontDefault = nullptr;                       // Pointer to the standard button font.
-    MyDWTextFormat *pDWTextFormatDefault = nullptr;       // Pointer to the standard button default text format.
+public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pColorStandardButtonDefault       Pointer to the standard button default color.
+     * @param pColorStandardButtonHover         Pointer to the standard button hover color.
+     * @param pColorStandardButtonDown          Pointer to the standard button down color.
+     * @param pColorStandardButtonBorderDefault Pointer to the standard button border default color.
+     * @param pColorStandardButtonBorderHover   Pointer to the standard button border hover color.
+     * @param pColorStandardButtonBorderDown    Pointer to the standard button border down color.
+     * @param pColorTextDefault                 Pointer to the standard button text default color.
+     * @param pColorTextHighlight               Pointer to the standard button text highlight color.
+     * @param pColorBackground                  Pointer to the standard button background color.
+     * @param pColorFocus                       Pointer to the standard button focus color.
+     * @param pTextFormat                       Pointer to the standard button text format.
+     */
+    MyStandardButtonSharedAttributesConfig(MyColor *pColorStandardButtonDefault, MyColor *pColorStandardButtonHover, MyColor *pColorStandardButtonDown,
+                                           MyColor *pColorStandardButtonBorderDefault, MyColor *pColorStandardButtonBorderHover, MyColor *pColorStandardButtonBorderDown,
+                                           MyColor *pColorTextDefault, MyColor *pColorTextHighlight, MyColor *pColorBackground, MyColor *pColorFocus, MyDWTextFormat *pTextFormat)
+        : pColorStandardButtonDefault(pColorStandardButtonDefault), pColorStandardButtonHover(pColorStandardButtonHover), pColorStandardButtonDown(pColorStandardButtonDown),
+          pColorStandardButtonBorderDefault(pColorStandardButtonBorderDefault), pColorStandardButtonBorderHover(pColorStandardButtonBorderHover), pColorStandardButtonBorderDown(pColorStandardButtonBorderDown),
+          pColorTextDefault(pColorTextDefault), pColorTextHighlight(pColorTextHighlight), pColorBackground(pColorBackground), pColorFocus(pColorFocus), pTextFormat(pTextFormat) {}
+
+public:
+    MyColor *pColorStandardButtonDefault;
+    MyColor *pColorStandardButtonHover;
+    MyColor *pColorStandardButtonDown;
+    MyColor *pColorStandardButtonBorderDefault;
+    MyColor *pColorStandardButtonBorderHover;
+    MyColor *pColorStandardButtonBorderDown;
+    MyColor *pColorTextDefault;
+    MyColor *pColorTextHighlight;
+    MyColor *pColorBackground;
+    MyColor *pColorFocus;
+    MyDWTextFormat *pTextFormat;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -90,7 +129,7 @@ struct MyStandardButtonSharedPropertiesConfig
     {
         return (this->pColorStandardButtonDefault && this->pColorStandardButtonHover && this->pColorStandardButtonDown &&
                 this->pColorStandardButtonBorderDefault && this->pColorStandardButtonBorderHover && this->pColorStandardButtonBorderDown &&
-                this->pColorTextDefault && this->pColorTextHighlight && this->pColorBackground && this->pColorFocus && this->pFontDefault && this->pDWTextFormatDefault);
+                this->pColorTextDefault && this->pColorTextHighlight && this->pColorBackground && this->pColorFocus && this->pTextFormat);
     }
 };
 /**
@@ -118,41 +157,45 @@ class MyStandardButton
 public:
     /**
      * @brief Destructor.
-     *
-     * @note Clean up the COM objects (animation variables).
      */
     ~MyStandardButton();
 
 private:
-    // Initialization variables.
-    inline static KeyToggle *pEnterKeyToggle = nullptr;                        // Pointer to the ENTER key-down state capture object.
-    inline static IUIAnimationManager *pAnimationManager = nullptr;            // Pointer to the initialized animation manager.
-    inline static IUIAnimationTimer *pAnimationTimer = nullptr;                // Pointer to the initialized animation timer.
-    inline static IUIAnimationTransitionLibrary *pTransitionLibrary = nullptr; // Pointer to the initialized transition library.
-    inline static bool isInitialized = false;                                  // Indicate whether the class is initialized.
-    inline static bool isSharedPropertiesSet = false;                          // Indicate whether the shared properties are set.
-    inline static bool isReady = false;                                        // Indicate whether the class is ready to use.
+    // Shared attributes (Initialization variables).
+    inline static KeyToggle returnKeyToggle = KeyToggle(VK_RETURN);              // ENTER key-down state capture object.
+    inline static IUIAnimationManager **ppAnimationManager = nullptr;            // Pointer to the pointer that point to initialized animation manager.
+    inline static IUIAnimationTimer **ppAnimationTimer = nullptr;                // Pointer to the pointer that point to initialized animation timer.
+    inline static IUIAnimationTransitionLibrary **ppTransitionLibrary = nullptr; // Pointer to the pointer that point to initialized transition library.
+    inline static MyD2D1Engine *pMyD2D1Engine = nullptr;                         // Pointer to the initialized MyD2D1Engine object.
+    inline static bool isInitialized = false;                                    // Indicate whether the class is initialized.
+    inline static bool isSharedAttributesSet = false;                            // Indicate whether the shared attributes are set.
+    inline static bool isReady = false;                                          // Indicate whether the class is ready to use.
 
-    // Shared properties.
-    inline static MyColor *pColorStandardButtonDefault = nullptr;       // Pointer to the standard button default state color.
-    inline static MyColor *pColorStandardButtonHover = nullptr;         // Pointer to the standard button hover state color.
-    inline static MyColor *pColorStandardButtonDown = nullptr;          // Pointer to the standard button down state color.
-    inline static MyColor *pColorStandardButtonBorderDefault = nullptr; // Pointer to the standard button default state border color.
-    inline static MyColor *pColorStandardButtonBorderHover = nullptr;   // Pointer to the standard button hover state border color.
-    inline static MyColor *pColorStandardButtonBorderDown = nullptr;    // Pointer to the standard button down state border color.
-    inline static MyColor *pColorTextDefault = nullptr;                 // Pointer to the standard button default text color.
-    inline static MyColor *pColorTextHighlight = nullptr;               // Pointer to the standard button highlight text color.
+    // Shared attributes (Drawing variables).
+    inline static MyColor *pColorStandardButtonDefault = nullptr;       // Pointer to the standard button default color.
+    inline static MyColor *pColorStandardButtonHover = nullptr;         // Pointer to the standard button hover color.
+    inline static MyColor *pColorStandardButtonDown = nullptr;          // Pointer to the standard button down color.
+    inline static MyColor *pColorStandardButtonBorderDefault = nullptr; // Pointer to the standard button border default color.
+    inline static MyColor *pColorStandardButtonBorderHover = nullptr;   // Pointer to the standard button border hover color.
+    inline static MyColor *pColorStandardButtonBorderDown = nullptr;    // Pointer to the standard button border down color.
+    inline static MyColor *pColorTextDefault = nullptr;                 // Pointer to the standard button text default color.
+    inline static MyColor *pColorTextHighlight = nullptr;               // Pointer to the standard button text highlight color.
     inline static MyColor *pColorBackground = nullptr;                  // Pointer to the standard button background color.
     inline static MyColor *pColorFocus = nullptr;                       // Pointer to the standard button focus color.
-    inline static MyFont *pFontDefault = nullptr;                       // Pointer to the standard button font.
-    inline static MyDWTextFormat *pDWTextFormatDefault = nullptr;       // Pointer to the standard button default text format.
+    inline static MyDWTextFormat *pTextFormat = nullptr;                // Pointer to the standard button text format.
 
-    // Animation variables.
-    inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
-    inline static const DOUBLE hoverAnimationDuration = 0.150; // Hover state animation duration.
-    inline static const DOUBLE downAnimationDuration = 0.100;  // Down state animation duration.
-    inline static const DOUBLE flashAnimationDuration = 0.150; // Flash state animation duration.
+    // Shared attributes (Animation variables).
+    inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1;   // Animation invalidation timer ID.
+    inline static const DOUBLE HOVER_ANIMATION_DURATION = 0.150; // Hover state animation duration.
+    inline static const DOUBLE DOWN_ANIMATION_DURATION = 0.100;  // Down state animation duration.
+    inline static const DOUBLE FLASH_ANIMATION_DURATION = 0.150; // Flash state animation duration.
 
+    // Shared attributes (Direct2D variables).
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr;         // D2D1 solid color brush of the focus color.
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushTextDefault = nullptr;   // D2D1 solid color brush of the text default color.
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushTextHighlight = nullptr; // D2D1 solid color brush of the text highlight color.
+
+    // Non-shared attributes (Animation variables).
     enum class ButtonAnimationState
     {
         Default,
@@ -165,19 +208,16 @@ private:
     bool isHoverState = false;                                                                // Indicate whether the button is hovered.
     bool isDownState = false;                                                                 // Indicate whether the button is pressed down.
 
-    // D2D1 variables.
-    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr;                // D2D1 DC render target.
-    ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr;         // D2D1 solid color brush of the focus color.
-    ID2D1SolidColorBrush *pD2D1SolidColorBrushTextDefault = nullptr;   // D2D1 solid color brush of the default text color.
-    ID2D1SolidColorBrush *pD2D1SolidColorBrushTextHighlight = nullptr; // D2D1 solid color brush of the highlight text color.
+    // Non-shared attributes (Direct2D variables).
+    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr; // D2D1 DC render target.
 
 private:
-    /// [INTERNAL FUNCTIONS]
+    /// [HELPER FUNCTIONS]
 
     /**
-     * @brief (Re)create the D2D1 device resources.
+     * @brief (Re)create the associated D2D1 device resources.
      *
-     * @param hWnd                 Handle to the button.
+     * @param hWnd                 Handle to the window.
      * @param recreateRenderTarget Specifies whether to recreate the render target.
      *
      * @return Returns true if all the operations are successfully performed, false otherwise.
@@ -185,7 +225,7 @@ private:
     bool createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget);
 
     /**
-     * @brief Initialize an animation variable pointer and set its basic parameters.
+     * @brief Create animation variable and set its basic parameters.
      *
      * @param pAnimationVariable Reference to the animation variable pointer.
      * @param initialValue       Specifies the animation variable initial value.
@@ -195,32 +235,32 @@ private:
      *
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
-    bool initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode = UI_ANIMATION_ROUNDING_NEAREST);
+    bool createAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode = UI_ANIMATION_ROUNDING_NEAREST);
+
+public:
+    /// [INTERNAL FUNCTIONS]
 
     /**
-     * @brief Install subclass callback for the button.
+     * @brief Install subclass callback for the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if successfully installed subclass callback for the button, false otherwise.
+     * @return Returns true if successfully installed subclass callback for the window, false otherwise.
      */
     bool installSubclass(HWND hWnd);
 
     /**
-     * @brief Starts the animation for the button.
+     * @brief Starts the animation for the window.
      *
-     * @param hWnd           Handle to the button.
-     * @param animationState The button animation state.
+     * @param hWnd           Handle to the window.
+     * @param animationState The window animation state.
      *
      * @return Returns true if the animation started successfully, false otherwise.
      */
     bool startAnimation(HWND hWnd, MyStandardButton::ButtonAnimationState animationState);
 
-private:
-    // [SUBCLASS CALLBACK FUNCTIONS]
-
     /**
-     * @brief Subclass callback function for the button.
+     * @brief Subclass callback function for the window.
      *
      * @param hWnd        The handle to the window.
      * @param uMsg        The message identifier.
@@ -232,7 +272,7 @@ private:
     static LRESULT CALLBACK scMyStandardButton(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 public:
-    /// [INITIALIZATION FUNCTIONS]
+    /// [UN/INITIALIZATION FUNCTIONS]
 
     /**
      * @brief Initialize the class.
@@ -244,14 +284,19 @@ public:
     static bool initialize(MyStandardButtonInitializeConfig initializeConfig);
 
     /**
-     * @brief Set the shared properties of the class.
+     * @brief Set the shared attributes of the class.
      *
-     * @param configSharedProperties Shared properties configuration structure.
+     * @param configSharedAttributes Shared attributes configuration structure.
      */
-    static bool setSharedProperties(MyStandardButtonSharedPropertiesConfig configSharedProperties);
+    static bool setSharedAttributes(MyStandardButtonSharedAttributesConfig configSharedAttributes);
 
 public:
     /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Release D2D1 shared resources.
+     */
+    static void releaseD2D1SharedResources();
 
     /**
      * @brief Check if the window is subclassed by the class MyStandardButton.
@@ -269,20 +314,20 @@ public:
     /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Install subclass callback for the button.
+     * @brief Associate the subclass instance to the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if successfully installed subclass callback for the button, false otherwise.
+     * @return Returns true if successfully associated the subclass instance to the window, false otherwise.
      */
     bool setSubclass(HWND hWnd);
 
     /**
-     * @bried Refresh the button by triggering the animation to the current state.
+     * @bried Refresh the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if the button is successfully refreshed, false otherwise.
+     * @return Returns true if the window is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
 };
@@ -294,10 +339,26 @@ public:
  */
 struct MyImageButtonInitializeConfig
 {
-    KeyToggle *pEnterKeyToggle = nullptr;                          // Pointer to the ENTER key-down state capture object.
-    IUIAnimationManager **ppAnimationManager = nullptr;            // Reference to pointer that point to the initialized animation manager.
-    IUIAnimationTimer **ppAnimationTimer = nullptr;                // Reference to pointer that point to the initialized animation timer.
-    IUIAnimationTransitionLibrary **ppTransitionLibrary = nullptr; // Reference to pointer that point to the initialized transition library.
+public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pAnimationManager  Pointer to the initialized animation manager.
+     * @param pAnimationTimer    Pointer to the initialized animation timer.
+     * @param pTransitionLibrary Pointer to the initialized transition library.
+     * @param pMyD2D1Engine      Pointer to the initialized MyD2D1Engine object.
+     */
+    MyImageButtonInitializeConfig(IUIAnimationManager *&pAnimationManager, IUIAnimationTimer *&pAnimationTimer, IUIAnimationTransitionLibrary *&pTransitionLibrary, MyD2D1Engine *pMyD2D1Engine)
+        : pAnimationManager(pAnimationManager), pAnimationTimer(pAnimationTimer), pTransitionLibrary(pTransitionLibrary), pMyD2D1Engine(pMyD2D1Engine) {}
+
+public:
+    IUIAnimationManager *&pAnimationManager;
+    IUIAnimationTimer *&pAnimationTimer;
+    IUIAnimationTransitionLibrary *&pTransitionLibrary;
+    MyD2D1Engine *pMyD2D1Engine;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -306,20 +367,29 @@ struct MyImageButtonInitializeConfig
      */
     bool isValid()
     {
-        return (this->pEnterKeyToggle &&
-                this->ppAnimationManager && *this->ppAnimationManager &&
-                this->ppAnimationTimer && *this->ppAnimationTimer &&
-                this->ppTransitionLibrary && *this->ppTransitionLibrary);
+        return (this->pAnimationManager && this->pAnimationTimer && this->pTransitionLibrary && this->pMyD2D1Engine && this->pMyD2D1Engine->isReady());
     }
 };
 /**
- * @struct MyImageButtonSharedPropertiesConfig
+ * @struct MyImageButtonSharedAttributesConfig
  *
- * @brief This configuration structure is used to set the shared properties of the class MyImageButton.
+ * @brief This configuration structure is used to set the shared attributes of the class MyImageButton.
  */
-struct MyImageButtonSharedPropertiesConfig
+struct MyImageButtonSharedAttributesConfig
 {
-    MyColor *pColorFocus = nullptr; // Pointer to the image button focus color.
+public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pColorFocus Pointer to the image button focus color.
+     */
+    MyImageButtonSharedAttributesConfig(MyColor *pColorFocus) : pColorFocus(pColorFocus) {}
+
+public:
+    MyColor *pColorFocus;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -332,25 +402,56 @@ struct MyImageButtonSharedPropertiesConfig
     }
 };
 /**
- * @struct MyImageButtonNonSharedPropertiesConfig
+ * @struct MyImageButtonNonSharedAttributesConfig
  *
- * @brief This configuration structure is used to set the non-shared properties of the class MyImageButton.
+ * @brief This configuration structure is used to set the non-shared attributes of the class MyImageButton.
  */
-struct MyImageButtonNonSharedPropertiesConfig
+struct MyImageButtonNonSharedAttributesConfig
 {
-    std::unique_ptr<MyD2D1Image> *pImageDefault = nullptr; // Pointer to the image button default state image.
-    std::unique_ptr<MyD2D1Image> *pImageHover = nullptr;   // Pointer to the image button hover state image.
-    std::unique_ptr<MyD2D1Image> *pImageDown = nullptr;    // Pointer to the image button down state image.
-    MyColor *pColorBackgroundDefault = nullptr;            // Pointer to the image button default state background color.
-    MyColor *pColorBackgroundHover = nullptr;              // Pointer to the image button hover state background color.
-    MyColor *pColorBackgroundDown = nullptr;               // Pointer to the image button down state background color.
-    INT imagePosX = 0;                                     // The image relative x position.
-    INT imagePosY = 0;                                     // The image relative y position.
-    INT imageWidth = 0;                                    // The image width.
-    INT imageHeight = 0;                                   // The image height.
-    bool centering = false;                                // Indicate whether to centering the image.
-    bool skipHoverAnimationState = false;                  // Indicate whether to skip the hover state animation.
-    bool skipDownAnimationState = false;                   // Indicate whether to skip the down state animation.
+public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pImageDefault           Pointer to the image button default image.
+     * @param pImageHover             Pointer to the image button hover image.
+     * @param pImageDown              Pointer to the image button down image.
+     * @param pColorBackgroundDefault Pointer to the image button default background color.
+     * @param pColorBackgroundHover   Pointer to the image button hover background color.
+     * @param pColorBackgroundDown    Pointer to the image button down background color.
+     * @param imagePosX               The image relative x position.
+     * @param imagePosY               The image relative y position.
+     * @param imageWidth              The image width.
+     * @param imageHeight             The image height.
+     * @param centering               Indicate whether to centering the image.
+     * @param skipHoverAnimationState Indicate whether to skip the hover state animation.
+     * @param skipDownAnimationState  Indicate whether to skip the down state animation.
+     */
+    MyImageButtonNonSharedAttributesConfig(std::unique_ptr<MyD2D1Image> *pImageDefault, std::unique_ptr<MyD2D1Image> *pImageHover, std::unique_ptr<MyD2D1Image> *pImageDown,
+                                           MyColor *pColorBackgroundDefault, MyColor *pColorBackgroundHover, MyColor *pColorBackgroundDown,
+                                           FLOAT imagePosX = 0, FLOAT imagePosY = 0, FLOAT imageWidth = 0, FLOAT imageHeight = 0, bool centering = false,
+                                           bool skipHoverAnimationState = false, bool skipDownAnimationState = false)
+        : pImageDefault(pImageDefault), pImageHover(pImageHover), pImageDown(pImageDown),
+          pColorBackgroundDefault(pColorBackgroundDefault), pColorBackgroundHover(pColorBackgroundHover), pColorBackgroundDown(pColorBackgroundDown),
+          imagePosX(imagePosX), imagePosY(imagePosY), imageWidth(imageWidth), imageHeight(imageHeight), centering(centering),
+          skipHoverAnimationState(skipHoverAnimationState), skipDownAnimationState(skipDownAnimationState) {}
+
+public:
+    std::unique_ptr<MyD2D1Image> *pImageDefault;
+    std::unique_ptr<MyD2D1Image> *pImageHover;
+    std::unique_ptr<MyD2D1Image> *pImageDown;
+    MyColor *pColorBackgroundDefault;
+    MyColor *pColorBackgroundHover;
+    MyColor *pColorBackgroundDown;
+    FLOAT imagePosX;
+    FLOAT imagePosY;
+    FLOAT imageWidth;
+    FLOAT imageHeight;
+    bool centering;
+    bool skipHoverAnimationState;
+    bool skipDownAnimationState;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -379,7 +480,7 @@ struct MyImageButtonNonSharedPropertiesConfig
  *
  * 3. Create and subclass the button control:
  *    - Create the button window.
- *    - Prepare a configuration structure MyImageButtonNonSharedPropertiesConfig.
+ *    - Prepare a configuration structure MyImageButtonNonSharedAttributesConfig.
  *    - Create a MyImageButton object and perform subclassing using setSubclass() function.
  *    - Each MyImageButton instance can only handle a single button control.
  */
@@ -388,44 +489,48 @@ class MyImageButton
 public:
     /**
      * @brief Destructor.
-     *
-     * @note Clean up the COM objects (animation variables).
      */
     ~MyImageButton();
 
 private:
-    // Initialization variables.
-    inline static KeyToggle *pEnterKeyToggle = nullptr;                        // Pointer to the ENTER key-down state capture object.
-    inline static IUIAnimationManager *pAnimationManager = nullptr;            // Pointer to the initialized animation manager.
-    inline static IUIAnimationTimer *pAnimationTimer = nullptr;                // Pointer to the initialized animation timer.
-    inline static IUIAnimationTransitionLibrary *pTransitionLibrary = nullptr; // Pointer to the initialized transition library.
-    inline static bool isInitialized = false;                                  // Indicate whether the class is initialized.
-    inline static bool isSharedPropertiesSet = false;                          // Indicate whether the shared properties are set.
-    inline static bool isReady = false;                                        // Indicate whether the class is ready to use.
+    // Shared attributes (Initialization variables).
+    inline static KeyToggle returnKeyToggle = KeyToggle(VK_RETURN);              // ENTER key-down state capture object.
+    inline static IUIAnimationManager **ppAnimationManager = nullptr;            // Pointer to the pointer that point to initialized animation manager.
+    inline static IUIAnimationTimer **ppAnimationTimer = nullptr;                // Pointer to the pointer that point to initialized animation timer.
+    inline static IUIAnimationTransitionLibrary **ppTransitionLibrary = nullptr; // Pointer to the pointer that point to initialized transition library.
+    inline static MyD2D1Engine *pMyD2D1Engine = nullptr;                         // Pointer to the initialized MyD2D1Engine object.
+    inline static bool isInitialized = false;                                    // Indicate whether the class is initialized.
+    inline static bool isSharedPropertiesSet = false;                            // Indicate whether the shared attributes are set.
+    inline static bool isReady = false;                                          // Indicate whether the class is ready to use.
 
-    // Shared properties.
+    // Shared attributes (Drawing variables).
     inline static MyColor *pColorFocus = nullptr; // Pointer to the image button focus color.
 
-    // Non-shared properties.
-    std::unique_ptr<MyD2D1Image> *pImageDefault = nullptr; // Pointer to the image button default state image.
-    std::unique_ptr<MyD2D1Image> *pImageHover = nullptr;   // Pointer to the image button hover state image.
-    std::unique_ptr<MyD2D1Image> *pImageDown = nullptr;    // Pointer to the image button down state image.
-    MyColor *pColorBackgroundDefault = nullptr;            // Pointer to the image button default state background color.
-    MyColor *pColorBackgroundHover = nullptr;              // Pointer to the image button hover state background color.
-    MyColor *pColorBackgroundDown = nullptr;               // Pointer to the image button down state background color.
-    INT imagePosX = 0;                                     // The image relative x position.
-    INT imagePosY = 0;                                     // The image relative y position.
-    INT imageWidth = 0;                                    // The image width.
-    INT imageHeight = 0;                                   // The image height.
+    // Shared attributes (Animation variables).
+    inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1;   // Animation invalidation timer ID.
+    inline static const DOUBLE HOVER_ANIMATION_DURATION = 0.150; // Hover state animation duration.
+    inline static const DOUBLE DOWN_ANIMATION_DURATION = 0.100;  // Down state animation duration.
+    inline static const DOUBLE FLASH_ANIMATION_DURATION = 0.150; // Flash state animation duration.
+
+    // Shared attributes (Direct2D variables).
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr; // D2D1 solid color brush of the focus color.
+
+    // Non-shared attributes (Drawing variables).
+    std::unique_ptr<MyD2D1Image> *pImageDefault = nullptr; // Pointer to the image button default image.
+    std::unique_ptr<MyD2D1Image> *pImageHover = nullptr;   // Pointer to the image button hover image.
+    std::unique_ptr<MyD2D1Image> *pImageDown = nullptr;    // Pointer to the image button down image.
+    MyColor *pColorBackgroundDefault = nullptr;            // Pointer to the image button default background color.
+    MyColor *pColorBackgroundHover = nullptr;              // Pointer to the image button hover background color.
+    MyColor *pColorBackgroundDown = nullptr;               // Pointer to the image button down background color.
+    FLOAT imagePosX = 0;                                   // The image relative x position.
+    FLOAT imagePosY = 0;                                   // The image relative y position.
+    FLOAT imageWidth = 0;                                  // The image width.
+    FLOAT imageHeight = 0;                                 // The image height.
     bool isCentering = false;                              // Indicate whether to centering the image.
     bool skipHoverAnimationState = false;                  // Indicate whether to skip the hover state animation.
     bool skipDownAnimationState = false;                   // Indicate whether to skip the down state animation.
 
-    // Animation variables.
-    inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
-    inline static const DOUBLE hoverAnimationDuration = 0.150; // Hover state animation duration.
-    inline static const DOUBLE downAnimationDuration = 0.100;  // Down state animation duration.
-    inline static const DOUBLE flashAnimationDuration = 0.150; // Flash state animation duration.
+    // Non-shared attributes (Animation variables).
     enum class ButtonAnimationState
     {
         Default,
@@ -440,20 +545,19 @@ private:
     bool isHoverState = false;                                                              // Indicate whether the button is hovered.
     bool isDownState = false;                                                               // Indicate whether the button is pressed down.
 
-    // D2D1 variables.
-    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr;        // D2D1 DC render target.
-    ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr; // D2D1 solid color brush of the focus color.
-    ID2D1Bitmap *pD2D1BitmapDefaultImage = nullptr;            // D2D1 bitmap of the default image.
-    ID2D1Bitmap *pD2D1BitmapHoverImage = nullptr;              // D2D1 bitmap of the hover image.
-    ID2D1Bitmap *pD2D1BitmapDownImage = nullptr;               // D2D1 bitmap of the down image.
+    // Non-shared attributes (Direct2D variables).
+    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr; // D2D1 DC render target.
+    ID2D1Bitmap *pD2D1BitmapDefaultImage = nullptr;     // D2D1 bitmap of the default image.
+    ID2D1Bitmap *pD2D1BitmapHoverImage = nullptr;       // D2D1 bitmap of the hover image.
+    ID2D1Bitmap *pD2D1BitmapDownImage = nullptr;        // D2D1 bitmap of the down image.
 
 private:
-    /// [INTERNAL FUNCTIONS]
+    /// [HELPER FUNCTIONS]
 
     /**
-     * @brief (Re)create the D2D1 device resources.
+     * @brief (Re)create the associated D2D1 device resources.
      *
-     * @param hWnd                 Handle to the button.
+     * @param hWnd                 Handle to the window.
      * @param recreateRenderTarget Specifies whether to recreate the render target.
      *
      * @return Returns true if all the operations are successfully performed, false otherwise.
@@ -461,7 +565,7 @@ private:
     bool createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget);
 
     /**
-     * @brief Initialize an animation variable pointer and set its basic parameters.
+     * @brief Create animation variable and set its basic parameters.
      *
      * @param pAnimationVariable Reference to the animation variable pointer.
      * @param initialValue       Specifies the animation variable initial value.
@@ -471,32 +575,32 @@ private:
      *
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
-    bool initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode = UI_ANIMATION_ROUNDING_NEAREST);
+    bool createAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode = UI_ANIMATION_ROUNDING_NEAREST);
+
+public:
+    /// [INTERNAL FUNCTIONS]
 
     /**
-     * @brief Install subclass callback for the button.
+     * @brief Install subclass callback for the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if successfully installed subclass callback for the button, false otherwise.
+     * @return Returns true if successfully installed subclass callback for the window, false otherwise.
      */
     bool installSubclass(HWND hWnd);
 
     /**
-     * @brief Starts the animation for the button.
+     * @brief Starts the animation for the window.
      *
-     * @param hWnd           Handle to the button.
-     * @param animationState The button animation state.
+     * @param hWnd           Handle to the window.
+     * @param animationState The window animation state.
      *
      * @return Returns true if the animation started successfully, false otherwise.
      */
     bool startAnimation(HWND hWnd, MyImageButton::ButtonAnimationState animationState);
 
-private:
-    // [SUBCLASS CALLBACK FUNCTIONS]
-
     /**
-     * @brief Subclass callback function for the button.
+     * @brief Subclass callback function for the window.
      *
      * @param hWnd        The handle to the window.
      * @param uMsg        The message identifier.
@@ -508,7 +612,7 @@ private:
     static LRESULT CALLBACK scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 public:
-    /// [INITIALIZATION FUNCTIONS]
+    /// [UN/INITIALIZATION FUNCTIONS]
 
     /**
      * @brief Initialize the class.
@@ -520,14 +624,19 @@ public:
     static bool initialize(MyImageButtonInitializeConfig initializeConfig);
 
     /**
-     * @brief Set the shared properties of the class.
+     * @brief Set the shared attributes of the class.
      *
-     * @param configSharedProperties Shared properties configuration structure.
+     * @param configSharedAttributes Shared attributes configuration structure.
      */
-    static bool setSharedProperties(MyImageButtonSharedPropertiesConfig configSharedProperties);
+    static bool setSharedAttributes(MyImageButtonSharedAttributesConfig configSharedAttributes);
 
 public:
     /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Release D2D1 shared resources.
+     */
+    static void releaseD2D1SharedResources();
 
     /**
      * @brief Check if the window is subclassed by the class MyImageButton.
@@ -545,21 +654,21 @@ public:
     /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Install subclass callback for the button.
+     * @brief Associate the subclass instance to the window.
      *
-     * @param hWnd                      Handle to the button.
-     * @param configNonSharedProperties Non-shared properties configuration structure.
+     * @param hWnd                      Handle to the window.
+     * @param configNonSharedAttributes Non-shared properties configuration structure.
      *
-     * @return Returns true if successfully installed subclass callback for the button, false otherwise.
+     * @return Returns true if successfully associated the subclass instance to the window, false otherwise.
      */
-    bool setSubclass(HWND hWnd, MyImageButtonNonSharedPropertiesConfig configNonSharedProperties);
+    bool setSubclass(HWND hWnd, MyImageButtonNonSharedAttributesConfig configNonSharedAttributes);
 
     /**
-     * @bried Refresh the button by triggering the animation to the current state.
+     * @bried Refresh the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if the button is successfully refreshed, false otherwise.
+     * @return Returns true if the window is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
 };
@@ -571,10 +680,25 @@ public:
  */
 struct MyRadioButtonInitializeConfig
 {
-    KeyToggle *pEnterKeyToggle = nullptr;                          // Pointer to the ENTER key-down state capture object.
-    IUIAnimationManager **ppAnimationManager = nullptr;            // Reference to pointer that point to the initialized animation manager.
-    IUIAnimationTimer **ppAnimationTimer = nullptr;                // Reference to pointer that point to the initialized animation timer.
-    IUIAnimationTransitionLibrary **ppTransitionLibrary = nullptr; // Reference to pointer that point to the initialized transition library.
+    /**
+     * @brief Constructor.
+     *
+     * @param pAnimationManager  Pointer to the initialized animation manager.
+     * @param pAnimationTimer    Pointer to the initialized animation timer.
+     * @param pTransitionLibrary Pointer to the initialized transition library.
+     * @param pMyD2D1Engine      Pointer to the initialized MyD2D1Engine object.
+     */
+    MyRadioButtonInitializeConfig(IUIAnimationManager *&pAnimationManager, IUIAnimationTimer *&pAnimationTimer, IUIAnimationTransitionLibrary *&pTransitionLibrary, MyD2D1Engine *pMyD2D1Engine)
+        : pAnimationManager(pAnimationManager), pAnimationTimer(pAnimationTimer), pTransitionLibrary(pTransitionLibrary), pMyD2D1Engine(pMyD2D1Engine) {}
+
+public:
+    IUIAnimationManager *&pAnimationManager;
+    IUIAnimationTimer *&pAnimationTimer;
+    IUIAnimationTransitionLibrary *&pTransitionLibrary;
+    MyD2D1Engine *pMyD2D1Engine;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -583,42 +707,86 @@ struct MyRadioButtonInitializeConfig
      */
     bool isValid()
     {
-        return (this->pEnterKeyToggle &&
-                this->ppAnimationManager && *this->ppAnimationManager &&
-                this->ppAnimationTimer && *this->ppAnimationTimer &&
-                this->ppTransitionLibrary && *this->ppTransitionLibrary);
+        return (this->pAnimationManager && this->pAnimationTimer && this->pTransitionLibrary && this->pMyD2D1Engine && this->pMyD2D1Engine->isReady());
     }
 };
 /**
- * @struct MyRadioButtonSharedPropertiesConfig
+ * @struct MyRadioButtonSharedAttributesConfig
  *
- * @brief This configuration structure is used to set the shared properties of the class MyRadioButton.
+ * @brief This configuration structure is used to set the shared attributes of the class MyRadioButton.
  */
-struct MyRadioButtonSharedPropertiesConfig
+struct MyRadioButtonSharedAttributesConfig
 {
-    MyColor *pColorRadioButtonPrimaryDefault = nullptr;           // Pointer to the radio button default state primary color.
-    MyColor *pColorRadioButtonPrimaryHover = nullptr;             // Pointer to the radio button hover state primary color.
-    MyColor *pColorRadioButtonPrimaryDown = nullptr;              // Pointer to the radio button down state primary color.
-    MyColor *pColorRadioButtonSecondaryDefault = nullptr;         // Pointer to the radio button default state secondary color.
-    MyColor *pColorRadioButtonSecondaryHover = nullptr;           // Pointer to the radio button hover state secondary color.
-    MyColor *pColorRadioButtonSecondaryDown = nullptr;            // Pointer to the radio button down state secondary color.
-    MyColor *pColorRadioButtonBorderDefault = nullptr;            // Pointer to the radio button default state border color.
-    MyColor *pColorRadioButtonBorderHover = nullptr;              // Pointer to the radio button hover state border color.
-    MyColor *pColorRadioButtonBorderDown = nullptr;               // Pointer to the radio button down state border color.
-    MyColor *pColorSelectedRadioButtonPrimaryDefault = nullptr;   // Pointer to the selected radio button default state primary color.
-    MyColor *pColorSelectedRadioButtonPrimaryHover = nullptr;     // Pointer to the selected radio button hover state primary color.
-    MyColor *pColorSelectedRadioButtonPrimaryDown = nullptr;      // Pointer to the selected radio button down state primary color.
-    MyColor *pColorSelectedRadioButtonSecondaryDefault = nullptr; // Pointer to the selected radio button default state secondary color.
-    MyColor *pColorSelectedRadioButtonSecondaryHover = nullptr;   // Pointer to the selected radio button hover state secondary color.
-    MyColor *pColorSelectedRadioButtonSecondaryDown = nullptr;    // Pointer to the selected radio button down state secondary color.
-    MyColor *pColorSelectedRadioButtonBorderDefault = nullptr;    // Pointer to the selected radio button default state border color.
-    MyColor *pColorSelectedRadioButtonBorderHover = nullptr;      // Pointer to the selected radio button hover state border color.
-    MyColor *pColorSelectedRadioButtonBorderDown = nullptr;       // Pointer to the selected radio button down state border color.
-    MyColor *pColorRadioButtonTextDefault = nullptr;              // Pointer to the radio button default text color.
-    MyColor *pColorRadioButtonTextHighlight = nullptr;            // Pointer to the radio button highlight text color.
-    MyColor *pColorBackground = nullptr;                          // Pointer to the radio button background color.
-    MyColor *pColorFocus = nullptr;                               // Pointer to the radio button focus color.
-    MyFont *pFontDefault = nullptr;                               // Pointer to the radio button font.
+public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pColorRadioButtonPrimaryDefault           Pointer to the radio button primary default color.
+     * @param pColorRadioButtonPrimaryHover             Pointer to the radio button primary hover color.
+     * @param pColorRadioButtonPrimaryDown              Pointer to the radio button primary down color.
+     * @param pColorRadioButtonSecondaryDefault         Pointer to the radio button secondary default color.
+     * @param pColorRadioButtonSecondaryHover           Pointer to the radio button secondary hover color.
+     * @param pColorRadioButtonSecondaryDown            Pointer to the radio button secondary down color.
+     * @param pColorRadioButtonBorderDefault            Pointer to the radio button border default color.
+     * @param pColorRadioButtonBorderHover              Pointer to the radio button border hover color.
+     * @param pColorRadioButtonBorderDown               Pointer to the radio button border down color.
+     * @param pColorSelectedRadioButtonPrimaryDefault   Pointer to the selected radio button primary default color.
+     * @param pColorSelectedRadioButtonPrimaryHover     Pointer to the selected radio button primary hover color.
+     * @param pColorSelectedRadioButtonPrimaryDown      Pointer to the selected radio button primary down color.
+     * @param pColorSelectedRadioButtonSecondaryDefault Pointer to the selected radio button secondary default color.
+     * @param pColorSelectedRadioButtonSecondaryHover   Pointer to the selected radio button secondary hover color.
+     * @param pColorSelectedRadioButtonSecondaryDown    Pointer to the selected radio button secondary down color.
+     * @param pColorSelectedRadioButtonBorderDefault    Pointer to the selected radio button border default color.
+     * @param pColorSelectedRadioButtonBorderHover      Pointer to the selected radio button border hover color.
+     * @param pColorSelectedRadioButtonBorderDown       Pointer to the selected radio button border down color.
+     * @param pColorTextDefault                         Pointer to the radio button text default color.
+     * @param pColorTextHighlight                       Pointer to the radio button text highlight color.
+     * @param pColorBackground                          Pointer to the radio button background color.
+     * @param pColorFocus                               Pointer to the radio button focus color.
+     * @param pTextFormat                               Pointer to the radio button text format.
+     */
+    MyRadioButtonSharedAttributesConfig(MyColor *pColorRadioButtonPrimaryDefault, MyColor *pColorRadioButtonPrimaryHover, MyColor *pColorRadioButtonPrimaryDown,
+                                        MyColor *pColorRadioButtonSecondaryDefault, MyColor *pColorRadioButtonSecondaryHover, MyColor *pColorRadioButtonSecondaryDown,
+                                        MyColor *pColorRadioButtonBorderDefault, MyColor *pColorRadioButtonBorderHover, MyColor *pColorRadioButtonBorderDown,
+                                        MyColor *pColorSelectedRadioButtonPrimaryDefault, MyColor *pColorSelectedRadioButtonPrimaryHover, MyColor *pColorSelectedRadioButtonPrimaryDown,
+                                        MyColor *pColorSelectedRadioButtonSecondaryDefault, MyColor *pColorSelectedRadioButtonSecondaryHover, MyColor *pColorSelectedRadioButtonSecondaryDown,
+                                        MyColor *pColorSelectedRadioButtonBorderDefault, MyColor *pColorSelectedRadioButtonBorderHover, MyColor *pColorSelectedRadioButtonBorderDown,
+                                        MyColor *pColorTextDefault, MyColor *pColorTextHighlight, MyColor *pColorBackground, MyColor *pColorFocus, MyDWTextFormat *pTextFormat)
+        : pColorRadioButtonPrimaryDefault(pColorRadioButtonPrimaryDefault), pColorRadioButtonPrimaryHover(pColorRadioButtonPrimaryHover), pColorRadioButtonPrimaryDown(pColorRadioButtonPrimaryDown),
+          pColorRadioButtonSecondaryDefault(pColorRadioButtonSecondaryDefault), pColorRadioButtonSecondaryHover(pColorRadioButtonSecondaryHover), pColorRadioButtonSecondaryDown(pColorRadioButtonSecondaryDown),
+          pColorRadioButtonBorderDefault(pColorRadioButtonBorderDefault), pColorRadioButtonBorderHover(pColorRadioButtonBorderHover), pColorRadioButtonBorderDown(pColorRadioButtonBorderDown),
+          pColorSelectedRadioButtonPrimaryDefault(pColorSelectedRadioButtonPrimaryDefault), pColorSelectedRadioButtonPrimaryHover(pColorSelectedRadioButtonPrimaryHover), pColorSelectedRadioButtonPrimaryDown(pColorSelectedRadioButtonPrimaryDown),
+          pColorSelectedRadioButtonSecondaryDefault(pColorSelectedRadioButtonSecondaryDefault), pColorSelectedRadioButtonSecondaryHover(pColorSelectedRadioButtonSecondaryHover), pColorSelectedRadioButtonSecondaryDown(pColorSelectedRadioButtonSecondaryDown),
+          pColorSelectedRadioButtonBorderDefault(pColorSelectedRadioButtonBorderDefault), pColorSelectedRadioButtonBorderHover(pColorSelectedRadioButtonBorderHover), pColorSelectedRadioButtonBorderDown(pColorSelectedRadioButtonBorderDown),
+          pColorTextDefault(pColorTextDefault), pColorTextHighlight(pColorTextHighlight), pColorBackground(pColorBackground), pColorFocus(pColorFocus), pTextFormat(pTextFormat) {}
+
+public:
+    MyColor *pColorRadioButtonPrimaryDefault;
+    MyColor *pColorRadioButtonPrimaryHover;
+    MyColor *pColorRadioButtonPrimaryDown;
+    MyColor *pColorRadioButtonSecondaryDefault;
+    MyColor *pColorRadioButtonSecondaryHover;
+    MyColor *pColorRadioButtonSecondaryDown;
+    MyColor *pColorRadioButtonBorderDefault;
+    MyColor *pColorRadioButtonBorderHover;
+    MyColor *pColorRadioButtonBorderDown;
+    MyColor *pColorSelectedRadioButtonPrimaryDefault;
+    MyColor *pColorSelectedRadioButtonPrimaryHover;
+    MyColor *pColorSelectedRadioButtonPrimaryDown;
+    MyColor *pColorSelectedRadioButtonSecondaryDefault;
+    MyColor *pColorSelectedRadioButtonSecondaryHover;
+    MyColor *pColorSelectedRadioButtonSecondaryDown;
+    MyColor *pColorSelectedRadioButtonBorderDefault;
+    MyColor *pColorSelectedRadioButtonBorderHover;
+    MyColor *pColorSelectedRadioButtonBorderDown;
+    MyColor *pColorTextDefault;
+    MyColor *pColorTextHighlight;
+    MyColor *pColorBackground;
+    MyColor *pColorFocus;
+    MyDWTextFormat *pTextFormat;
+
+public:
+    /// [GENERAL FUNCTIONS]
 
     /**
      * @brief Check if the configuration structure is valid.
@@ -633,8 +801,8 @@ struct MyRadioButtonSharedPropertiesConfig
                 this->pColorSelectedRadioButtonPrimaryDefault && this->pColorSelectedRadioButtonPrimaryHover && this->pColorSelectedRadioButtonPrimaryDown &&
                 this->pColorSelectedRadioButtonSecondaryDefault && this->pColorSelectedRadioButtonSecondaryHover && this->pColorSelectedRadioButtonSecondaryDown &&
                 this->pColorSelectedRadioButtonBorderDefault && this->pColorSelectedRadioButtonBorderHover && this->pColorSelectedRadioButtonBorderDown &&
-                this->pColorRadioButtonTextDefault && this->pColorRadioButtonTextHighlight &&
-                this->pColorBackground && this->pColorFocus && this->pFontDefault);
+                this->pColorTextDefault && this->pColorTextHighlight &&
+                this->pColorBackground && this->pColorFocus && this->pTextFormat);
     }
 };
 /**
@@ -667,51 +835,57 @@ class MyRadioButton
 public:
     /**
      * @brief Destructor.
-     *
-     * @note Clean up the COM objects (animation variables).
      */
     ~MyRadioButton();
 
 private:
-    // Initialization variables.
-    inline static KeyToggle *pEnterKeyToggle = nullptr;                        // Pointer to the ENTER key-down state capture object.
-    inline static IUIAnimationManager *pAnimationManager = nullptr;            // Pointer to the initialized animation manager.
-    inline static IUIAnimationTimer *pAnimationTimer = nullptr;                // Pointer to the initialized animation timer.
-    inline static IUIAnimationTransitionLibrary *pTransitionLibrary = nullptr; // Pointer to the initialized transition library.
-    inline static bool isInitialized = false;                                  // Indicate whether the class is initialized.
-    inline static bool isSharedPropertiesSet = false;                          // Indicate whether the shared properties are set.
-    inline static bool isReady = false;                                        // Indicate whether the class is ready to use.
+    // Shared attributes (Initialization variables).
+    inline static KeyToggle returnKeyToggle = KeyToggle(VK_RETURN);              // ENTER key-down state capture object.
+    inline static IUIAnimationManager **ppAnimationManager = nullptr;            // Pointer to the pointer that point to initialized animation manager.
+    inline static IUIAnimationTimer **ppAnimationTimer = nullptr;                // Pointer to the pointer that point to initialized animation timer.
+    inline static IUIAnimationTransitionLibrary **ppTransitionLibrary = nullptr; // Pointer to the pointer that point to initialized transition library.
+    inline static MyD2D1Engine *pMyD2D1Engine = nullptr;                         // Pointer to the initialized MyD2D1Engine object.
+    inline static bool isInitialized = false;                                    // Indicate whether the class is initialized.
+    inline static bool isSharedAttributesSet = false;                            // Indicate whether the shared attributes are set.
+    inline static bool isReady = false;                                          // Indicate whether the class is ready to use.
 
-    // Shared properties.
-    inline static MyColor *pColorRadioButtonPrimaryDefault = nullptr;           // Pointer to the radio button default state primary color.
-    inline static MyColor *pColorRadioButtonPrimaryHover = nullptr;             // Pointer to the radio button hover state primary color.
-    inline static MyColor *pColorRadioButtonPrimaryDown = nullptr;              // Pointer to the radio button down state primary color.
-    inline static MyColor *pColorRadioButtonSecondaryDefault = nullptr;         // Pointer to the radio button default state secondary color.
-    inline static MyColor *pColorRadioButtonSecondaryHover = nullptr;           // Pointer to the radio button hover state secondary color.
-    inline static MyColor *pColorRadioButtonSecondaryDown = nullptr;            // Pointer to the radio button down state secondary color.
-    inline static MyColor *pColorRadioButtonBorderDefault = nullptr;            // Pointer to the radio button default state border color.
-    inline static MyColor *pColorRadioButtonBorderHover = nullptr;              // Pointer to the radio button hover state border color.
-    inline static MyColor *pColorRadioButtonBorderDown = nullptr;               // Pointer to the radio button down state border color.
-    inline static MyColor *pColorSelectedRadioButtonPrimaryDefault = nullptr;   // Pointer to the selected radio button default state primary color.
-    inline static MyColor *pColorSelectedRadioButtonPrimaryHover = nullptr;     // Pointer to the selected radio button hover state primary color.
-    inline static MyColor *pColorSelectedRadioButtonPrimaryDown = nullptr;      // Pointer to the selected radio button down state primary color.
-    inline static MyColor *pColorSelectedRadioButtonSecondaryDefault = nullptr; // Pointer to the selected radio button default state secondary color.
-    inline static MyColor *pColorSelectedRadioButtonSecondaryHover = nullptr;   // Pointer to the selected radio button hover state secondary color.
-    inline static MyColor *pColorSelectedRadioButtonSecondaryDown = nullptr;    // Pointer to the selected radio button down state secondary color.
-    inline static MyColor *pColorSelectedRadioButtonBorderDefault = nullptr;    // Pointer to the selected radio button default state border color.
-    inline static MyColor *pColorSelectedRadioButtonBorderHover = nullptr;      // Pointer to the selected radio button hover state border color.
-    inline static MyColor *pColorSelectedRadioButtonBorderDown = nullptr;       // Pointer to the selected radio button down state border color.
-    inline static MyColor *pColorRadioButtonTextDefault = nullptr;              // Pointer to the radio button default text color.
-    inline static MyColor *pColorRadioButtonTextHighlight = nullptr;            // Pointer to the radio button highlight text color.
+    // Shared attributes (Drawing variables).
+    inline static MyColor *pColorRadioButtonPrimaryDefault = nullptr;           // Pointer to the radio button primary default color.
+    inline static MyColor *pColorRadioButtonPrimaryHover = nullptr;             // Pointer to the radio button primary hover color.
+    inline static MyColor *pColorRadioButtonPrimaryDown = nullptr;              // Pointer to the radio button primary down color.
+    inline static MyColor *pColorRadioButtonSecondaryDefault = nullptr;         // Pointer to the radio button secondary default color.
+    inline static MyColor *pColorRadioButtonSecondaryHover = nullptr;           // Pointer to the radio button secondary hover color.
+    inline static MyColor *pColorRadioButtonSecondaryDown = nullptr;            // Pointer to the radio button secondary down color.
+    inline static MyColor *pColorRadioButtonBorderDefault = nullptr;            // Pointer to the radio button border default color.
+    inline static MyColor *pColorRadioButtonBorderHover = nullptr;              // Pointer to the radio button border hover color.
+    inline static MyColor *pColorRadioButtonBorderDown = nullptr;               // Pointer to the radio button border down color.
+    inline static MyColor *pColorSelectedRadioButtonPrimaryDefault = nullptr;   // Pointer to the selected radio button primary default color.
+    inline static MyColor *pColorSelectedRadioButtonPrimaryHover = nullptr;     // Pointer to the selected radio button primary hover color.
+    inline static MyColor *pColorSelectedRadioButtonPrimaryDown = nullptr;      // Pointer to the selected radio button primary down color.
+    inline static MyColor *pColorSelectedRadioButtonSecondaryDefault = nullptr; // Pointer to the selected radio button secondary default color.
+    inline static MyColor *pColorSelectedRadioButtonSecondaryHover = nullptr;   // Pointer to the selected radio button secondary hover color.
+    inline static MyColor *pColorSelectedRadioButtonSecondaryDown = nullptr;    // Pointer to the selected radio button secondary down color.
+    inline static MyColor *pColorSelectedRadioButtonBorderDefault = nullptr;    // Pointer to the selected radio button border default color.
+    inline static MyColor *pColorSelectedRadioButtonBorderHover = nullptr;      // Pointer to the selected radio button border hover color.
+    inline static MyColor *pColorSelectedRadioButtonBorderDown = nullptr;       // Pointer to the selected radio button border down color.
+    inline static MyColor *pColorTextDefault = nullptr;                         // Pointer to the radio button text default color.
+    inline static MyColor *pColorTextHighlight = nullptr;                       // Pointer to the radio button text highlight color.
     inline static MyColor *pColorBackground = nullptr;                          // Pointer to the radio button background color.
     inline static MyColor *pColorFocus = nullptr;                               // Pointer to the radio button focus color.
-    inline static MyFont *pFontDefault = nullptr;                               // Pointer to the radio button font.
+    inline static MyDWTextFormat *pTextFormat = nullptr;                        // Pointer to the radio button text format.
 
-    // Animation variables.
-    inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1; // Animation invalidation timer ID.
-    inline static const DOUBLE hoverAnimationDuration = 0.150; // Hover state animation duration.
-    inline static const DOUBLE downAnimationDuration = 0.150;  // Down state animation duration.
-    inline static const DOUBLE flashAnimationDuration = 0.150; // Flash state animation duration.
+    // Shared attributes (Animation variables).
+    inline static const UINT_PTR IDT_ANIMATION_INVALIDATE = 1;   // Animation invalidation timer ID.
+    inline static const DOUBLE HOVER_ANIMATION_DURATION = 0.150; // Hover state animation duration.
+    inline static const DOUBLE DOWN_ANIMATION_DURATION = 0.150;  // Down state animation duration.
+    inline static const DOUBLE FLASH_ANIMATION_DURATION = 0.150; // Flash state animation duration.
+
+    // Shared attributes (Direct2D variables).
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushFocus = nullptr;         // D2D1 solid color brush of the focus color.
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushTextDefault = nullptr;   // D2D1 solid color brush of the default text color.
+    inline static ID2D1SolidColorBrush *pD2D1SolidColorBrushTextHighlight = nullptr; // D2D1 solid color brush of the highlight text color.
+
+    // Non-shared attributes (Animation variables).
     enum ButtonAnimationState
     {
         Default,
@@ -729,14 +903,27 @@ private:
     bool isDownState = false;                                                                    // Indicate whether the button is pressed down.
     bool isSelected = false;                                                                     // Indicate whether the button is selected.
 
+    // Non-shared attributes (Direct2D variables).
+    ID2D1DCRenderTarget *pD2D1DCRenderTarget = nullptr; // D2D1 DC render target.
+
 private:
     MyRadioGroup *pRadioGroup = nullptr; // Pointer to the radio group the button belongs to. This value will be set by the radio group when the button is added to the group.
 
 private:
-    /// [INTERNAL FUNCTIONS]
+    /// [HELPER FUNCTIONS]
 
     /**
-     * @brief Initialize an animation variable pointer and set its basic parameters.
+     * @brief (Re)create the associated D2D1 device resources.
+     *
+     * @param hWnd                 Handle to the window.
+     * @param recreateRenderTarget Specifies whether to recreate the render target.
+     *
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget);
+
+    /**
+     * @brief Create animation variable and set its basic parameters.
      *
      * @param pAnimationVariable Reference to the animation variable pointer.
      * @param initialValue       Specifies the animation variable initial value.
@@ -746,32 +933,32 @@ private:
      *
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
-    bool initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode = UI_ANIMATION_ROUNDING_NEAREST);
+    bool createAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode = UI_ANIMATION_ROUNDING_NEAREST);
+
+public:
+    /// [INTERNAL FUNCTIONS]
 
     /**
-     * @brief Install subclass callback for the button.
+     * @brief Install subclass callback for the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if successfully installed subclass callback for the button, false otherwise.
+     * @return Returns true if successfully installed subclass callback for the window, false otherwise.
      */
     bool installSubclass(HWND hWnd);
 
     /**
-     * @brief Starts the animation for the button.
+     * @brief Starts the animation for the window.
      *
-     * @param hWnd           Handle to the button.
+     * @param hWnd           Handle to the window.
      * @param animationState The button animation state.
      *
      * @return Returns true if the animation started successfully, false otherwise.
      */
     bool startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationState animationState);
 
-private:
-    // [SUBCLASS CALLBACK FUNCTIONS]
-
     /**
-     * @brief Subclass callback function for the button.
+     * @brief Subclass callback function for the window.
      *
      * @param hWnd        The handle to the window.
      * @param uMsg        The message identifier.
@@ -783,7 +970,7 @@ private:
     static LRESULT CALLBACK scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 public:
-    /// [INITIALIZATION FUNCTIONS]
+    /// [UN/INITIALIZATION FUNCTIONS]
 
     /**
      * @brief Initialize the class.
@@ -795,14 +982,19 @@ public:
     static bool initialize(MyRadioButtonInitializeConfig initializeConfig);
 
     /**
-     * @brief Set the shared properties of the class.
+     * @brief Set the shared attributes of the class.
      *
-     * @param configSharedProperties Shared properties configuration structure.
+     * @param configSharedAttributes Shared attributes configuration structure.
      */
-    static bool setSharedProperties(MyRadioButtonSharedPropertiesConfig configSharedProperties);
+    static bool setSharedAttributes(MyRadioButtonSharedAttributesConfig configSharedAttributes);
 
 public:
     /// [GENERAL FUNCTIONS]
+
+    /**
+     * @brief Release D2D1 shared resources.
+     */
+    static void releaseD2D1SharedResources();
 
     /**
      * @brief Check if the window is subclassed by the class MyRadioButton.
@@ -820,28 +1012,28 @@ public:
     /// [GENERAL FUNCTIONS]
 
     /**
-     * @brief Install subclass callback for the button.
+     * @brief Associate the subclass instance to the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if successfully installed subclass callback for the button, false otherwise.
+     * @return Returns true if successfully associated the subclass instance to the window, false otherwise.
      */
     bool setSubclass(HWND hWnd);
 
     /**
      * @brief Update the button selection state.
      *
-     * @param hWnd  Handle to the button.
+     * @param hWnd  Handle to the window.
      * @param state Specifies the new button selection state. (0 - deselected | 1 - selected)
      */
     void updateSelectionState(HWND hWnd, bool state);
 
     /**
-     * @bried Refresh the button by triggering the animation to the current state.
+     * @bried Refresh the window.
      *
-     * @param hWnd Handle to the button.
+     * @param hWnd Handle to the window.
      *
-     * @return Returns true if the button is successfully refreshed, false otherwise.
+     * @return Returns true if the window is successfully refreshed, false otherwise.
      */
     bool refresh(HWND hWnd);
 };
@@ -1135,7 +1327,7 @@ class MyDDLCombobox
 {
 private:
     // Initialization variables.
-    inline static bool isSharedPropertiesSet = false; // Indicate whether the shared properties are set.
+    inline static bool isSharedPropertiesSet = false; // Indicate whether the shared attributes are set.
     inline static bool isReady = false;               // Indicate whether the class is ready to use.
 
     // Shared properties.

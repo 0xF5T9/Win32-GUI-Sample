@@ -9,12 +9,12 @@ enum class MyEditboxType;
 enum class MyImageFormat;
 // Structs:
 struct MyStandardButtonInitializeConfig;
-struct MyStandardButtonSharedPropertiesConfig;
+struct MyStandardButtonSharedAttributesConfig;
 struct MyImageButtonInitializeConfig;
-struct MyImageButtonSharedPropertiesConfig;
-struct MyImageButtonNonSharedPropertiesConfig;
+struct MyImageButtonSharedAttributesConfig;
+struct MyImageButtonNonSharedAttributesConfig;
 struct MyRadioButtonInitializeConfig;
-struct MyRadioButtonSharedPropertiesConfig;
+struct MyRadioButtonSharedAttributesConfig;
 struct MyEditInitializeConfig;
 struct MyEditNonSharedPropertiesConfig;
 struct MyDDLComboboxSharedPropertiesConfig;

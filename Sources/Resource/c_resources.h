@@ -11,23 +11,14 @@
 
 #include "../Resource/resource.h" // Project resource header.
 
-/**
- * IDI_ICON1    cross_black.ico
- * IDI_ICON2    cross_grey.ico
- * IDI_ICON3    cross_white.ico
- * IDI_ICON4    minus_black.ico
- * IDI_ICON5    minus_grey.ico
- * IDI_ICON6    minus_white.ico
- * IDI_ICON7    MAINICON.ico
-*/
-
 // Timer identifiers.
 // #define IDT_ACTIVE_CHECK 1 // Reserved and likely to be removed in the future.
 
 // Window identifiers. (non-client)
 #define IDC_NONCLIENT_CLOSE_BUTTON        101
-#define IDC_NONCLIENT_MINIMIZE_BUTTON     102
-#define IDC_NONCLIENT_CAPTIONTITLE_STATIC 103
+#define IDC_NONCLIENT_MAXIMIZE_BUTTON     102
+#define IDC_NONCLIENT_MINIMIZE_BUTTON     103
+#define IDC_NONCLIENT_CAPTIONTITLE_STATIC 104
 
 // Window identifiers. (client)
 #define IDC_MAINCONTENT_CONTAINER           500

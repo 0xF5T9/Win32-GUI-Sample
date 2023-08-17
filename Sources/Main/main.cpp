@@ -75,7 +75,7 @@ int WINAPI wWinMain(
     WNDCLASSW my_class = {0};
     my_class.hbrBackground = NULL;
     my_class.hCursor = LoadCursorW(NULL, IDC_ARROW);
-    my_class.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON7));
+    my_class.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MAINICON));
     my_class.hInstance = hInstance;
     my_class.lpszClassName = g_WindowClassName;
     my_class.lpfnWndProc = WindowProcedure;
@@ -235,6 +235,20 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         case IDC_NONCLIENT_CLOSE_BUTTON:
             nApp::Window::Uninitialization::OnExit();
             DestroyWindow(hWnd);
+            return 0;
+
+        case IDC_NONCLIENT_MAXIMIZE_BUTTON:
+            if (!g_IsWindowMaximized)
+            {
+                g_IsWindowMaximized = true;
+                ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+            }
+            else
+            {
+                g_IsWindowMaximized = false;
+                ShowWindow(hWnd, SW_RESTORE);
+            }
+            
             return 0;
 
         case IDC_NONCLIENT_MINIMIZE_BUTTON:
@@ -825,9 +839,10 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         }
 
         // Update the non-client controls dimensions all at once.
-        HDWP hdwp_nonclient_controls = BeginDeferWindowPos(2);
+        HDWP hdwp_nonclient_controls = BeginDeferWindowPos(3);
         DeferWindowPos(hdwp_nonclient_controls, g_pUIElements->miscs.hWndNonClientCloseButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
-        DeferWindowPos(hdwp_nonclient_controls, g_pUIElements->miscs.hWndNonClientMinimizeButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58 - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+        DeferWindowPos(hdwp_nonclient_controls, g_pUIElements->miscs.hWndNonClientMaximizeButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58 - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+        DeferWindowPos(hdwp_nonclient_controls, g_pUIElements->miscs.hWndNonClientMinimizeButton, NULL, g_CurrentWindowWidth - WINDOW_BORDER_DEFAULTWIDTH - 58 - 58 - 58, WINDOW_BORDER_DEFAULTWIDTH, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
         if (!EndDeferWindowPos(hdwp_nonclient_controls))
             WriteLog(L"Failed to update the non-client controls' dimensions", L" [MESSAGE: \"WM_SIZE\" | CALLBACK: \"WindowProcedure()\"]", MyLogType::Error);
 
@@ -850,6 +865,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             g_IsAppResizing = false;
 
         RedrawWindow(g_pUIElements->miscs.hWndNonClientCloseButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        RedrawWindow(g_pUIElements->miscs.hWndNonClientMaximizeButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
         RedrawWindow(g_pUIElements->miscs.hWndNonClientMinimizeButton, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 
         break;
@@ -1341,6 +1357,9 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         }
         case VK_F4:
         {
+            std::wstring message = L"";
+            message.append(std::to_wstring(sizeof(g_KeyToggleENTER)));
+            MessageBoxW(NULL, message.c_str(), L"", MB_OK);
             MessageBeep(MB_OK);
             return 0;
         }

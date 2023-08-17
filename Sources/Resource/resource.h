@@ -1,27 +1,23 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by WindowsProject5.rc
+// Used by resource.rc
 //
-#define IDI_ICON1                       101
-#define IDI_ICON2                       102
-#define IDI_ICON3                       103
-#define IDI_ICON4                       104
-#define IDI_ICON5                       105
-#define IDI_ICON6                       106
-#define IDI_ICON7                       107
-#define IDB_PNG1                        108
-#define IDB_PNG2                        109
-#define IDB_PNG3                        110
-#define IDB_PNG4                        111
-#define IDB_PNG5                        112
-#define IDB_PNG6                        113
-#define IDR_IMAGE1                      114
+#define IDI_MAINICON                    100
+#define IDR_IMAGE1                      101
+#define IDR_IMAGE2                      102
+#define IDR_IMAGE3                      103
+#define IDR_IMAGE4                      104
+#define IDR_IMAGE5                      105
+#define IDR_IMAGE6                      106
+#define IDR_IMAGE7                      107
+#define IDR_IMAGE8                      108
+#define IDR_IMAGE9                      109
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        115
+#define _APS_NEXT_RESOURCE_VALUE        301
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101

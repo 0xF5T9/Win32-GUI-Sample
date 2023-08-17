@@ -109,24 +109,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Sources\Resource\Raws\cross_black.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\cross_grey.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\cross_white.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\minus_black.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\minus_grey.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\minus_white.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
     <Image Include="Sources\Resource\Raws\cross_grey.png">
       <Filter>Source Files\Resource\Raws</Filter>
     </Image>
@@ -148,6 +130,15 @@
     <Image Include="Sources\Resource\Raws\minus_white.png">
       <Filter>Source Files\Resource\Raws</Filter>
     </Image>
+    <Image Include="Sources\Resource\Raws\square_black.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\square_grey.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
+    <Image Include="Sources\Resource\Raws\square_white.png">
+      <Filter>Source Files\Resource\Raws</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -158,7 +149,7 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Sources\Resource\WindowsProject5.rc">
+    <ResourceCompile Include="Sources\Resource\resource.rc">
       <Filter>Source Files\Resource</Filter>
     </ResourceCompile>
   </ItemGroup>

@@ -53,47 +53,30 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "Raws\\cross_black.ico"
-
-IDI_ICON2               ICON                    "Raws\\cross_grey.ico"
-
-IDI_ICON3               ICON                    "Raws\\cross_white.ico"
-
-IDI_ICON4               ICON                    "Raws\\minus_black.ico"
-
-IDI_ICON5               ICON                    "Raws\\minus_grey.ico"
-
-IDI_ICON6               ICON                    "Raws\\minus_white.ico"
-
 MAINICON                ICON                    "Raws\\MAINICON.ico"
-
-IDI_ICON7               ICON                    "Raws\\MAINICON.ico"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// PNG
-//
-
-IDB_PNG1                PNG                     "Raws\\cross_grey.png"
-
-IDB_PNG2                PNG                     "Raws\\cross_white.png"
-
-IDB_PNG3                PNG                     "Raws\\cross_black.png"
-
-IDB_PNG4                PNG                     "Raws\\minus_grey.png"
-
-IDB_PNG5                PNG                     "Raws\\minus_white.png"
-
-IDB_PNG6                PNG                     "Raws\\minus_black.png"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // IMAGE
 //
 
-IDR_IMAGE1             IMAGE                   "Raws\\test.png"
+IDR_IMAGE1             IMAGE                     "Raws\\cross_grey.png"
+
+IDR_IMAGE2             IMAGE                     "Raws\\cross_white.png"
+
+IDR_IMAGE3             IMAGE                     "Raws\\cross_black.png"
+
+IDR_IMAGE4             IMAGE                     "Raws\\square_grey.png"
+
+IDR_IMAGE5             IMAGE                     "Raws\\square_white.png"
+
+IDR_IMAGE6             IMAGE                     "Raws\\square_black.png"
+
+IDR_IMAGE7             IMAGE                     "Raws\\minus_grey.png"
+
+IDR_IMAGE8             IMAGE                     "Raws\\minus_white.png"
+
+IDR_IMAGE9             IMAGE                     "Raws\\minus_black.png"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

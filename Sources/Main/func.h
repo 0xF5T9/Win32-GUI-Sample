@@ -1864,6 +1864,12 @@ namespace nApp
             std::wstring error_message = L"";
             while (!are_all_operation_success)
             {
+                // Release current subclass classes D2D1 shared resources
+                // so they can be recreated in next refresh() call.
+                MyStandardButton::releaseD2D1SharedResources();
+                MyImageButton::releaseD2D1SharedResources();
+                MyRadioButton::releaseD2D1SharedResources();
+
                 // Container: MainContent
                 if (g_ContainerMainContent)
                 {
@@ -2157,26 +2163,26 @@ namespace nApp
                     g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pWICCrossBlack,  // Close button default image.
                                                                       *g_pUIElements->images.pWICCrossWhite,  // Close button hover image.
                                                                       *g_pUIElements->images.pWICCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pWICSquareBlack, // Maximize button default image.
+                                                                      *g_pUIElements->images.pWICSquareWhite, // Maximize button hover image.
+                                                                      *g_pUIElements->images.pWICSquareWhite, // Maximize button down image.
                                                                       *g_pUIElements->images.pWICMinusBlack,  // Minimize button default image.
                                                                       *g_pUIElements->images.pWICMinusBlack,  // Minimize button hover image.
                                                                       *g_pUIElements->images.pWICMinusBlack); // Minimize button down image.
 
                     // Update standard button class.
-                    MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.standardButtonDefault,
-                            &g_pUIElements->colors.standardButtonHover,
-                            &g_pUIElements->colors.standardButtonDown,
-                            &g_pUIElements->colors.standardButtonBorderDefault,
-                            &g_pUIElements->colors.standardButtonBorderHover,
-                            &g_pUIElements->colors.standardButtonBorderDown,
-                            &g_pUIElements->colors.textActive,
-                            &g_pUIElements->colors.textHighlight,
-                            &g_pUIElements->colors.background,
-                            &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button,
-                            &g_pUIElements->fonts.buttonTextFormat};
-                    if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
+                    MyStandardButtonSharedAttributesConfig shared_config_mystandardbutton = MyStandardButtonSharedAttributesConfig(&g_pUIElements->colors.standardButtonDefault,
+                                                                                                                                   &g_pUIElements->colors.standardButtonHover,
+                                                                                                                                   &g_pUIElements->colors.standardButtonDown,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderDefault,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderHover,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderDown,
+                                                                                                                                   &g_pUIElements->colors.textActive,
+                                                                                                                                   &g_pUIElements->colors.textHighlight,
+                                                                                                                                   &g_pUIElements->colors.background,
+                                                                                                                                   &g_pUIElements->colors.focus,
+                                                                                                                                   &g_pUIElements->fonts.buttonTextFormat);
+                    if (!MyStandardButton::setSharedAttributes(shared_config_mystandardbutton))
                     {
                         error_message = L"Failed to update standard button class.";
                         is_switch_failed = true;
@@ -2184,11 +2190,8 @@ namespace nApp
                     }
 
                     // Update image button class.
-                    MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.focus // Image button focus color.
-                        };
-                    if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    MyImageButtonSharedAttributesConfig shared_config_myimagebutton = MyImageButtonSharedAttributesConfig(&g_pUIElements->colors.focus);
+                    if (!MyImageButton::setSharedAttributes(shared_config_myimagebutton))
                     {
                         error_message = L"Failed to update image button class.";
                         is_switch_failed = true;
@@ -2196,32 +2199,30 @@ namespace nApp
                     }
 
                     // Update radio button class.
-                    MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.radioButtonPrimaryDefault,
-                            &g_pUIElements->colors.radioButtonPrimaryHover,
-                            &g_pUIElements->colors.radioButtonPrimaryDown,
-                            &g_pUIElements->colors.radioButtonSecondaryDefault,
-                            &g_pUIElements->colors.radioButtonSecondaryHover,
-                            &g_pUIElements->colors.radioButtonSecondaryDown,
-                            &g_pUIElements->colors.radioButtonBorderDefault,
-                            &g_pUIElements->colors.radioButtonBorderHover,
-                            &g_pUIElements->colors.radioButtonBorderDown,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
-                            &g_pUIElements->colors.selectedRadioButtonBorderDefault,
-                            &g_pUIElements->colors.selectedRadioButtonBorderHover,
-                            &g_pUIElements->colors.selectedRadioButtonBorderDown,
-                            &g_pUIElements->colors.textActive,
-                            &g_pUIElements->colors.textHighlight,
-                            &g_pUIElements->colors.background,
-                            &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button};
-                    if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    MyRadioButtonSharedAttributesConfig shared_config_myradiobutton = MyRadioButtonSharedAttributesConfig(&g_pUIElements->colors.radioButtonPrimaryDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonPrimaryHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonPrimaryDown,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryDown,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                                                                                                                          &g_pUIElements->colors.textActive,
+                                                                                                                          &g_pUIElements->colors.textHighlight,
+                                                                                                                          &g_pUIElements->colors.background,
+                                                                                                                          &g_pUIElements->colors.focus,
+                                                                                                                          &g_pUIElements->fonts.buttonTextFormat);
+                    if (!MyRadioButton::setSharedAttributes(shared_config_myradiobutton))
                     {
                         error_message = L"Failed to update radio button class.";
                         is_switch_failed = true;
@@ -2317,26 +2318,26 @@ namespace nApp
                     g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pWICCrossGrey,   // Close button default image.
                                                                       *g_pUIElements->images.pWICCrossWhite,  // Close button hover image.
                                                                       *g_pUIElements->images.pWICCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pWICSquareGrey,  // Maximize button default image.
+                                                                      *g_pUIElements->images.pWICSquareWhite, // Maximize button hover image.
+                                                                      *g_pUIElements->images.pWICSquareWhite, // Maximize button down image.
                                                                       *g_pUIElements->images.pWICMinusGrey,   // Minimize button default image.
                                                                       *g_pUIElements->images.pWICMinusWhite,  // Minimize button hover image.
                                                                       *g_pUIElements->images.pWICMinusWhite); // Minimize button down image.
 
                     // Update standard button class.
-                    MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.standardButtonDefault,
-                            &g_pUIElements->colors.standardButtonHover,
-                            &g_pUIElements->colors.standardButtonDown,
-                            &g_pUIElements->colors.standardButtonBorderDefault,
-                            &g_pUIElements->colors.standardButtonBorderHover,
-                            &g_pUIElements->colors.standardButtonBorderDown,
-                            &g_pUIElements->colors.textActive,
-                            &g_pUIElements->colors.textHighlight,
-                            &g_pUIElements->colors.background,
-                            &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button,
-                            &g_pUIElements->fonts.buttonTextFormat};
-                    if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
+                    MyStandardButtonSharedAttributesConfig shared_config_mystandardbutton = MyStandardButtonSharedAttributesConfig(&g_pUIElements->colors.standardButtonDefault,
+                                                                                                                                   &g_pUIElements->colors.standardButtonHover,
+                                                                                                                                   &g_pUIElements->colors.standardButtonDown,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderDefault,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderHover,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderDown,
+                                                                                                                                   &g_pUIElements->colors.textActive,
+                                                                                                                                   &g_pUIElements->colors.textHighlight,
+                                                                                                                                   &g_pUIElements->colors.background,
+                                                                                                                                   &g_pUIElements->colors.focus,
+                                                                                                                                   &g_pUIElements->fonts.buttonTextFormat);
+                    if (!MyStandardButton::setSharedAttributes(shared_config_mystandardbutton))
                     {
                         error_message = L"Failed to update standard button class.";
                         is_switch_failed = true;
@@ -2344,11 +2345,8 @@ namespace nApp
                     }
 
                     // Update image button class.
-                    MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.focus // Image button focus color.
-                        };
-                    if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    MyImageButtonSharedAttributesConfig shared_config_myimagebutton = MyImageButtonSharedAttributesConfig(&g_pUIElements->colors.focus);
+                    if (!MyImageButton::setSharedAttributes(shared_config_myimagebutton))
                     {
                         error_message = L"Failed to update image button class.";
                         is_switch_failed = true;
@@ -2356,32 +2354,30 @@ namespace nApp
                     }
 
                     // Update radio button class.
-                    MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.radioButtonPrimaryDefault,
-                            &g_pUIElements->colors.radioButtonPrimaryHover,
-                            &g_pUIElements->colors.radioButtonPrimaryDown,
-                            &g_pUIElements->colors.radioButtonSecondaryDefault,
-                            &g_pUIElements->colors.radioButtonSecondaryHover,
-                            &g_pUIElements->colors.radioButtonSecondaryDown,
-                            &g_pUIElements->colors.radioButtonBorderDefault,
-                            &g_pUIElements->colors.radioButtonBorderHover,
-                            &g_pUIElements->colors.radioButtonBorderDown,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
-                            &g_pUIElements->colors.selectedRadioButtonBorderDefault,
-                            &g_pUIElements->colors.selectedRadioButtonBorderHover,
-                            &g_pUIElements->colors.selectedRadioButtonBorderDown,
-                            &g_pUIElements->colors.textActive,
-                            &g_pUIElements->colors.textHighlight,
-                            &g_pUIElements->colors.background,
-                            &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button};
-                    if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    MyRadioButtonSharedAttributesConfig shared_config_myradiobutton = MyRadioButtonSharedAttributesConfig(&g_pUIElements->colors.radioButtonPrimaryDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonPrimaryHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonPrimaryDown,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryDown,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                                                                                                                          &g_pUIElements->colors.textActive,
+                                                                                                                          &g_pUIElements->colors.textHighlight,
+                                                                                                                          &g_pUIElements->colors.background,
+                                                                                                                          &g_pUIElements->colors.focus,
+                                                                                                                          &g_pUIElements->fonts.buttonTextFormat);
+                    if (!MyRadioButton::setSharedAttributes(shared_config_myradiobutton))
                     {
                         error_message = L"Failed to update radio button class.";
                         is_switch_failed = true;
@@ -2477,26 +2473,26 @@ namespace nApp
                     g_pUIElements->images.updateNonClientButtonImages(*g_pUIElements->images.pWICCrossGrey,   // Close button default image.
                                                                       *g_pUIElements->images.pWICCrossWhite,  // Close button hover image.
                                                                       *g_pUIElements->images.pWICCrossWhite,  // Close button down image.
+                                                                      *g_pUIElements->images.pWICSquareGrey,  // Maximize button default image.
+                                                                      *g_pUIElements->images.pWICSquareWhite, // Maximize button hover image.
+                                                                      *g_pUIElements->images.pWICSquareWhite, // Maximize button down image.
                                                                       *g_pUIElements->images.pWICMinusGrey,   // Minimize button default image.
                                                                       *g_pUIElements->images.pWICMinusWhite,  // Minimize button hover image.
                                                                       *g_pUIElements->images.pWICMinusWhite); // Minimize button down image.
 
                     // Update standard button class.
-                    MyStandardButtonSharedPropertiesConfig MyStandardButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.standardButtonDefault,
-                            &g_pUIElements->colors.standardButtonHover,
-                            &g_pUIElements->colors.standardButtonDown,
-                            &g_pUIElements->colors.standardButtonBorderDefault,
-                            &g_pUIElements->colors.standardButtonBorderHover,
-                            &g_pUIElements->colors.standardButtonBorderDown,
-                            &g_pUIElements->colors.textActive,
-                            &g_pUIElements->colors.textHighlight,
-                            &g_pUIElements->colors.background,
-                            &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button,
-                            &g_pUIElements->fonts.buttonTextFormat};
-                    if (!MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig))
+                    MyStandardButtonSharedAttributesConfig shared_config_mystandardbutton = MyStandardButtonSharedAttributesConfig(&g_pUIElements->colors.standardButtonDefault,
+                                                                                                                                   &g_pUIElements->colors.standardButtonHover,
+                                                                                                                                   &g_pUIElements->colors.standardButtonDown,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderDefault,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderHover,
+                                                                                                                                   &g_pUIElements->colors.standardButtonBorderDown,
+                                                                                                                                   &g_pUIElements->colors.textActive,
+                                                                                                                                   &g_pUIElements->colors.textHighlight,
+                                                                                                                                   &g_pUIElements->colors.background,
+                                                                                                                                   &g_pUIElements->colors.focus,
+                                                                                                                                   &g_pUIElements->fonts.buttonTextFormat);
+                    if (!MyStandardButton::setSharedAttributes(shared_config_mystandardbutton))
                     {
                         error_message = L"Failed to update standard button class.";
                         is_switch_failed = true;
@@ -2504,11 +2500,8 @@ namespace nApp
                     }
 
                     // Update image button class.
-                    MyImageButtonSharedPropertiesConfig MyImageButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.focus // Image button focus color.
-                        };
-                    if (!MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig))
+                    MyImageButtonSharedAttributesConfig shared_config_myimagebutton = MyImageButtonSharedAttributesConfig(&g_pUIElements->colors.focus);
+                    if (!MyImageButton::setSharedAttributes(shared_config_myimagebutton))
                     {
                         error_message = L"Failed to update image button class.";
                         is_switch_failed = true;
@@ -2516,32 +2509,30 @@ namespace nApp
                     }
 
                     // Update radio button class.
-                    MyRadioButtonSharedPropertiesConfig MyRadioButtonSharedPropertiesConfig =
-                        {
-                            &g_pUIElements->colors.radioButtonPrimaryDefault,
-                            &g_pUIElements->colors.radioButtonPrimaryHover,
-                            &g_pUIElements->colors.radioButtonPrimaryDown,
-                            &g_pUIElements->colors.radioButtonSecondaryDefault,
-                            &g_pUIElements->colors.radioButtonSecondaryHover,
-                            &g_pUIElements->colors.radioButtonSecondaryDown,
-                            &g_pUIElements->colors.radioButtonBorderDefault,
-                            &g_pUIElements->colors.radioButtonBorderHover,
-                            &g_pUIElements->colors.radioButtonBorderDown,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
-                            &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
-                            &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
-                            &g_pUIElements->colors.selectedRadioButtonBorderDefault,
-                            &g_pUIElements->colors.selectedRadioButtonBorderHover,
-                            &g_pUIElements->colors.selectedRadioButtonBorderDown,
-                            &g_pUIElements->colors.textActive,
-                            &g_pUIElements->colors.textHighlight,
-                            &g_pUIElements->colors.background,
-                            &g_pUIElements->colors.focus,
-                            &g_pUIElements->fonts.button};
-                    if (!MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig))
+                    MyRadioButtonSharedAttributesConfig shared_config_myradiobutton = MyRadioButtonSharedAttributesConfig(&g_pUIElements->colors.radioButtonPrimaryDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonPrimaryHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonPrimaryDown,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonSecondaryDown,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderDefault,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderHover,
+                                                                                                                          &g_pUIElements->colors.radioButtonBorderDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonPrimaryDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonSecondaryDown,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderDefault,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderHover,
+                                                                                                                          &g_pUIElements->colors.selectedRadioButtonBorderDown,
+                                                                                                                          &g_pUIElements->colors.textActive,
+                                                                                                                          &g_pUIElements->colors.textHighlight,
+                                                                                                                          &g_pUIElements->colors.background,
+                                                                                                                          &g_pUIElements->colors.focus,
+                                                                                                                          &g_pUIElements->fonts.buttonTextFormat);
+                    if (!MyRadioButton::setSharedAttributes(shared_config_myradiobutton))
                     {
                         error_message = L"Failed to update radio button class.";
                         is_switch_failed = true;
@@ -2801,24 +2792,9 @@ namespace nApp
 
                     // Initialize my subclass classes.
                     WriteLog(L"Initializing subclass classes ...", L"", MyLogType::Debug);
-                    MyStandardButtonInitializeConfig initialize_config_mystandardbutton =
-                        {
-                            &g_KeyToggleENTER,
-                            &g_pAnimationManager,
-                            &g_pAnimationTimer,
-                            &g_pTransitionLibrary};
-                    MyImageButtonInitializeConfig initialize_config_myimagebutton =
-                        {
-                            &g_KeyToggleENTER,
-                            &g_pAnimationManager,
-                            &g_pAnimationTimer,
-                            &g_pTransitionLibrary};
-                    MyRadioButtonInitializeConfig initialize_config_myradiobutton =
-                        {
-                            &g_KeyToggleENTER,
-                            &g_pAnimationManager,
-                            &g_pAnimationTimer,
-                            &g_pTransitionLibrary};
+                    MyStandardButtonInitializeConfig initialize_config_mystandardbutton = MyStandardButtonInitializeConfig(g_pAnimationManager, g_pAnimationTimer, g_pTransitionLibrary, g_pD2D1Engine);
+                    MyImageButtonInitializeConfig initialize_config_myimagebutton = MyImageButtonInitializeConfig(g_pAnimationManager, g_pAnimationTimer, g_pTransitionLibrary, g_pD2D1Engine);
+                    MyRadioButtonInitializeConfig initialize_config_myradiobutton = MyRadioButtonInitializeConfig(g_pAnimationManager, g_pAnimationTimer, g_pTransitionLibrary, g_pD2D1Engine);
                     MyEditInitializeConfig initialize_config_myedit =
                         {
                             &g_KeyToggleENTER,
@@ -2922,15 +2898,13 @@ namespace nApp
 
                         // Close button.
                         MyWindow *p_imagebutton_close = new MyWindow(true);
-                        MyImageButtonNonSharedPropertiesConfig button_close_nonsharedpropertiesconfig =
-                            {
-                                &g_pUIElements->images.pNonClientCloseButtonDefault,
-                                &g_pUIElements->images.pNonClientCloseButtonHover,
-                                &g_pUIElements->images.pNonClientCloseButtonDown,
-                                &g_pUIElements->colors.captionBackground,
-                                &g_pUIElements->colors.closeButtonBackgroundOnHover,
-                                &g_pUIElements->colors.closeButtonBackgroundOnDown,
-                                0, 0, 20, 20, true, false, true};
+                        MyImageButtonNonSharedAttributesConfig button_close_nonsharedpropertiesconfig = MyImageButtonNonSharedAttributesConfig(&g_pUIElements->images.pNonClientCloseButtonDefault,
+                                                                                                                                               &g_pUIElements->images.pNonClientCloseButtonHover,
+                                                                                                                                               &g_pUIElements->images.pNonClientCloseButtonDown,
+                                                                                                                                               &g_pUIElements->colors.captionBackground,
+                                                                                                                                               &g_pUIElements->colors.closeButtonBackgroundOnHover,
+                                                                                                                                               &g_pUIElements->colors.closeButtonBackgroundOnDown,
+                                                                                                                                               0, 0, 20, 20, true, false, true);
                         if (!p_imagebutton_close->createImageButton(hWnd, L"", false, true, button_close_nonsharedpropertiesconfig,
                                                                     0, 0, 58, 37, (HMENU)IDC_NONCLIENT_CLOSE_BUTTON))
                         {
@@ -2940,17 +2914,33 @@ namespace nApp
                         g_VectorNonClientWindows.push_back(p_imagebutton_close);
                         g_pUIElements->miscs.hWndNonClientCloseButton = p_imagebutton_close->hWnd;
 
+                        // Maximize button.
+                        MyWindow *p_imagebutton_maximize = new MyWindow(true);
+                        MyImageButtonNonSharedAttributesConfig button_maximize_nonsharedpropertiesconfig = MyImageButtonNonSharedAttributesConfig(&g_pUIElements->images.pNonClientMaximizeButtonDefault,
+                                                                                                                                                  &g_pUIElements->images.pNonClientMaximizeButtonHover,
+                                                                                                                                                  &g_pUIElements->images.pNonClientMaximizeButtonDown,
+                                                                                                                                                  &g_pUIElements->colors.captionBackground,
+                                                                                                                                                  &g_pUIElements->colors.maximizeButtonBackgroundOnHover,
+                                                                                                                                                  &g_pUIElements->colors.maximizeButtonBackgroundOnDown,
+                                                                                                                                                  0, 0, 20, 20, true, false, true);
+                        if (!p_imagebutton_maximize->createImageButton(hWnd, L"", false, true, button_maximize_nonsharedpropertiesconfig,
+                                                                       0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MAXIMIZE_BUTTON))
+                        {
+                            error_message = L"Failed to create the maximize button.";
+                            break;
+                        }
+                        g_VectorNonClientWindows.push_back(p_imagebutton_maximize);
+                        g_pUIElements->miscs.hWndNonClientMaximizeButton = p_imagebutton_maximize->hWnd;
+
                         // Minimize button.
                         MyWindow *p_imagebutton_minimize = new MyWindow(true);
-                        MyImageButtonNonSharedPropertiesConfig button_minimize_nonsharedpropertiesconfig =
-                            {
-                                &g_pUIElements->images.pNonClientMinimizeButtonDefault,
-                                &g_pUIElements->images.pNonClientMinimizeButtonHover,
-                                &g_pUIElements->images.pNonClientMinimizeButtonDown,
-                                &g_pUIElements->colors.captionBackground,
-                                &g_pUIElements->colors.minimizeButtonBackgroundOnHover,
-                                &g_pUIElements->colors.minimizeButtonBackgroundOnDown,
-                                0, 0, 20, 20, true, false, true};
+                        MyImageButtonNonSharedAttributesConfig button_minimize_nonsharedpropertiesconfig = MyImageButtonNonSharedAttributesConfig(&g_pUIElements->images.pNonClientMinimizeButtonDefault,
+                                                                                                                                                  &g_pUIElements->images.pNonClientMinimizeButtonHover,
+                                                                                                                                                  &g_pUIElements->images.pNonClientMinimizeButtonDown,
+                                                                                                                                                  &g_pUIElements->colors.captionBackground,
+                                                                                                                                                  &g_pUIElements->colors.minimizeButtonBackgroundOnHover,
+                                                                                                                                                  &g_pUIElements->colors.minimizeButtonBackgroundOnDown,
+                                                                                                                                                  0, 0, 20, 20, true, false, true);
                         if (!p_imagebutton_minimize->createImageButton(hWnd, L"", false, true, button_minimize_nonsharedpropertiesconfig,
                                                                        0, 0, 58, 37, (HMENU)IDC_NONCLIENT_MINIMIZE_BUTTON))
                         {
@@ -3431,6 +3421,12 @@ namespace nApp
                     delete g_ContainerMainContent;
                     delete g_pUIElements;
                     WriteLog(L"UI-related objects uninitialized.", L"", MyLogType::Debug);
+
+                    // Release left-over D2D1 resources of the subclass classes.
+                    MyStandardButton::releaseD2D1SharedResources();
+                    MyImageButton::releaseD2D1SharedResources();
+                    MyRadioButton::releaseD2D1SharedResources();
+                    WriteLog(L"Subclass classes resources released.", L"", MyLogType::Debug);
 
                     // Uninitialize API(s).
                     {

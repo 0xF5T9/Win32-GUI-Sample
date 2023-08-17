@@ -183,7 +183,7 @@
     <ClInclude Include="Sources\UI\ui.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Sources\Resource\WindowsProject5.rc" />
+    <ResourceCompile Include="Sources\Resource\resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Sources\Resource\Raws\cross_black.png" />
@@ -191,14 +191,11 @@
     <Image Include="Sources\Resource\Raws\minus_black.png" />
     <Image Include="Sources\Resource\Raws\minus_grey.png" />
     <Image Include="Sources\Resource\Raws\minus_white.png" />
-    <Image Include="Sources\Resource\Raws\cross_black.ico" />
-    <Image Include="Sources\Resource\Raws\cross_grey.ico" />
-    <Image Include="Sources\Resource\Raws\cross_white.ico" />
     <Image Include="Sources\Resource\Raws\MAINICON.ico" />
-    <Image Include="Sources\Resource\Raws\minus_black.ico" />
-    <Image Include="Sources\Resource\Raws\minus_grey.ico" />
-    <Image Include="Sources\Resource\Raws\minus_white.ico" />
     <Image Include="Sources\Resource\Raws\cross_grey.png" />
+    <Image Include="Sources\Resource\Raws\square_black.png" />
+    <Image Include="Sources\Resource\Raws\square_grey.png" />
+    <Image Include="Sources\Resource\Raws\square_white.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md">

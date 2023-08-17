@@ -30,20 +30,15 @@ KeyToggle::operator bool()
 // Destructor:
 MyStandardButton::~MyStandardButton()
 {
-    // Release D2D1 resources.
+    // Release non-shared attributes (Direct2D variables).
     {
         if (this->pD2D1DCRenderTarget)
             this->pD2D1DCRenderTarget->Release();
     }
-    // Release animation variables.
-    {
-        // Note:
-        // If the animation manager created these variables no longer exists,
-        // No need to perform any cleanup as the COM objects already released along with its animation manager.
-        if (!MyStandardButton::pAnimationManager)
-            return;
 
-        // Release animation variables.
+    // Release non-shared attributes (Animation variables).
+    if (*MyStandardButton::ppAnimationManager)
+    {
         for (int i = 0; i < 3; i++)
         {
             if (this->pAnimationVariableButtonRGB[i])
@@ -56,7 +51,7 @@ MyStandardButton::~MyStandardButton()
         }
     }
 }
-// Private member function(s) [INTERNAL FUNCTIONS]:
+// Private function(s) [HELPER FUNCTIONS]:
 bool MyStandardButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget)
 {
     bool are_all_operation_success = false;
@@ -91,7 +86,7 @@ bool MyStandardButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderT
                 this->pD2D1DCRenderTarget = nullptr;
             }
 
-            this->pD2D1DCRenderTarget = g_pD2D1Engine->createDCRenderTarget();
+            this->pD2D1DCRenderTarget = MyStandardButton::pMyD2D1Engine->createDCRenderTarget();
             if (!this->pD2D1DCRenderTarget)
             {
                 error_message = L"Failed to create the render target.";
@@ -109,42 +104,37 @@ bool MyStandardButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderT
 
         // (Re)create the device-dependent resources.
         {
-            // Release device-dependent resources if they exist.
-            if (this->pD2D1SolidColorBrushFocus)
+            // If the shared resources are not created yet, create them.
+            if (!MyStandardButton::pD2D1SolidColorBrushFocus)
             {
-                this->pD2D1SolidColorBrushFocus->Release();
-                this->pD2D1SolidColorBrushFocus = nullptr;
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyStandardButton::pColorFocus->getD2D1Color(), &MyStandardButton::pD2D1SolidColorBrushFocus);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the focus.";
+                    break;
+                }
             }
-            if (this->pD2D1SolidColorBrushTextDefault)
+            if (!MyStandardButton::pD2D1SolidColorBrushTextDefault)
             {
-                this->pD2D1SolidColorBrushTextDefault->Release();
-                this->pD2D1SolidColorBrushTextDefault = nullptr;
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyStandardButton::pColorTextDefault->getD2D1Color(), &MyStandardButton::pD2D1SolidColorBrushTextDefault);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the default text.";
+                    break;
+                }
             }
-            if (this->pD2D1SolidColorBrushTextHighlight)
+            if (!MyStandardButton::pD2D1SolidColorBrushTextHighlight)
             {
-                this->pD2D1SolidColorBrushTextHighlight->Release();
-                this->pD2D1SolidColorBrushTextHighlight = nullptr;
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyStandardButton::pColorTextHighlight->getD2D1Color(), &MyStandardButton::pD2D1SolidColorBrushTextHighlight);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the highlight text.";
+                    break;
+                }
             }
 
-            // Create device-dependent resources.
-            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(this->pColorFocus->getD2D1Color(), &this->pD2D1SolidColorBrushFocus);
-            if (FAILED(hr))
-            {
-                error_message = L"Failed to create the solid color brush for the focus.";
-                break;
-            }
-            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(this->pColorTextDefault->getD2D1Color(), &this->pD2D1SolidColorBrushTextDefault);
-            if (FAILED(hr))
-            {
-                error_message = L"Failed to create the solid color brush for the default text.";
-                break;
-            }
-            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(this->pColorTextHighlight->getD2D1Color(), &this->pD2D1SolidColorBrushTextHighlight);
-            if (FAILED(hr))
-            {
-                error_message = L"Failed to create the solid color brush for the highlight text.";
-                break;
-            }
+            // (Re)create the non-shared resources.
+            // This class doesn't have any non-shared resources.
         }
 
         // Release the device context.
@@ -164,7 +154,7 @@ bool MyStandardButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderT
 
     return are_all_operation_success;
 }
-bool MyStandardButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
+bool MyStandardButton::createAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
@@ -173,7 +163,7 @@ bool MyStandardButton::initializeAnimationVariable(IUIAnimationVariable *&pAnima
         HRESULT hr;
 
         // Create the animation variable.
-        hr = MyStandardButton::pAnimationManager->CreateAnimationVariable(initialValue, &pAnimationVariable);
+        hr = (*MyStandardButton::ppAnimationManager)->CreateAnimationVariable(initialValue, &pAnimationVariable);
         if (FAILED(hr))
         {
             error_message = L"Failed to create the animation variable.";
@@ -208,12 +198,13 @@ bool MyStandardButton::initializeAnimationVariable(IUIAnimationVariable *&pAnima
 
     if (!are_all_operation_success)
     {
-        WriteLog(error_message, L" [CLASS: \"MyStandardButton\" | FUNC: \"initializeAnimationVariable()\"]", MyLogType::Error);
+        WriteLog(error_message, L" [CLASS: \"MyStandardButton\" | FUNC: \"createAnimationVariable()\"]", MyLogType::Error);
         return false;
     }
 
     return true;
 }
+// Private funtion(s) [INTERNAL FUNCTIONS]:
 bool MyStandardButton::installSubclass(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -227,33 +218,40 @@ bool MyStandardButton::installSubclass(HWND hWnd)
             break;
         }
 
-        // Initialize the animation variables.
-        error_message = L"Failed to initialize the animation variables.";
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonRGB[0],
-                                               this->pColorStandardButtonDefault->getGDIPColor().GetRed(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        // Create the animation variables.
+        error_message = L"Failed to create the animation variables.";
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonRGB[0],
+                                           MyStandardButton::pColorStandardButtonDefault->getGDIPColor().GetRed(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonRGB[1],
-                                               this->pColorStandardButtonDefault->getGDIPColor().GetGreen(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonRGB[1],
+                                           MyStandardButton::pColorStandardButtonDefault->getGDIPColor().GetGreen(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonRGB[2],
-                                               this->pColorStandardButtonDefault->getGDIPColor().GetBlue(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonRGB[2],
+                                           MyStandardButton::pColorStandardButtonDefault->getGDIPColor().GetBlue(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[0],
-                                               this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonBorderRGB[0],
+                                           MyStandardButton::pColorStandardButtonBorderDefault->getGDIPColor().GetRed(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[1],
-                                               this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonBorderRGB[1],
+                                           MyStandardButton::pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[2],
-                                               this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonBorderRGB[2],
+                                           MyStandardButton::pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         error_message = L"";
+
+        // Create the associated D2D1 device resources.
+        if (!this->createD2D1DeviceResources(hWnd, true))
+        {
+            error_message = L"Failed to create the Direct2D device resources.";
+            break;
+        }
 
         are_all_operation_success = true;
     }
@@ -284,7 +282,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyStandardButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyStandardButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Default)";
@@ -293,22 +291,22 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Default)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -345,7 +343,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyStandardButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyStandardButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Default)";
@@ -432,7 +430,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyStandardButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyStandardButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Hover)";
@@ -441,22 +439,22 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Hover)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::hoverAnimationDuration, this->pColorStandardButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::HOVER_ANIMATION_DURATION, this->pColorStandardButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -493,7 +491,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyStandardButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyStandardButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Hover)";
@@ -580,7 +578,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyStandardButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyStandardButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Down)";
@@ -589,22 +587,22 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Down)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_button_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::DOWN_ANIMATION_DURATION, this->pColorStandardButtonDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_button_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::DOWN_ANIMATION_DURATION, this->pColorStandardButtonDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_button_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::DOWN_ANIMATION_DURATION, this->pColorStandardButtonDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_button_border_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::DOWN_ANIMATION_DURATION, this->pColorStandardButtonBorderDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_button_border_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::DOWN_ANIMATION_DURATION, this->pColorStandardButtonBorderDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::downAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_button_border_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::DOWN_ANIMATION_DURATION, this->pColorStandardButtonBorderDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -641,7 +639,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyStandardButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyStandardButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Down)";
@@ -732,7 +730,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyStandardButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyStandardButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Flash)";
@@ -741,40 +739,40 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Flash)";
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonBorderDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonBorderDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonBorderDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonBorderDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonBorderDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyStandardButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyStandardButton::flashAnimationDuration, this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
+            hr = (*MyStandardButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyStandardButton::FLASH_ANIMATION_DURATION, this->pColorStandardButtonBorderDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -835,7 +833,7 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyStandardButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyStandardButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Flash)";
@@ -950,14 +948,13 @@ bool MyStandardButton::startAnimation(HWND hWnd, MyStandardButton::ButtonAnimati
 
     return false;
 }
-// Private member function(s) [SUBCLASS CALLBACK FUNCTIONS]:
 LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     // Extract the poiner from dwRefData and use it to access non-static members.
     MyStandardButton *p_this = reinterpret_cast<MyStandardButton *>(dwRefData);
 
     // Check if the enter key is pressed and the button has focus.
-    if (*MyStandardButton::pEnterKeyToggle && GetFocus() == hWnd)
+    if (MyStandardButton::returnKeyToggle && GetFocus() == hWnd)
     {
         // Trigger flash animation if the button is not hovered or pressed down.
         if (!p_this->isHoverState && !p_this->isDownState)
@@ -1067,15 +1064,15 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
                 break;
             }
 
-            // Prepare objects for drawing.
+            // Prepare drawing resources.
             D2D1_RECT_F d2d1_rect_window = D2D1::RectF(0, 0, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
             D2D1::ColorF d2d1_color_button = D2D1::ColorF(button_rgb[0] / 255.0f, button_rgb[1] / 255.0f, button_rgb[2] / 255.0f, 1.0);
             D2D1::ColorF d2d1_color_button_border = D2D1::ColorF(button_border_rgb[0] / 255.0f, button_border_rgb[1] / 255.0f, button_border_rgb[2] / 255.0f, 1.0);
-            auto text_format = MyStandardButton::pDWTextFormatDefault->getTextFormat();
+            auto text_format = MyStandardButton::pTextFormat->getTextFormat();
             ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_button;
             ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_button_border;
-            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = p_this->pD2D1SolidColorBrushFocus;
-            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_button_text = (p_this->isHoverState ? p_this->pD2D1SolidColorBrushTextHighlight : p_this->pD2D1SolidColorBrushTextDefault);
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = MyStandardButton::pD2D1SolidColorBrushFocus;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_button_text = (p_this->isHoverState ? MyStandardButton::pD2D1SolidColorBrushTextHighlight : MyStandardButton::pD2D1SolidColorBrushTextDefault);
             hr = p_this->pD2D1DCRenderTarget->CreateSolidColorBrush(d2d1_color_button, &p_d2d1_solidcolorbrush_button);
             if (FAILED(hr))
             {
@@ -1097,10 +1094,10 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
             p_this->pD2D1DCRenderTarget->Clear(MyStandardButton::pColorBackground->getD2D1Color());
 
             // Draw the button.
-            g_pD2D1Engine->drawFillRoundRectangle(p_this->pD2D1DCRenderTarget, d2d1_rect_window, 5, 5, p_d2d1_solidcolorbrush_button, (GetFocus() == hWnd ? p_d2d1_solidcolorbrush_focus_border : p_d2d1_solidcolorbrush_button_border), 1.0);
+            MyStandardButton::pMyD2D1Engine->drawFillRoundRectangle(p_this->pD2D1DCRenderTarget, d2d1_rect_window, 5, 5, p_d2d1_solidcolorbrush_button, (GetFocus() == hWnd ? p_d2d1_solidcolorbrush_focus_border : p_d2d1_solidcolorbrush_button_border), 1.0);
 
             // Draw the button text.
-            g_pD2D1Engine->drawText(p_this->pD2D1DCRenderTarget, text_format, d2d1_rect_window, button_text, p_d2d1_solidcolorbrush_button_text, 0, 0, true);
+            MyStandardButton::pMyD2D1Engine->drawText(p_this->pD2D1DCRenderTarget, text_format, d2d1_rect_window, button_text, p_d2d1_solidcolorbrush_button_text, 0, 0, 3);
 
             // End drawing.
             hr = p_this->pD2D1DCRenderTarget->EndDraw();
@@ -1161,7 +1158,7 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
                 HRESULT hr;
                 // Get the current time.
                 UI_ANIMATION_SECONDS seconds_now;
-                hr = MyStandardButton::pAnimationTimer->GetTime(&seconds_now);
+                hr = (*MyStandardButton::ppAnimationTimer)->GetTime(&seconds_now);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to retrieve the current time.";
@@ -1169,7 +1166,7 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
                 }
 
                 // Update the animation manager.
-                hr = MyStandardButton::pAnimationManager->Update(seconds_now);
+                hr = (*MyStandardButton::ppAnimationManager)->Update(seconds_now);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to update the animation manager.";
@@ -1181,7 +1178,7 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
 
                 // Get the animation manager's status.
                 UI_ANIMATION_MANAGER_STATUS status;
-                hr = MyStandardButton::pAnimationManager->GetStatus(&status);
+                hr = (*MyStandardButton::ppAnimationManager)->GetStatus(&status);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to get the animation manager's status.";
@@ -1315,7 +1312,7 @@ LRESULT CALLBACK MyStandardButton::scMyStandardButton(HWND hWnd, UINT uMsg, WPAR
 
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-// Public static member function(s) [INITIALIZATION FUNCTIONS]:
+// Public static function(s) [UN/INITIALIZATION FUNCTIONS]:
 bool MyStandardButton::initialize(MyStandardButtonInitializeConfig initializeConfig)
 {
     bool are_all_operation_success = false;
@@ -1329,17 +1326,17 @@ bool MyStandardButton::initialize(MyStandardButtonInitializeConfig initializeCon
             break;
         }
 
-        // Set the pointers.
-        MyStandardButton::pEnterKeyToggle = initializeConfig.pEnterKeyToggle;
-        MyStandardButton::pAnimationManager = std::ref(*initializeConfig.ppAnimationManager);
-        MyStandardButton::pAnimationTimer = std::ref(*initializeConfig.ppAnimationTimer);
-        MyStandardButton::pTransitionLibrary = std::ref(*initializeConfig.ppTransitionLibrary);
+        // Set the non-shared attributes (Initialization variables).
+        MyStandardButton::ppAnimationManager = &initializeConfig.pAnimationManager;
+        MyStandardButton::ppAnimationTimer = &initializeConfig.pAnimationTimer;
+        MyStandardButton::ppTransitionLibrary = &initializeConfig.pTransitionLibrary;
+        MyStandardButton::pMyD2D1Engine = initializeConfig.pMyD2D1Engine;
 
         // Update initialization state.
         MyStandardButton::isInitialized = true;
 
         // Update class ready state.
-        if (MyStandardButton::isSharedPropertiesSet)
+        if (MyStandardButton::isSharedAttributesSet)
             MyStandardButton::isReady = true;
 
         are_all_operation_success = true;
@@ -1353,35 +1350,34 @@ bool MyStandardButton::initialize(MyStandardButtonInitializeConfig initializeCon
 
     return true;
 }
-bool MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfig configSharedProperties)
+bool MyStandardButton::setSharedAttributes(MyStandardButtonSharedAttributesConfig configSharedAttributes)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
     while (!are_all_operation_success)
     {
-        // Check if the shared properties configuration structure is valid.
-        if (!configSharedProperties.isValid())
+        // Check if the shared attributes configuration structure is valid.
+        if (!configSharedAttributes.isValid())
         {
-            error_message = L"The shared properties configuration structure is invalid.";
+            error_message = L"The shared attributes configuration structure is invalid.";
             break;
         }
 
-        // Set the pointers.
-        MyStandardButton::pColorStandardButtonDefault = configSharedProperties.pColorStandardButtonDefault;
-        MyStandardButton::pColorStandardButtonHover = configSharedProperties.pColorStandardButtonHover;
-        MyStandardButton::pColorStandardButtonDown = configSharedProperties.pColorStandardButtonDown;
-        MyStandardButton::pColorStandardButtonBorderDefault = configSharedProperties.pColorStandardButtonBorderDefault;
-        MyStandardButton::pColorStandardButtonBorderHover = configSharedProperties.pColorStandardButtonBorderHover;
-        MyStandardButton::pColorStandardButtonBorderDown = configSharedProperties.pColorStandardButtonBorderDown;
-        MyStandardButton::pColorTextDefault = configSharedProperties.pColorTextDefault;
-        MyStandardButton::pColorTextHighlight = configSharedProperties.pColorTextHighlight;
-        MyStandardButton::pColorBackground = configSharedProperties.pColorBackground;
-        MyStandardButton::pColorFocus = configSharedProperties.pColorFocus;
-        MyStandardButton::pFontDefault = configSharedProperties.pFontDefault;
-        MyStandardButton::pDWTextFormatDefault = configSharedProperties.pDWTextFormatDefault;
+        // Set the shared attributes (Drawing variables).
+        MyStandardButton::pColorStandardButtonDefault = configSharedAttributes.pColorStandardButtonDefault;
+        MyStandardButton::pColorStandardButtonHover = configSharedAttributes.pColorStandardButtonHover;
+        MyStandardButton::pColorStandardButtonDown = configSharedAttributes.pColorStandardButtonDown;
+        MyStandardButton::pColorStandardButtonBorderDefault = configSharedAttributes.pColorStandardButtonBorderDefault;
+        MyStandardButton::pColorStandardButtonBorderHover = configSharedAttributes.pColorStandardButtonBorderHover;
+        MyStandardButton::pColorStandardButtonBorderDown = configSharedAttributes.pColorStandardButtonBorderDown;
+        MyStandardButton::pColorTextDefault = configSharedAttributes.pColorTextDefault;
+        MyStandardButton::pColorTextHighlight = configSharedAttributes.pColorTextHighlight;
+        MyStandardButton::pColorBackground = configSharedAttributes.pColorBackground;
+        MyStandardButton::pColorFocus = configSharedAttributes.pColorFocus;
+        MyStandardButton::pTextFormat = configSharedAttributes.pTextFormat;
 
         // Update initialization state.
-        MyStandardButton::isSharedPropertiesSet = true;
+        MyStandardButton::isSharedAttributesSet = true;
 
         // Update class ready state.
         if (MyStandardButton::isInitialized)
@@ -1392,13 +1388,31 @@ bool MyStandardButton::setSharedProperties(MyStandardButtonSharedPropertiesConfi
 
     if (!are_all_operation_success)
     {
-        WriteLog(error_message, L" [CLASS: \"MyStandardButton\" | FUNC: \"setSharedProperties()\"]", MyLogType::Error);
+        WriteLog(error_message, L" [CLASS: \"MyStandardButton\" | FUNC: \"setSharedAttributes()\"]", MyLogType::Error);
         return false;
     }
 
     return true;
 }
-// Public static member function(s) [GENERAL FUNCTIONS]:
+// Public static function(s) [GENERAL FUNCTIONS]:
+void MyStandardButton::releaseD2D1SharedResources()
+{
+    if (MyStandardButton::pD2D1SolidColorBrushFocus)
+    {
+        MyStandardButton::pD2D1SolidColorBrushFocus->Release();
+        MyStandardButton::pD2D1SolidColorBrushFocus = nullptr;
+    }
+    if (MyStandardButton::pD2D1SolidColorBrushTextDefault)
+    {
+        MyStandardButton::pD2D1SolidColorBrushTextDefault->Release();
+        MyStandardButton::pD2D1SolidColorBrushTextDefault = nullptr;
+    }
+    if (MyStandardButton::pD2D1SolidColorBrushTextHighlight)
+    {
+        MyStandardButton::pD2D1SolidColorBrushTextHighlight->Release();
+        MyStandardButton::pD2D1SolidColorBrushTextHighlight = nullptr;
+    }
+}
 bool MyStandardButton::isSubclassed(HWND hWnd, void **ppSubclass)
 {
     DWORD_PTR reference_data;
@@ -1410,7 +1424,7 @@ bool MyStandardButton::isSubclassed(HWND hWnd, void **ppSubclass)
 
     return is_subclassed;
 }
-// Public member function(s) [GENERAL FUNCTIONS]:
+// Public function(s) [GENERAL FUNCTIONS]:
 bool MyStandardButton::setSubclass(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -1431,13 +1445,6 @@ bool MyStandardButton::setSubclass(HWND hWnd)
             break;
         }
 
-        // Create the Direct2D device resources.
-        if (!this->createD2D1DeviceResources(hWnd, true))
-        {
-            error_message = L"Failed to create the Direct2D device resources.";
-            break;
-        }
-
         are_all_operation_success = true;
     }
 
@@ -1451,12 +1458,14 @@ bool MyStandardButton::setSubclass(HWND hWnd)
 }
 bool MyStandardButton::refresh(HWND hWnd)
 {
+    // Recreate the associated D2D1 device resources.
     if (!createD2D1DeviceResources(hWnd, true))
     {
-        WriteLog(L"Failed to create the Direct2D device resources.", L" [CLASS: \"MyImageButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
+        WriteLog(L"Failed to create the Direct2D device resources.", L" [CLASS: \"MyStandardButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
         return false;
     }
 
+    // Start animation to the current state to refresh the button appearance.
     if (!this->startAnimation(hWnd, this->currentAnimationState))
     {
         WriteLog(L"Failed to start the button animation.", L" [CLASS: \"MyStandardButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
@@ -1470,7 +1479,7 @@ bool MyStandardButton::refresh(HWND hWnd)
 // Destructor:
 MyImageButton::~MyImageButton()
 {
-    // Release D2D1 resources.
+    // Release non-shared attributes (Direct2D variables).
     {
         if (this->pD2D1BitmapDefaultImage)
             this->pD2D1BitmapDefaultImage->Release();
@@ -1482,15 +1491,9 @@ MyImageButton::~MyImageButton()
             this->pD2D1DCRenderTarget->Release();
     }
 
-    // Release animation variables.
+    // Release non-shared attributes (Animation variables).
+    if (*MyImageButton::ppAnimationManager)
     {
-        // Note:
-        // If the animation manager created these animation variables no longer exists,
-        // No need to perform any cleanup as the animation variables already released along with its animation manager.
-        if (!MyImageButton::pAnimationManager)
-            return;
-
-        // Release animation variables.
         for (int i = 0; i < 3; i++)
         {
             if (this->pAnimationVariableBackgroundRGB[i])
@@ -1504,7 +1507,7 @@ MyImageButton::~MyImageButton()
             this->pAnimationVariableDownImageOpacity->Release();
     }
 }
-// Private member function(s) [INTERNAL FUNCTIONS]:
+// Private function(s) [HELPER FUNCTIONS]:
 bool MyImageButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget)
 {
     bool are_all_operation_success = false;
@@ -1539,7 +1542,7 @@ bool MyImageButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarg
                 this->pD2D1DCRenderTarget = nullptr;
             }
 
-            this->pD2D1DCRenderTarget = g_pD2D1Engine->createDCRenderTarget();
+            this->pD2D1DCRenderTarget = MyImageButton::pMyD2D1Engine->createDCRenderTarget();
             if (!this->pD2D1DCRenderTarget)
             {
                 error_message = L"Failed to create the render target.";
@@ -1557,12 +1560,18 @@ bool MyImageButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarg
 
         // (Re)create the device-dependent resources.
         {
-            // Release device-dependent resources if they exist.
-            if (pD2D1SolidColorBrushFocus)
+            // If the shared resources are not created yet, create them.
+            if (!MyImageButton::pD2D1SolidColorBrushFocus)
             {
-                pD2D1SolidColorBrushFocus->Release();
-                pD2D1SolidColorBrushFocus = nullptr;
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyImageButton::pColorFocus->getD2D1Color(), &MyImageButton::pD2D1SolidColorBrushFocus);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the focus border.";
+                    break;
+                }
             }
+
+            // (Re)create the non-shared resources.
             if (this->pD2D1BitmapDefaultImage)
             {
                 this->pD2D1BitmapDefaultImage->Release();
@@ -1577,14 +1586,6 @@ bool MyImageButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarg
             {
                 this->pD2D1BitmapDownImage->Release();
                 this->pD2D1BitmapDownImage = nullptr;
-            }
-
-            // Create device-dependent resources.
-            hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyImageButton::pColorFocus->getD2D1Color(), &this->pD2D1SolidColorBrushFocus);
-            if (FAILED(hr))
-            {
-                error_message = L"Failed to create the solid color brush for the focus border.";
-                break;
             }
             hr = this->pD2D1DCRenderTarget->CreateBitmapFromWicBitmap((*(*this->pImageDefault)).getBitmapSource(), &this->pD2D1BitmapDefaultImage);
             if (FAILED(hr))
@@ -1623,7 +1624,7 @@ bool MyImageButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarg
 
     return are_all_operation_success;
 }
-bool MyImageButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
+bool MyImageButton::createAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
@@ -1632,7 +1633,7 @@ bool MyImageButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimatio
         HRESULT hr;
 
         // Create the animation variable.
-        hr = MyImageButton::pAnimationManager->CreateAnimationVariable(initialValue, &pAnimationVariable);
+        hr = (*MyImageButton::ppAnimationManager)->CreateAnimationVariable(initialValue, &pAnimationVariable);
         if (FAILED(hr))
         {
             error_message = L"Failed to create the animation variable.";
@@ -1667,12 +1668,13 @@ bool MyImageButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimatio
 
     if (!are_all_operation_success)
     {
-        WriteLog(error_message, L" [CLASS: \"MyImageButton\" | FUNC: \"initializeAnimationVariable()\"]", MyLogType::Error);
+        WriteLog(error_message, L" [CLASS: \"MyImageButton\" | FUNC: \"createAnimationVariable()\"]", MyLogType::Error);
         return false;
     }
 
     return true;
 }
+// Private function(s) [INTERNAL FUNCTIONS]:
 bool MyImageButton::installSubclass(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -1686,27 +1688,34 @@ bool MyImageButton::installSubclass(HWND hWnd)
             break;
         }
 
-        // Initialize the animation variables.
-        error_message = L"Failed to initialize the animation variables.";
-        if (!this->initializeAnimationVariable(this->pAnimationVariableBackgroundRGB[0],
-                                               this->pColorBackgroundDefault->getGDIPColor().GetRed(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        // Create the animation variables.
+        error_message = L"Failed to create the animation variables.";
+        if (!this->createAnimationVariable(this->pAnimationVariableBackgroundRGB[0],
+                                           this->pColorBackgroundDefault->getGDIPColor().GetRed(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableBackgroundRGB[1],
-                                               this->pColorBackgroundDefault->getGDIPColor().GetGreen(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableBackgroundRGB[1],
+                                           this->pColorBackgroundDefault->getGDIPColor().GetGreen(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableBackgroundRGB[2],
-                                               this->pColorBackgroundDefault->getGDIPColor().GetBlue(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableBackgroundRGB[2],
+                                           this->pColorBackgroundDefault->getGDIPColor().GetBlue(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableDefaultImageOpacity, 1.0, 0.0, 1.0))
+        if (!this->createAnimationVariable(this->pAnimationVariableDefaultImageOpacity, 1.0, 0.0, 1.0))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableHoverImageOpacity, 0.0, 0.0, 1.0))
+        if (!this->createAnimationVariable(this->pAnimationVariableHoverImageOpacity, 0.0, 0.0, 1.0))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableDownImageOpacity, 0.0, 0.0, 1.0))
+        if (!this->createAnimationVariable(this->pAnimationVariableDownImageOpacity, 0.0, 0.0, 1.0))
             break;
         error_message = L"";
+
+        // Create the associated D2D1 device resources.
+        if (!this->createD2D1DeviceResources(hWnd, true))
+        {
+            error_message = L"Failed to create the Direct2D device resources.";
+            break;
+        }
 
         are_all_operation_success = true;
     }
@@ -1739,7 +1748,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyImageButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyImageButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Default)";
@@ -1748,22 +1757,22 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Default)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, this->pColorBackgroundDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, this->pColorBackgroundDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, this->pColorBackgroundDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 1.0, 0.5, 0.5, &p_transition_default_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 1.0, 0.5, 0.5, &p_transition_default_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_hover_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 0.0, 0.5, 0.5, &p_transition_hover_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_down_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 0.0, 0.5, 0.5, &p_transition_down_icon_opacity);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -1800,7 +1809,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyImageButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyImageButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Default)";
@@ -1901,7 +1910,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyImageButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyImageButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Hover)";
@@ -1910,22 +1919,22 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Hover)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, this->pColorBackgroundHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, this->pColorBackgroundHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, this->pColorBackgroundHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, this->pColorBackgroundHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_default_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 0.0, 0.5, 0.5, &p_transition_default_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 1.0, 0.5, 0.5, &p_transition_hover_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 1.0, 0.5, 0.5, &p_transition_hover_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_down_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 0.0, 0.5, 0.5, &p_transition_down_icon_opacity);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -1962,7 +1971,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyImageButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyImageButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Hover)";
@@ -2063,7 +2072,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyImageButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyImageButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Down)";
@@ -2072,22 +2081,22 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Down)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_background_rgb[0]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::DOWN_ANIMATION_DURATION, this->pColorBackgroundDown->getGDIPColor().GetRed(), 0.7, 0.3, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_background_rgb[1]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::DOWN_ANIMATION_DURATION, this->pColorBackgroundDown->getGDIPColor().GetGreen(), 0.7, 0.3, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::downAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_background_rgb[2]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::DOWN_ANIMATION_DURATION, this->pColorBackgroundDown->getGDIPColor().GetBlue(), 0.7, 0.3, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_default_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 0.0, 0.5, 0.5, &p_transition_default_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 0.0, 0.5, 0.5, &p_transition_hover_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 0.0, 0.5, 0.5, &p_transition_hover_icon_opacity);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::hoverAnimationDuration, 1.0, 0.5, 0.5, &p_transition_down_icon_opacity);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::HOVER_ANIMATION_DURATION, 1.0, 0.5, 0.5, &p_transition_down_icon_opacity);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -2124,7 +2133,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyImageButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyImageButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Down)";
@@ -2228,7 +2237,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyImageButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyImageButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Flash)";
@@ -2237,22 +2246,22 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Flash)";
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_background_rgb[0]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::FLASH_ANIMATION_DURATION, this->pColorBackgroundDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_background_rgb[1]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::FLASH_ANIMATION_DURATION, this->pColorBackgroundDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_background_rgb[2]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::FLASH_ANIMATION_DURATION, this->pColorBackgroundDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_background_rgb[0]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::FLASH_ANIMATION_DURATION, this->pColorBackgroundDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_background_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_background_rgb[1]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::FLASH_ANIMATION_DURATION, this->pColorBackgroundDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_background_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyImageButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyImageButton::flashAnimationDuration, this->pColorBackgroundDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_background_rgb[2]);
+            hr = (*MyImageButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyImageButton::FLASH_ANIMATION_DURATION, this->pColorBackgroundDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_background_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -2293,7 +2302,7 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyImageButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyImageButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Flash)";
@@ -2406,14 +2415,13 @@ bool MyImageButton::startAnimation(HWND hWnd, MyImageButton::ButtonAnimationStat
 
     return false;
 }
-// Private member function(s) [SUBCLASS CALLBACK FUNCTIONS]:
 LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     // Extract the poiner from dwRefData and use it to access non-static members.
     MyImageButton *p_this = reinterpret_cast<MyImageButton *>(dwRefData);
 
     // Check if the enter key is pressed and the button has focus.
-    if (*MyImageButton::pEnterKeyToggle && GetFocus() == hWnd)
+    if (MyImageButton::returnKeyToggle && GetFocus() == hWnd)
     {
         // Trigger flash animation if the button is not hovered or pressed down.
         if (!p_this->isHoverState && !p_this->isDownState)
@@ -2505,13 +2513,13 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 break;
             }
 
-            // Prepare objects for drawing.
+            // Prepare drawing resources.
             D2D1_RECT_F d2d1_rect_window = D2D1::RectF(0, 0, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
             D2D1::ColorF d2d1_color_background = D2D1::ColorF(background_rgb[0] / 255.0f, background_rgb[1] / 255.0f, background_rgb[2] / 255.0f, 1.0);
             ID2D1Bitmap *&p_d2d1_bitmap_defaultimage = p_this->pD2D1BitmapDefaultImage;
             ID2D1Bitmap *&p_d2d1_bitmap_hoverimage = p_this->pD2D1BitmapHoverImage;
             ID2D1Bitmap *&p_d2d1_bitmap_downimage = p_this->pD2D1BitmapDownImage;
-            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = p_this->pD2D1SolidColorBrushFocus;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = MyImageButton::pD2D1SolidColorBrushFocus;
 
             // Begin drawing.
             p_this->pD2D1DCRenderTarget->BeginDraw();
@@ -2521,23 +2529,23 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
             p_this->pD2D1DCRenderTarget->Clear(d2d1_color_background);
 
             // Draw the button default image.
-            g_pD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_defaultimage, d2d1_rect_window, static_cast<FLOAT>(default_image_opacity), 0, 0, 20, 20, true);
+            MyImageButton::pMyD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_defaultimage, d2d1_rect_window, static_cast<FLOAT>(default_image_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering);
 
             // Draw the button hover image.
             if (!p_this->skipHoverAnimationState && hover_image_opacity > 0.0)
             {
-                g_pD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_hoverimage, d2d1_rect_window, static_cast<FLOAT>(hover_image_opacity), 0, 0, 20, 20, true);
+                MyImageButton::pMyD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_hoverimage, d2d1_rect_window, static_cast<FLOAT>(hover_image_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering);
             }
 
             if (!p_this->skipDownAnimationState && down_image_opacity > 0.0)
             {
-                g_pD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_downimage, d2d1_rect_window, static_cast<FLOAT>(down_image_opacity), 0, 0, 20, 20, true);
+                MyImageButton::pMyD2D1Engine->drawImage(p_this->pD2D1DCRenderTarget, p_d2d1_bitmap_downimage, d2d1_rect_window, static_cast<FLOAT>(down_image_opacity), p_this->imagePosX, p_this->imagePosY, p_this->imageWidth, p_this->imageHeight, p_this->isCentering);
             }
 
             // Draw the button focus's border.
             if (GetFocus() == hWnd)
             {
-                g_pD2D1Engine->drawRectangle(p_this->pD2D1DCRenderTarget, d2d1_rect_window, p_d2d1_solidcolorbrush_focus_border);
+                MyImageButton::pMyD2D1Engine->drawRectangle(p_this->pD2D1DCRenderTarget, d2d1_rect_window, p_d2d1_solidcolorbrush_focus_border);
             }
 
             // End drawing.
@@ -2593,7 +2601,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 HRESULT hr;
                 // Get the current time.
                 UI_ANIMATION_SECONDS seconds_now;
-                hr = MyImageButton::pAnimationTimer->GetTime(&seconds_now);
+                hr = (*MyImageButton::ppAnimationTimer)->GetTime(&seconds_now);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to retrieve the current time.";
@@ -2601,7 +2609,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 }
 
                 // Update the animation manager.
-                hr = MyImageButton::pAnimationManager->Update(seconds_now);
+                hr = (*MyImageButton::ppAnimationManager)->Update(seconds_now);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to update the animation manager.";
@@ -2613,7 +2621,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
 
                 // Get the animation manager's status.
                 UI_ANIMATION_MANAGER_STATUS status;
-                hr = MyImageButton::pAnimationManager->GetStatus(&status);
+                hr = (*MyImageButton::ppAnimationManager)->GetStatus(&status);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to get the animation manager's status.";
@@ -2763,7 +2771,7 @@ LRESULT CALLBACK MyImageButton::scMyImageButton(HWND hWnd, UINT uMsg, WPARAM wPa
 
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-// Public static member function(s) [INITIALIZATION FUNCTIONS]:
+// Public static function(s) [UN/INITIALIZATION FUNCTIONS]:
 bool MyImageButton::initialize(MyImageButtonInitializeConfig initializeConfig)
 {
     bool are_all_operation_success = false;
@@ -2777,11 +2785,11 @@ bool MyImageButton::initialize(MyImageButtonInitializeConfig initializeConfig)
             break;
         }
 
-        // Set the pointers.
-        MyImageButton::pEnterKeyToggle = initializeConfig.pEnterKeyToggle;
-        MyImageButton::pAnimationManager = std::ref(*initializeConfig.ppAnimationManager);
-        MyImageButton::pAnimationTimer = std::ref(*initializeConfig.ppAnimationTimer);
-        MyImageButton::pTransitionLibrary = std::ref(*initializeConfig.ppTransitionLibrary);
+        // Set the non-shared attributes (Initialization variables).
+        MyImageButton::ppAnimationManager = &initializeConfig.pAnimationManager;
+        MyImageButton::ppAnimationTimer = &initializeConfig.pAnimationTimer;
+        MyImageButton::ppTransitionLibrary = &initializeConfig.pTransitionLibrary;
+        MyImageButton::pMyD2D1Engine = initializeConfig.pMyD2D1Engine;
 
         // Update initialization state.
         MyImageButton::isInitialized = true;
@@ -2801,21 +2809,21 @@ bool MyImageButton::initialize(MyImageButtonInitializeConfig initializeConfig)
 
     return true;
 }
-bool MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig configSharedProperties)
+bool MyImageButton::setSharedAttributes(MyImageButtonSharedAttributesConfig configSharedAttributes)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
     while (!are_all_operation_success)
     {
-        // Check if the shared properties configuration structure is valid.
-        if (!configSharedProperties.isValid())
+        // Check if the shared attributes configuration structure is valid.
+        if (!configSharedAttributes.isValid())
         {
-            error_message = L"The shared properties configuration structure is invalid.";
+            error_message = L"The shared attributes configuration structure is invalid.";
             break;
         }
 
-        // Set the pointers.
-        MyImageButton::pColorFocus = configSharedProperties.pColorFocus;
+        // Set the shared attributes (Drawing variables).
+        MyImageButton::pColorFocus = configSharedAttributes.pColorFocus;
 
         // Update initialization state.
         MyImageButton::isSharedPropertiesSet = true;
@@ -2829,13 +2837,21 @@ bool MyImageButton::setSharedProperties(MyImageButtonSharedPropertiesConfig conf
 
     if (!are_all_operation_success)
     {
-        WriteLog(error_message, L" [CLASS: \"MyImageButton\" | FUNC: \"setSharedProperties()\"]", MyLogType::Error);
+        WriteLog(error_message, L" [CLASS: \"MyImageButton\" | FUNC: \"setSharedAttributes()\"]", MyLogType::Error);
         return false;
     }
 
     return true;
 }
-// Public static member function(s) [GENERAL FUNCTIONS]:
+// Public static function(s) [GENERAL FUNCTIONS]:
+void MyImageButton::releaseD2D1SharedResources()
+{
+    if (MyImageButton::pD2D1SolidColorBrushFocus)
+    {
+        MyImageButton::pD2D1SolidColorBrushFocus->Release();
+        MyImageButton::pD2D1SolidColorBrushFocus = nullptr;
+    }
+}
 bool MyImageButton::isSubclassed(HWND hWnd, void **ppSubclass)
 {
     DWORD_PTR reference_data;
@@ -2847,8 +2863,8 @@ bool MyImageButton::isSubclassed(HWND hWnd, void **ppSubclass)
 
     return is_subclassed;
 }
-// Public member function(s) [GENERAL FUNCTIONS]:
-bool MyImageButton::setSubclass(HWND hWnd, MyImageButtonNonSharedPropertiesConfig configNonSharedProperties)
+// Public function(s) [GENERAL FUNCTIONS]:
+bool MyImageButton::setSubclass(HWND hWnd, MyImageButtonNonSharedAttributesConfig configNonSharedAttributes)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
@@ -2861,39 +2877,32 @@ bool MyImageButton::setSubclass(HWND hWnd, MyImageButtonNonSharedPropertiesConfi
             break;
         }
 
-        // Check if the drawing object pointers configuration structure is valid.
-        if (!configNonSharedProperties.isValid())
+        // Check if the non-shared attributes configuration structure is valid.
+        if (!configNonSharedAttributes.isValid())
         {
-            error_message = L"The drawing object pointers configuration structure is invalid.";
+            error_message = L"The non-shared attributes configuration structure is invalid.";
             break;
         }
 
-        // Set the pointers.
-        this->pImageDefault = configNonSharedProperties.pImageDefault;
-        this->pImageHover = configNonSharedProperties.pImageHover;
-        this->pImageDown = configNonSharedProperties.pImageDown;
-        this->pColorBackgroundDefault = configNonSharedProperties.pColorBackgroundDefault;
-        this->pColorBackgroundHover = configNonSharedProperties.pColorBackgroundHover;
-        this->pColorBackgroundDown = configNonSharedProperties.pColorBackgroundDown;
-        this->imagePosX = configNonSharedProperties.imagePosX;
-        this->imagePosY = configNonSharedProperties.imagePosY;
-        this->imageWidth = configNonSharedProperties.imageWidth;
-        this->imageHeight = configNonSharedProperties.imageHeight;
-        this->isCentering = configNonSharedProperties.centering;
-        this->skipHoverAnimationState = configNonSharedProperties.skipHoverAnimationState;
-        this->skipDownAnimationState = configNonSharedProperties.skipDownAnimationState;
+        // Set the non-shared attributes (Drawing variables).
+        this->pImageDefault = configNonSharedAttributes.pImageDefault;
+        this->pImageHover = configNonSharedAttributes.pImageHover;
+        this->pImageDown = configNonSharedAttributes.pImageDown;
+        this->pColorBackgroundDefault = configNonSharedAttributes.pColorBackgroundDefault;
+        this->pColorBackgroundHover = configNonSharedAttributes.pColorBackgroundHover;
+        this->pColorBackgroundDown = configNonSharedAttributes.pColorBackgroundDown;
+        this->imagePosX = configNonSharedAttributes.imagePosX;
+        this->imagePosY = configNonSharedAttributes.imagePosY;
+        this->imageWidth = configNonSharedAttributes.imageWidth;
+        this->imageHeight = configNonSharedAttributes.imageHeight;
+        this->isCentering = configNonSharedAttributes.centering;
+        this->skipHoverAnimationState = configNonSharedAttributes.skipHoverAnimationState;
+        this->skipDownAnimationState = configNonSharedAttributes.skipDownAnimationState;
 
         // Install the subclass callback.
         if (!this->installSubclass(hWnd))
         {
             error_message = L"Failed to install the subclass callback.";
-            break;
-        }
-
-        // Create the Direct2D device resources.
-        if (!this->createD2D1DeviceResources(hWnd, true))
-        {
-            error_message = L"Failed to create the Direct2D device resources.";
             break;
         }
 
@@ -2910,12 +2919,14 @@ bool MyImageButton::setSubclass(HWND hWnd, MyImageButtonNonSharedPropertiesConfi
 }
 bool MyImageButton::refresh(HWND hWnd)
 {
+    // Recreate the associated D2D1 device resources.
     if (!createD2D1DeviceResources(hWnd, true))
     {
         WriteLog(L"Failed to create the Direct2D device resources.", L" [CLASS: \"MyImageButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
         return false;
     }
 
+    // Start animation to the current state to refresh the button appearance.
     if (!this->startAnimation(hWnd, this->currentAnimationState))
     {
         WriteLog(L"Failed to start the button animation.", L" [CLASS: \"MyImageButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
@@ -2929,31 +2940,136 @@ bool MyImageButton::refresh(HWND hWnd)
 // Destructor:
 MyRadioButton::~MyRadioButton()
 {
-    // Note:
-    // If the animation manager created these variables no longer exists,
-    // No need to perform any cleanup as the COM objects already released along with its animation manager.
-    if (!MyRadioButton::pAnimationManager)
-        return;
+    // Release non-shared attributes (Direct2D variables).
+    {
+        if (this->pD2D1DCRenderTarget)
+            this->pD2D1DCRenderTarget->Release();
+    }
 
-    // Release the COM objects (Animation variables).
-    for (int i = 0; i < 3; i++)
+    // Release non-shared attributes (Animation variables).
+    if (*MyRadioButton::ppAnimationManager)
     {
-        if (this->pAnimationVariableButtonPrimaryRGB[i])
-            this->pAnimationVariableButtonPrimaryRGB[i]->Release();
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        if (this->pAnimationVariableButtonSecondaryRGB[i])
-            this->pAnimationVariableButtonSecondaryRGB[i]->Release();
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        if (this->pAnimationVariableButtonBorderRGB[i])
-            this->pAnimationVariableButtonBorderRGB[i]->Release();
+        for (int i = 0; i < 3; i++)
+        {
+            if (this->pAnimationVariableButtonPrimaryRGB[i])
+                this->pAnimationVariableButtonPrimaryRGB[i]->Release();
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            if (this->pAnimationVariableButtonSecondaryRGB[i])
+                this->pAnimationVariableButtonSecondaryRGB[i]->Release();
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            if (this->pAnimationVariableButtonBorderRGB[i])
+                this->pAnimationVariableButtonBorderRGB[i]->Release();
+        }
     }
 }
-// Private member function(s) [INTERNAL FUNCTIONS]:
-bool MyRadioButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
+// Private function(s) [HELPER FUNCTIONS]:
+bool MyRadioButton::createD2D1DeviceResources(HWND hWnd, bool recreateRenderTarget)
+{
+    bool are_all_operation_success = false;
+    std::wstring error_message = L"";
+    while (!are_all_operation_success)
+    {
+        HRESULT hr;
+
+        // Get the device context.
+        HDC hdc = GetDC(hWnd);
+        if (!hdc)
+        {
+            error_message = L"Failed to get the device context.";
+            break;
+        }
+
+        // Get the client area of the window.
+        RECT rect_window;
+        if (!GetClientRect(hWnd, &rect_window))
+        {
+            error_message = L"Failed to get the client area of the window.";
+            break;
+        }
+
+        // (Re)create the render target.
+        if (recreateRenderTarget)
+        {
+            // Release the render target if it exists.
+            if (this->pD2D1DCRenderTarget)
+            {
+                this->pD2D1DCRenderTarget->Release();
+                this->pD2D1DCRenderTarget = nullptr;
+            }
+
+            this->pD2D1DCRenderTarget = MyRadioButton::pMyD2D1Engine->createDCRenderTarget();
+            if (!this->pD2D1DCRenderTarget)
+            {
+                error_message = L"Failed to create the render target.";
+                break;
+            }
+        }
+
+        // Bind the device context to the render target.
+        hr = this->pD2D1DCRenderTarget->BindDC(hdc, &rect_window);
+        if (FAILED(hr))
+        {
+            error_message = L"Failed to bind the device context to the render target.";
+            break;
+        }
+
+        // (Re)create the device-dependent resources.
+        {
+            // If the shared resources are not created yet, create them.
+            if (!MyRadioButton::pD2D1SolidColorBrushFocus)
+            {
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyRadioButton::pColorFocus->getD2D1Color(), &MyRadioButton::pD2D1SolidColorBrushFocus);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the focus.";
+                    break;
+                }
+            }
+            if (!MyRadioButton::pD2D1SolidColorBrushTextDefault)
+            {
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyRadioButton::pColorTextDefault->getD2D1Color(), &MyRadioButton::pD2D1SolidColorBrushTextDefault);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the default text.";
+                    break;
+                }
+            }
+            if (!MyRadioButton::pD2D1SolidColorBrushTextHighlight)
+            {
+                hr = this->pD2D1DCRenderTarget->CreateSolidColorBrush(MyRadioButton::pColorTextHighlight->getD2D1Color(), &MyRadioButton::pD2D1SolidColorBrushTextHighlight);
+                if (FAILED(hr))
+                {
+                    error_message = L"Failed to create the solid color brush for the highlight text.";
+                    break;
+                }
+            }
+
+            // (Re)create the non-shared resources.
+            // This class doesn't have any non-shared resources.
+        }
+
+        // Release the device context.
+        if (!ReleaseDC(hWnd, hdc))
+        {
+            error_message = L"Failed to release the device context.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+    {
+        WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | FUNC: \"createD2D1DeviceResources()\"]", MyLogType::Error);
+    }
+
+    return are_all_operation_success;
+}
+bool MyRadioButton::createAnimationVariable(IUIAnimationVariable *&pAnimationVariable, DOUBLE initialValue, DOUBLE lowerBound, DOUBLE upperBound, UI_ANIMATION_ROUNDING_MODE roundingMode)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
@@ -2962,7 +3078,7 @@ bool MyRadioButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimatio
         HRESULT hr;
 
         // Create the animation variable.
-        hr = MyRadioButton::pAnimationManager->CreateAnimationVariable(initialValue, &pAnimationVariable);
+        hr = (*MyRadioButton::ppAnimationManager)->CreateAnimationVariable(initialValue, &pAnimationVariable);
         if (FAILED(hr))
         {
             error_message = L"Failed to create the animation variable.";
@@ -2997,12 +3113,13 @@ bool MyRadioButton::initializeAnimationVariable(IUIAnimationVariable *&pAnimatio
 
     if (!are_all_operation_success)
     {
-        WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | FUNC: \"initializeAnimationVariable()\"]", MyLogType::Error);
+        WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | FUNC: \"createAnimationVariable()\"]", MyLogType::Error);
         return false;
     }
 
     return true;
 }
+// Private funtion(s) [INTERNAL FUNCTIONS]:
 bool MyRadioButton::installSubclass(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -3016,45 +3133,52 @@ bool MyRadioButton::installSubclass(HWND hWnd)
             break;
         }
 
-        // Initialize the animation variables.
-        error_message = L"Failed to initialize the animation variables.";
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[0],
-                                               this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetRed(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        // Create the animation variables.
+        error_message = L"Failed to create the animation variables.";
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[0],
+                                           MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetRed(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[1],
-                                               this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetGreen(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[1],
+                                           MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetGreen(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[2],
-                                               this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetBlue(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonPrimaryRGB[2],
+                                           this->pColorRadioButtonPrimaryDefault->getGDIPColor().GetBlue(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[0],
-                                               this->pColorRadioButtonSecondaryDefault->getGDIPColor().GetRed(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[0],
+                                           MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetRed(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[1],
-                                               this->pColorRadioButtonSecondaryDefault->getGDIPColor().GetGreen(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[1],
+                                           MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetGreen(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[2],
-                                               this->pColorRadioButtonSecondaryDefault->getGDIPColor().GetBlue(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonSecondaryRGB[2],
+                                           MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetBlue(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[0],
-                                               this->pColorRadioButtonBorderDefault->getGDIPColor().GetRed(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonBorderRGB[0],
+                                           MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetRed(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[1],
-                                               this->pColorRadioButtonBorderDefault->getGDIPColor().GetGreen(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonBorderRGB[1],
+                                           MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetGreen(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
-        if (!this->initializeAnimationVariable(this->pAnimationVariableButtonBorderRGB[2],
-                                               this->pColorRadioButtonBorderDefault->getGDIPColor().GetBlue(),
-                                               0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+        if (!this->createAnimationVariable(this->pAnimationVariableButtonBorderRGB[2],
+                                           MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetBlue(),
+                                           0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
             break;
         error_message = L"";
+
+        // Create the associated D2D1 device resources.
+        if (!this->createD2D1DeviceResources(hWnd, true))
+        {
+            error_message = L"Failed to create the Direct2D device resources.";
+            break;
+        }
 
         are_all_operation_success = true;
     }
@@ -3086,7 +3210,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Default)";
@@ -3095,31 +3219,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Default)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3166,7 +3290,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Default)";
@@ -3269,7 +3393,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Hover)";
@@ -3278,31 +3402,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Hover)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3349,7 +3473,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Hover)";
@@ -3452,7 +3576,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Down)";
@@ -3461,31 +3585,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Down)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3532,7 +3656,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Down)";
@@ -3635,7 +3759,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: Selected)";
@@ -3644,31 +3768,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: Selected)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3715,7 +3839,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: Selected)";
@@ -3818,7 +3942,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: SelectedHover)";
@@ -3827,39 +3951,39 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: SelectedHover)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
 
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::hoverAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::HOVER_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderHover->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -3906,7 +4030,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: SelectedHover)";
@@ -4009,7 +4133,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: SelectedDown)";
@@ -4018,31 +4142,31 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: SelectedDown)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetRed(), 0.5, 0.5, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.5, 0.5, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::downAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::DOWN_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.5, 0.5, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -4089,7 +4213,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: SelectedDown)";
@@ -4197,7 +4321,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
         while (!are_all_operation_success)
         {
             // Create the storyboard.
-            hr = MyRadioButton::pAnimationManager->CreateStoryboard(&p_storyboard);
+            hr = (*MyRadioButton::ppAnimationManager)->CreateStoryboard(&p_storyboard);
             if (FAILED(hr))
             {
                 error_message = L"Failed to create the storyboard. (State: SelectedFlash)";
@@ -4206,58 +4330,58 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Create the transition(s) for the animation variable(s).
             error_message = L"Failed to create the transition(s) for the animation variable(s). (State: SelectedFlash)";
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetRed(), 0.8, 0.2, &p_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetGreen(), 0.8, 0.2, &p_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDown->getGDIPColor().GetBlue(), 0.8, 0.2, &p_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonPrimaryDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_primary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonSecondaryDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_secondary_rgb[2]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetRed(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[0]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetGreen(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[1]);
             if (FAILED(hr))
                 break;
-            hr = MyRadioButton::pTransitionLibrary->CreateAccelerateDecelerateTransition(MyRadioButton::flashAnimationDuration, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
+            hr = (*MyRadioButton::ppTransitionLibrary)->CreateAccelerateDecelerateTransition(MyRadioButton::FLASH_ANIMATION_DURATION, MyRadioButton::pColorSelectedRadioButtonBorderDefault->getGDIPColor().GetBlue(), 0.8, 0.2, &p_reverse_transition_button_border_rgb[2]);
             if (FAILED(hr))
                 break;
             error_message = L"";
@@ -4339,7 +4463,7 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
             // Update time for the animation timer.
             UI_ANIMATION_SECONDS seconds_now;
-            hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+            hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
             if (FAILED(hr))
             {
                 error_message = L"Failed to retrieve the current time. (State: SelectedFlash)";
@@ -4486,14 +4610,13 @@ bool MyRadioButton::startAnimation(HWND hWnd, MyRadioButton::ButtonAnimationStat
 
     return false;
 }
-// Private member function(s) [SUBCLASS CALLBACK FUNCTIONS]:
 LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     // Extract the poiner from dwRefData and use it to access non-static members.
     MyRadioButton *p_this = reinterpret_cast<MyRadioButton *>(dwRefData);
 
     // Check if the enter key is pressed and the button has focus.
-    if (*MyRadioButton::pEnterKeyToggle && GetFocus() == hWnd)
+    if (MyRadioButton::returnKeyToggle && GetFocus() == hWnd)
     {
         // Triggering the appropriate animation depends on the current animation state.
         if (!p_this->isHoverState && !p_this->isDownState)
@@ -4551,18 +4674,19 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
     // Override paint messages.
     case WM_PAINT:
     {
-        HRESULT hr;
+        // In Direct2D, there may be some scenarios where D2D1 render target is lost but can be re-created.
+        // If failed to re-create the render target too many times, indicate an error.
+        USHORT paint_attempts = 1;
+
         PAINTSTRUCT ps;
-        HDC hdc = NULL;
-        HDC mem_hdc = NULL;
-        HBITMAP bitmap = NULL;
-        HBITMAP bitmap_old = NULL;
-        bool is_paint_begined = false;
-        bool is_bitmap_created = false;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
         bool are_all_operation_success = false;
         std::wstring error_message = L"";
         while (!are_all_operation_success)
         {
+            HRESULT hr;
+
             // Get the latest animation values.
             INT32 button_primary_rgb[3] = {0, 0, 0};
             INT32 button_secondary_rgb[3] = {0, 0, 0};
@@ -4595,20 +4719,15 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
             hr = p_this->pAnimationVariableButtonBorderRGB[2]->GetIntegerValue(&button_border_rgb[2]);
             if (FAILED(hr))
                 break;
-            Gdiplus::Color button_primary_color(255, button_primary_rgb[0], button_primary_rgb[1], button_primary_rgb[2]);
-            Gdiplus::Color button_secondary_color(255, button_secondary_rgb[0], button_secondary_rgb[1], button_secondary_rgb[2]);
-            Gdiplus::Color button_border_color(255, button_border_rgb[0], button_border_rgb[1], button_border_rgb[2]);
             error_message = L"";
 
-            // Get the button's client rects.
-            RECT rect_button;
-            Gdiplus::Rect gdip_rect_button;
-            if (!GetClientRect(hWnd, &rect_button))
+            // Get the window client rect.
+            RECT rect_window;
+            if (!GetClientRect(hWnd, &rect_window))
             {
-                error_message = L"Failed to get the client rects.";
+                error_message = L"Failed to retrieve the window's client rect.";
                 break;
             }
-            gdip_rect_button = Gdiplus::Rect(rect_button.left, rect_button.top, rect_button.right, rect_button.bottom);
 
             // Get the button's text length.
             SetLastError(ERROR_SUCCESS);
@@ -4630,151 +4749,114 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
             std::wstring button_text(p_text_buffer);
             delete[] p_text_buffer;
 
-            // Begin the paintings.
-            hdc = BeginPaint(hWnd, &ps);
-            if (!hdc)
+            // Bind the render target to the window's device context.
+            hr = p_this->pD2D1DCRenderTarget->BindDC(hdc, &rect_window);
+            if (FAILED(hr))
             {
-                error_message = L"Failed to execute \"BeginPaint()\".";
-                break;
-            }
-            is_paint_begined = true;
-
-            // Create memory device context and bitmap object for double buffering.
-            mem_hdc = CreateCompatibleDC(hdc);
-            if (!mem_hdc)
-            {
-                error_message = L"Failed to create the compatible memory device context.";
-                break;
-            }
-            bitmap = CreateCompatibleBitmap(hdc, rect_button.right - rect_button.left, rect_button.bottom - rect_button.top);
-            if (!bitmap)
-            {
-                error_message = L"Failed to create the compatible bitmap object.";
-                break;
-            }
-            is_bitmap_created = true;
-            bitmap_old = reinterpret_cast<HBITMAP>(SelectObject(mem_hdc, bitmap));
-            if (!bitmap_old)
-            {
-                error_message = L"Failed to select the bitmap object.";
+                error_message = L"Failed to bind the render target to the window's device context.";
                 break;
             }
 
-            // Create Gdiplus::Graphics object for GDI+ drawing operations.
-            Gdiplus::Graphics gdip_graphics(mem_hdc);
-
-            // Set GDI+ smoothing mode.
-            if (gdip_graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality))
+            // Prepare drawing resources.
+            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(static_cast<FLOAT>(rect_window.left),
+                                                       static_cast<FLOAT>(rect_window.top),
+                                                       static_cast<FLOAT>(rect_window.right),
+                                                       static_cast<FLOAT>(rect_window.bottom));
+            D2D_RECT_F d2d1_rect_text = d2d1_rect_window;
+            auto text_format = MyRadioButton::pTextFormat->getTextFormat();
+            D2D1::ColorF d2d1_color_ellipse = D2D1::ColorF(button_secondary_rgb[0] / 255.0f, button_secondary_rgb[1] / 255.0f, button_secondary_rgb[2] / 255.0f, 1.0f);
+            D2D1::ColorF d2d1_color_ellipse_inner = D2D1::ColorF(button_primary_rgb[0] / 255.0f, button_primary_rgb[1] / 255.0f, button_primary_rgb[2] / 255.0f, 1.0f);
+            D2D1::ColorF d2d1_color_ellipse_border = D2D1::ColorF(button_border_rgb[0] / 255.0f, button_border_rgb[1] / 255.0f, button_border_rgb[2] / 255.0f, 1.0f);
+            ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_ellipse;
+            ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_ellipse_inner;
+            ID2D1SolidColorBrush *p_d2d1_solidcolorbrush_ellipse_border;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_focus_border = MyRadioButton::pD2D1SolidColorBrushFocus;
+            ID2D1SolidColorBrush *&p_d2d1_solidcolorbrush_button_text = (p_this->isHoverState ? MyRadioButton::pD2D1SolidColorBrushTextHighlight : MyRadioButton::pD2D1SolidColorBrushTextDefault);
+            hr = p_this->pD2D1DCRenderTarget->CreateSolidColorBrush(d2d1_color_ellipse, &p_d2d1_solidcolorbrush_ellipse);
+            if (FAILED(hr))
             {
-                error_message = L"Failed to set GDI+ smoothing mode.";
+                error_message = L"Failed to create the solid color brush for the ellipse.";
+                break;
+            }
+            hr = p_this->pD2D1DCRenderTarget->CreateSolidColorBrush(d2d1_color_ellipse_inner, &p_d2d1_solidcolorbrush_ellipse_inner);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the ellipse inner.";
+                break;
+            }
+            hr = p_this->pD2D1DCRenderTarget->CreateSolidColorBrush(d2d1_color_ellipse_border, &p_d2d1_solidcolorbrush_ellipse_border);
+            if (FAILED(hr))
+            {
+                error_message = L"Failed to create the solid color brush for the ellipse border.";
                 break;
             }
 
-            // Set background mode.
-            if (!SetBkMode(mem_hdc, TRANSPARENT))
-            {
-                error_message = L"Failed to set the background mode.";
-                break;
-            }
+            // Begin drawing.
+            p_this->pD2D1DCRenderTarget->BeginDraw();
+            p_this->pD2D1DCRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE); // Set antialiasing mode to per-primitive.
 
-            // Select font object.
-            if (!SelectObject(mem_hdc, reinterpret_cast<HFONT>(MyRadioButton::pFontDefault->getHFONT())))
-            {
-                error_message = L"Failed to select the font object.";
-                break;
-            }
+            // Draw the background.
+            p_this->pD2D1DCRenderTarget->Clear(MyRadioButton::pColorBackground->getD2D1Color());
 
-            // Set text color.
-            if (SetTextColor(mem_hdc, (p_this->isHoverState || p_this->isDownState ? MyRadioButton::pColorRadioButtonTextHighlight->getCOLORREF() : MyRadioButton::pColorRadioButtonTextDefault->getCOLORREF())) == CLR_INVALID)
-            {
-                error_message = L"Failed to set the text color.";
-                break;
-            }
+            // Draw the main ellipse.
+            FLOAT ellipse_size = (d2d1_rect_window.bottom - d2d1_rect_window.top) * 0.55f / 2.0f;
+            FLOAT ellipse_pos_y = (d2d1_rect_window.top + d2d1_rect_window.bottom) / 2.0f;
+            FLOAT ellipse_pos_x = ellipse_pos_y;
+            FLOAT text_start_pos = ellipse_pos_x + ellipse_size + 10.0f;
+            p_this->pD2D1DCRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(ellipse_pos_x, ellipse_pos_y), ellipse_size, ellipse_size), p_d2d1_solidcolorbrush_ellipse);
 
-            // Begin painting to the memory device context.
+            // Draw the inner ellipse.
+            FLOAT ellipse_inner_size = ellipse_size * 0.75f;
+            p_this->pD2D1DCRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(ellipse_pos_x, ellipse_pos_y), ellipse_inner_size, ellipse_inner_size), p_d2d1_solidcolorbrush_ellipse_inner);
+
+            // Draw the ellipse border.
+            p_this->pD2D1DCRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(ellipse_pos_x, ellipse_pos_y), ellipse_size, ellipse_size), (GetFocus() == hWnd ? p_d2d1_solidcolorbrush_focus_border : p_d2d1_solidcolorbrush_ellipse_border), 1.0);
+
+            // Draw the text.
+            MyRadioButton::pMyD2D1Engine->drawText(p_this->pD2D1DCRenderTarget, text_format, d2d1_rect_text, button_text, p_d2d1_solidcolorbrush_button_text, d2d1_rect_text.left + text_start_pos, 0, 2);
+
+            // End drawing.
+            hr = p_this->pD2D1DCRenderTarget->EndDraw();
+            if (hr == D2DERR_RECREATE_TARGET)
             {
-                // Draw the button's background.
-                if (!MyDraw_FillRect(&gdip_graphics, gdip_rect_button, &MyRadioButton::pColorBackground->getGDIPColor()))
+                if (p_d2d1_solidcolorbrush_ellipse)
+                    p_d2d1_solidcolorbrush_ellipse->Release();
+                if (p_d2d1_solidcolorbrush_ellipse_inner)
+                    p_d2d1_solidcolorbrush_ellipse_inner->Release();
+                if (p_d2d1_solidcolorbrush_ellipse_border)
+                    p_d2d1_solidcolorbrush_ellipse_border->Release();
+                if (!p_this->createD2D1DeviceResources(hWnd, true))
                 {
-                    error_message = L"Failed to draw the button's background.";
+                    error_message = L"Failed to recreate the render target.";
                     break;
                 }
-
-                // Draw the button secondary part.
-                INT circle1_diameter = gdip_rect_button.GetBottom() / 2;
-                INT circle1_posx = 11;
-                INT circle1_posy = (gdip_rect_button.GetBottom() / 2) - (circle1_diameter / 2);
-                if (!MyDraw_FillEllipse(&gdip_graphics, gdip_rect_button, circle1_diameter, circle1_posx, circle1_posy, &button_secondary_color, (GetFocus() == hWnd ? &MyRadioButton::pColorFocus->getGDIPColor() : &button_border_color)))
+                if (paint_attempts > 10)
                 {
-                    error_message = L"Failed to draw the button secondary part.";
+                    error_message = L"Failed to recreate the render target after 10 attempts.";
                     break;
                 }
-
-                // Draw the button primary part.
-                INT circle2_diameter = circle1_diameter - 6;
-                INT circle2_posx = circle1_posx + 3;
-                INT circle2_posy = circle1_posy + 3;
-
-                if (!MyDraw_FillEllipse(&gdip_graphics, gdip_rect_button, circle2_diameter, circle2_posx, circle2_posy, &button_primary_color))
-                {
-                    error_message = L"Failed to draw the button primary part.";
-                    break;
-                }
-
-                // Draw the button's text.
-                RECT rect_text_area{rect_button.left + circle1_diameter + 12 + 5, rect_button.top, rect_button.right - 10, rect_button.bottom};
-                DrawTextW(mem_hdc, button_text.c_str(), -1, &rect_text_area, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+                paint_attempts++;
+                continue; // Repeat the paint operation.
             }
-
-            // Draw contents from memory device context to target device context.
-            if (!BitBlt(hdc, 0, 0, rect_button.right - rect_button.left, rect_button.bottom - rect_button.top, mem_hdc, 0, 0, SRCCOPY))
+            else if (FAILED(hr))
             {
-                error_message = L"Failed to draw contents from memory device context to target device context.";
+                error_message = L"Failed to end drawing.";
                 break;
             }
+            p_d2d1_solidcolorbrush_ellipse->Release();
+            p_d2d1_solidcolorbrush_ellipse_inner->Release();
+            p_d2d1_solidcolorbrush_ellipse_border->Release();
 
             are_all_operation_success = true;
         }
 
         if (!are_all_operation_success)
         {
-            WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyRadioButton()\"]", MyLogType::Error);
+            WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyImageButton()\"]", MyLogType::Error);
         }
 
-        // Perform necesscary clean up operations.
-        if (is_paint_begined)
-        {
-            // Delete the bitmap object.
-            if (is_bitmap_created)
-            {
-                if (!SelectObject(mem_hdc, bitmap_old))
-                {
-                    WriteLog(L"Failed to select the bitmap object.", L" [CLASS: \"MyRadioButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyRadioButton()\"]", MyLogType::Error);
-                }
-                if (!DeleteObject(bitmap))
-                {
-                    WriteLog(L"Failed to delete the bitmap object.", L" [CLASS: \"MyRadioButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyRadioButton()\"]", MyLogType::Error);
-                }
-                bitmap = NULL;
-                bitmap_old = NULL;
-            }
-
-            // Delete the memory device context.
-            if (mem_hdc)
-            {
-                if (!DeleteDC(mem_hdc))
-                {
-                    WriteLog(L"Failed to delete the memory device context.", L" [CLASS: \"MyRadioButton\" | MESSAGE: \"WM_PAINT\" | CALLBACK: \"scMyRadioButton()\"]", MyLogType::Error);
-                }
-                mem_hdc = NULL;
-            }
-
-            // End the paintings.
-            EndPaint(hWnd, &ps);
-            return 0;
-        }
-
-        break;
+        EndPaint(hWnd, &ps);
+        return 0;
     }
 
     // Suppress all system background erase requests.
@@ -4795,7 +4877,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 HRESULT hr;
                 // Get the current time.
                 UI_ANIMATION_SECONDS seconds_now;
-                hr = MyRadioButton::pAnimationTimer->GetTime(&seconds_now);
+                hr = (*MyRadioButton::ppAnimationTimer)->GetTime(&seconds_now);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to retrieve the current time.";
@@ -4803,7 +4885,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
                 }
 
                 // Update the animation manager.
-                hr = MyRadioButton::pAnimationManager->Update(seconds_now);
+                hr = (*MyRadioButton::ppAnimationManager)->Update(seconds_now);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to update the animation manager.";
@@ -4815,7 +4897,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
 
                 // Get the animation manager's status.
                 UI_ANIMATION_MANAGER_STATUS status;
-                hr = MyRadioButton::pAnimationManager->GetStatus(&status);
+                hr = (*MyRadioButton::ppAnimationManager)->GetStatus(&status);
                 if (FAILED(hr))
                 {
                     error_message = L"Failed to get the animation manager's status.";
@@ -4990,7 +5072,7 @@ LRESULT CALLBACK MyRadioButton::scMyRadioButton(HWND hWnd, UINT uMsg, WPARAM wPa
 
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-// Public static member function(s) [INITIALIZATION FUNCTIONS]:
+// Public static function(s) [UN/INITIALIZATION FUNCTIONS]:
 bool MyRadioButton::initialize(MyRadioButtonInitializeConfig initializeConfig)
 {
     bool are_all_operation_success = false;
@@ -5004,17 +5086,17 @@ bool MyRadioButton::initialize(MyRadioButtonInitializeConfig initializeConfig)
             break;
         }
 
-        // Set the pointers.
-        MyRadioButton::pEnterKeyToggle = initializeConfig.pEnterKeyToggle;
-        MyRadioButton::pAnimationManager = std::ref(*initializeConfig.ppAnimationManager);
-        MyRadioButton::pAnimationTimer = std::ref(*initializeConfig.ppAnimationTimer);
-        MyRadioButton::pTransitionLibrary = std::ref(*initializeConfig.ppTransitionLibrary);
+        // Set the non-shared attributes (Initialization variables).
+        MyRadioButton::ppAnimationManager = &initializeConfig.pAnimationManager;
+        MyRadioButton::ppAnimationTimer = &initializeConfig.pAnimationTimer;
+        MyRadioButton::ppTransitionLibrary = &initializeConfig.pTransitionLibrary;
+        MyRadioButton::pMyD2D1Engine = initializeConfig.pMyD2D1Engine;
 
         // Update initialization state.
         MyRadioButton::isInitialized = true;
 
         // Update class ready state.
-        if (MyRadioButton::isSharedPropertiesSet)
+        if (MyRadioButton::isSharedAttributesSet)
             MyRadioButton::isReady = true;
 
         are_all_operation_success = true;
@@ -5028,46 +5110,46 @@ bool MyRadioButton::initialize(MyRadioButtonInitializeConfig initializeConfig)
 
     return true;
 }
-bool MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig configSharedProperties)
+bool MyRadioButton::setSharedAttributes(MyRadioButtonSharedAttributesConfig configSharedAttributes)
 {
     bool are_all_operation_success = false;
     std::wstring error_message = L"";
     while (!are_all_operation_success)
     {
-        // Check if the shared properties configuration structure is valid.
-        if (!configSharedProperties.isValid())
+        // Check if the shared attributes configuration structure is valid.
+        if (!configSharedAttributes.isValid())
         {
-            error_message = L"The shared properties configuration structure is invalid.";
+            error_message = L"The shared attributes configuration structure is invalid.";
             break;
         }
 
-        // Set the pointers.
-        MyRadioButton::pColorRadioButtonPrimaryDefault = configSharedProperties.pColorRadioButtonPrimaryDefault;
-        MyRadioButton::pColorRadioButtonPrimaryHover = configSharedProperties.pColorRadioButtonPrimaryHover;
-        MyRadioButton::pColorRadioButtonPrimaryDown = configSharedProperties.pColorRadioButtonPrimaryDown;
-        MyRadioButton::pColorRadioButtonSecondaryDefault = configSharedProperties.pColorRadioButtonSecondaryDefault;
-        MyRadioButton::pColorRadioButtonSecondaryHover = configSharedProperties.pColorRadioButtonSecondaryHover;
-        MyRadioButton::pColorRadioButtonSecondaryDown = configSharedProperties.pColorRadioButtonSecondaryDown;
-        MyRadioButton::pColorRadioButtonBorderDefault = configSharedProperties.pColorRadioButtonBorderDefault;
-        MyRadioButton::pColorRadioButtonBorderHover = configSharedProperties.pColorRadioButtonBorderHover;
-        MyRadioButton::pColorRadioButtonBorderDown = configSharedProperties.pColorRadioButtonBorderDown;
-        MyRadioButton::pColorSelectedRadioButtonPrimaryDefault = configSharedProperties.pColorSelectedRadioButtonPrimaryDefault;
-        MyRadioButton::pColorSelectedRadioButtonPrimaryHover = configSharedProperties.pColorSelectedRadioButtonPrimaryHover;
-        MyRadioButton::pColorSelectedRadioButtonPrimaryDown = configSharedProperties.pColorSelectedRadioButtonPrimaryDown;
-        MyRadioButton::pColorSelectedRadioButtonSecondaryDefault = configSharedProperties.pColorSelectedRadioButtonSecondaryDefault;
-        MyRadioButton::pColorSelectedRadioButtonSecondaryHover = configSharedProperties.pColorSelectedRadioButtonSecondaryHover;
-        MyRadioButton::pColorSelectedRadioButtonSecondaryDown = configSharedProperties.pColorSelectedRadioButtonSecondaryDown;
-        MyRadioButton::pColorSelectedRadioButtonBorderDefault = configSharedProperties.pColorSelectedRadioButtonBorderDefault;
-        MyRadioButton::pColorSelectedRadioButtonBorderHover = configSharedProperties.pColorSelectedRadioButtonBorderHover;
-        MyRadioButton::pColorSelectedRadioButtonBorderDown = configSharedProperties.pColorSelectedRadioButtonBorderDown;
-        MyRadioButton::pColorRadioButtonTextDefault = configSharedProperties.pColorRadioButtonTextDefault;
-        MyRadioButton::pColorRadioButtonTextHighlight = configSharedProperties.pColorRadioButtonTextHighlight;
-        MyRadioButton::pColorBackground = configSharedProperties.pColorBackground;
-        MyRadioButton::pColorFocus = configSharedProperties.pColorFocus;
-        MyRadioButton::pFontDefault = configSharedProperties.pFontDefault;
+        // Set the shared attributes (Drawing variables).
+        MyRadioButton::pColorRadioButtonPrimaryDefault = configSharedAttributes.pColorRadioButtonPrimaryDefault;
+        MyRadioButton::pColorRadioButtonPrimaryHover = configSharedAttributes.pColorRadioButtonPrimaryHover;
+        MyRadioButton::pColorRadioButtonPrimaryDown = configSharedAttributes.pColorRadioButtonPrimaryDown;
+        MyRadioButton::pColorRadioButtonSecondaryDefault = configSharedAttributes.pColorRadioButtonSecondaryDefault;
+        MyRadioButton::pColorRadioButtonSecondaryHover = configSharedAttributes.pColorRadioButtonSecondaryHover;
+        MyRadioButton::pColorRadioButtonSecondaryDown = configSharedAttributes.pColorRadioButtonSecondaryDown;
+        MyRadioButton::pColorRadioButtonBorderDefault = configSharedAttributes.pColorRadioButtonBorderDefault;
+        MyRadioButton::pColorRadioButtonBorderHover = configSharedAttributes.pColorRadioButtonBorderHover;
+        MyRadioButton::pColorRadioButtonBorderDown = configSharedAttributes.pColorRadioButtonBorderDown;
+        MyRadioButton::pColorSelectedRadioButtonPrimaryDefault = configSharedAttributes.pColorSelectedRadioButtonPrimaryDefault;
+        MyRadioButton::pColorSelectedRadioButtonPrimaryHover = configSharedAttributes.pColorSelectedRadioButtonPrimaryHover;
+        MyRadioButton::pColorSelectedRadioButtonPrimaryDown = configSharedAttributes.pColorSelectedRadioButtonPrimaryDown;
+        MyRadioButton::pColorSelectedRadioButtonSecondaryDefault = configSharedAttributes.pColorSelectedRadioButtonSecondaryDefault;
+        MyRadioButton::pColorSelectedRadioButtonSecondaryHover = configSharedAttributes.pColorSelectedRadioButtonSecondaryHover;
+        MyRadioButton::pColorSelectedRadioButtonSecondaryDown = configSharedAttributes.pColorSelectedRadioButtonSecondaryDown;
+        MyRadioButton::pColorSelectedRadioButtonBorderDefault = configSharedAttributes.pColorSelectedRadioButtonBorderDefault;
+        MyRadioButton::pColorSelectedRadioButtonBorderHover = configSharedAttributes.pColorSelectedRadioButtonBorderHover;
+        MyRadioButton::pColorSelectedRadioButtonBorderDown = configSharedAttributes.pColorSelectedRadioButtonBorderDown;
+        MyRadioButton::pColorTextDefault = configSharedAttributes.pColorTextDefault;
+        MyRadioButton::pColorTextHighlight = configSharedAttributes.pColorTextHighlight;
+        MyRadioButton::pColorBackground = configSharedAttributes.pColorBackground;
+        MyRadioButton::pColorFocus = configSharedAttributes.pColorFocus;
+        MyRadioButton::pTextFormat = configSharedAttributes.pTextFormat;
 
         // Update initialization state.
-        MyRadioButton::isSharedPropertiesSet = true;
+        MyRadioButton::isSharedAttributesSet = true;
 
         // Update class ready state.
         if (MyRadioButton::isInitialized)
@@ -5078,13 +5160,31 @@ bool MyRadioButton::setSharedProperties(MyRadioButtonSharedPropertiesConfig conf
 
     if (!are_all_operation_success)
     {
-        WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | FUNC: \"setSharedProperties()\"]", MyLogType::Error);
+        WriteLog(error_message, L" [CLASS: \"MyRadioButton\" | FUNC: \"setSharedAttributes()\"]", MyLogType::Error);
         return false;
     }
 
     return true;
 }
-// Public static member function(s) [GENERAL FUNCTIONS]:
+// Public static function(s) [GENERAL FUNCTIONS]:
+void MyRadioButton::releaseD2D1SharedResources()
+{
+    if (MyRadioButton::pD2D1SolidColorBrushFocus)
+    {
+        MyRadioButton::pD2D1SolidColorBrushFocus->Release();
+        MyRadioButton::pD2D1SolidColorBrushFocus = nullptr;
+    }
+    if (MyRadioButton::pD2D1SolidColorBrushTextDefault)
+    {
+        MyRadioButton::pD2D1SolidColorBrushTextDefault->Release();
+        MyRadioButton::pD2D1SolidColorBrushTextDefault = nullptr;
+    }
+    if (MyRadioButton::pD2D1SolidColorBrushTextHighlight)
+    {
+        MyRadioButton::pD2D1SolidColorBrushTextHighlight->Release();
+        MyRadioButton::pD2D1SolidColorBrushTextHighlight = nullptr;
+    }
+}
 bool MyRadioButton::isSubclassed(HWND hWnd, void **ppSubclass)
 {
     DWORD_PTR reference_data;
@@ -5096,7 +5196,7 @@ bool MyRadioButton::isSubclassed(HWND hWnd, void **ppSubclass)
 
     return is_subclassed;
 }
-// Public member function(s) [GENERAL FUNCTIONS]:
+// Public function(s) [GENERAL FUNCTIONS]:
 bool MyRadioButton::setSubclass(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -5151,6 +5251,14 @@ void MyRadioButton::updateSelectionState(HWND hWnd, bool state)
 }
 bool MyRadioButton::refresh(HWND hWnd)
 {
+    // Recreate the associated D2D1 device resources.
+    if (!createD2D1DeviceResources(hWnd, true))
+    {
+        WriteLog(L"Failed to create the Direct2D device resources.", L" [CLASS: \"MyRadioButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
+        return false;
+    }
+
+    // Start animation to the current state to refresh the button appearance.
     if (!this->startAnimation(hWnd, this->currentAnimationState))
     {
         WriteLog(L"Failed to start the button animation.", L" [CLASS: \"MyRadioButton\" | FUNC: \"refresh()\"]", MyLogType::Error);
@@ -5161,7 +5269,7 @@ bool MyRadioButton::refresh(HWND hWnd)
 }
 
 /// @class MyRadioGroup definitions:
-// Public member function(s) [GENERAL FUNCTIONS]:
+// Public function(s) [GENERAL FUNCTIONS]:
 bool MyRadioGroup::addRadioButton(MyWindow *pWindow)
 {
     // Check if the pointer is null.
@@ -5234,7 +5342,7 @@ bool MyRadioGroup::updateRadioState(INT buttonID)
 }
 
 /// @class MyEdit definitions:
-// Private member function(s) [INTERNAL FUNCTIONS]:
+// Private function(s) [INTERNAL FUNCTIONS]:
 bool MyEdit::installEditSubclass(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -5283,7 +5391,7 @@ bool MyEdit::installStaticSubclass(HWND hWnd)
 
     return true;
 }
-// Private member function(s) [SUBCLASS CALLBACK FUNCTIONS]:
+// Private function(s) [SUBCLASS CALLBACK FUNCTIONS]:
 LRESULT CALLBACK MyEdit::scMyEdit(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     // Extract the poiner from dwRefData and use it to access non-static members.
@@ -5607,7 +5715,7 @@ LRESULT CALLBACK MyEdit::scMyEditStatic(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-// Public static member function(s) [INITIALIZATION FUNCTIONS]:
+// Public static function(s) [INITIALIZATION FUNCTIONS]:
 bool MyEdit::initialize(MyEditInitializeConfig initializeConfig)
 {
     bool are_all_operation_success = false;
@@ -5642,7 +5750,7 @@ bool MyEdit::initialize(MyEditInitializeConfig initializeConfig)
 
     return true;
 }
-// Public static member function(s) [GENERAL FUNCTIONS]:
+// Public static function(s) [GENERAL FUNCTIONS]:
 bool MyEdit::isSubclassed(HWND hWnd, bool isStaticHandle, void **ppSubclass)
 {
     DWORD_PTR reference_data;
@@ -5654,7 +5762,7 @@ bool MyEdit::isSubclassed(HWND hWnd, bool isStaticHandle, void **ppSubclass)
 
     return is_subclassed;
 }
-// Public member function(s) [GENERAL FUNCTIONS]:
+// Public function(s) [GENERAL FUNCTIONS]:
 HWND MyEdit::getStaticHandle()
 {
     return this->hWndStatic;
@@ -5717,7 +5825,7 @@ bool MyEdit::setSubclass(HWND hWnd, MyEditNonSharedPropertiesConfig nonSharedPro
 }
 
 /// @class MyDDLCombobox definitions:
-// Private member function(s) [INTERNAL FUNCTIONS]:
+// Private function(s) [INTERNAL FUNCTIONS]:
 bool MyDDLCombobox::installSubclassDDLCombobox(HWND hWnd)
 {
     bool are_all_operation_success = false;
@@ -5768,7 +5876,7 @@ bool MyDDLCombobox::installSubclassDropdownlist(HWND hWnd)
 
     return true;
 }
-// Private member function(s) [SUBCLASS CALLBACK FUNCTIONS]:
+// Private function(s) [SUBCLASS CALLBACK FUNCTIONS]:
 LRESULT CALLBACK MyDDLCombobox::scMyDDLCombobox(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     // Extract the poiner from dwRefData and use it to access non-static members.
@@ -6153,7 +6261,7 @@ LRESULT CALLBACK MyDDLCombobox::scMyDDLComboboxDropdownlist(HWND hWnd, UINT uMsg
 
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
-// Public static member function(s) [INITIALIZATION FUNCTIONS]:
+// Public static function(s) [INITIALIZATION FUNCTIONS]:
 bool MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig configSharedProperties)
 {
     bool are_all_operation_success = false;
@@ -6163,7 +6271,7 @@ bool MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig conf
         // Check if the shared properties configuration structure is valid.
         if (!configSharedProperties.isValid())
         {
-            error_message = L"The shared properties configuration structure is invalid.";
+            error_message = L"The shared attributes configuration structure is invalid.";
             break;
         }
 
@@ -6197,7 +6305,7 @@ bool MyDDLCombobox::setSharedProperties(MyDDLComboboxSharedPropertiesConfig conf
 
     return true;
 }
-// Public static member function(s) [GENERAL FUNCTIONS]:
+// Public static function(s) [GENERAL FUNCTIONS]:
 bool MyDDLCombobox::isSubclassed(HWND hWnd, void **ppSubclass)
 {
     DWORD_PTR reference_data;
@@ -6209,7 +6317,7 @@ bool MyDDLCombobox::isSubclassed(HWND hWnd, void **ppSubclass)
 
     return is_subclassed;
 }
-// Public member function(s) [GENERAL FUNCTIONS]:
+// Public function(s) [GENERAL FUNCTIONS]:
 bool MyDDLCombobox::setSubclass(HWND hWnd, INT comboboxHeight)
 {
     bool are_all_operation_success = false;

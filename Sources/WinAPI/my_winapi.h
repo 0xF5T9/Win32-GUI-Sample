@@ -161,7 +161,7 @@ public:
      *
      * @return Returns true if the window was successfully created, false otherwise.
      */
-    bool createImageButton(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyImageButtonNonSharedPropertiesConfig configNonSharedProperties, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID);
+    bool createImageButton(HWND hWndParent, std::wstring windowText, bool visibleByDefault, bool useTabStop, MyImageButtonNonSharedAttributesConfig configNonSharedProperties, INT windowPosX, INT windowPosY, INT windowWidth, INT windowHeight, HMENU windowID);
 
     /**
      * @brief Create a radio button.
