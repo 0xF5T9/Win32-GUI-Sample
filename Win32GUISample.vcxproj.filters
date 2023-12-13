@@ -13,144 +13,159 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Main">
-      <UniqueIdentifier>{770173bb-4e31-4fd2-b866-aa53f1484eaf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Subclass">
-      <UniqueIdentifier>{64f00a49-b18f-40e2-b576-270d6dddfd88}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Resource">
-      <UniqueIdentifier>{2b1d50cf-bd53-469b-a970-64323d0ed614}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Global">
-      <UniqueIdentifier>{c5db9fb4-fca8-4cba-97ac-04a622355767}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Resource\Raws">
-      <UniqueIdentifier>{c6968ad7-d94e-42ab-99b0-2ea40669b2bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Includes">
-      <UniqueIdentifier>{ec15881e-80f3-4264-8e00-6ca8e94baf3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Includes\Externals">
-      <UniqueIdentifier>{69adddb0-27db-44a9-943c-b6c13491e1bf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\UI">
-      <UniqueIdentifier>{aef7aa2d-4db5-490c-9153-279b4f71ec34}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\WinAPI">
-      <UniqueIdentifier>{9ac0e1ac-130a-430d-9994-50ec7bbd1c0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Graphic">
-      <UniqueIdentifier>{62c24eb0-4ff0-46fb-b10f-21caf17e85e8}</UniqueIdentifier>
+    <Filter Include="Resource Files\Raws">
+      <UniqueIdentifier>{f78764e5-5151-474b-ac0c-7fc5f6d2cb0c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sources\Main\main.cpp">
-      <Filter>Source Files\Main</Filter>
+    <ClCompile Include="Sources\app.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Subclass\subclasses.cpp">
-      <Filter>Source Files\Subclass</Filter>
+    <ClCompile Include="Sources\global.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Global\global.cpp">
-      <Filter>Source Files\Global</Filter>
+    <ClCompile Include="Sources\graphic.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\UI\ui.cpp">
-      <Filter>Source Files\UI</Filter>
+    <ClCompile Include="Sources\main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\WinAPI\my_winapi.cpp">
-      <Filter>Source Files\WinAPI</Filter>
+    <ClCompile Include="Sources\subclass.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Graphic\graphic.cpp">
-      <Filter>Source Files\Graphic</Filter>
+    <ClCompile Include="Sources\ui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\window.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Sources\Main\func.h">
-      <Filter>Source Files\Main</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\Subclass\subclasses.h">
-      <Filter>Source Files\Subclass</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\Global\global.h">
-      <Filter>Source Files\Global</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\Resource\c_resources.h">
-      <Filter>Source Files\Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\Resource\resource.h">
-      <Filter>Source Files\Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="Includes\standard_includes.h">
-      <Filter>Header Files\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="Includes\Externals\Ex_DarkMode.h">
-      <Filter>Header Files\Includes\Externals</Filter>
-    </ClInclude>
-    <ClInclude Include="Includes\Externals\Ex_IatHook.h">
-      <Filter>Header Files\Includes\Externals</Filter>
-    </ClInclude>
-    <ClInclude Include="Includes\my_includes.h">
-      <Filter>Header Files\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="Includes\forward_declarations.h">
-      <Filter>Header Files\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="Includes\my_enums.h">
-      <Filter>Header Files\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\UI\ui.h">
-      <Filter>Source Files\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\WinAPI\my_winapi.h">
-      <Filter>Source Files\WinAPI</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\Graphic\graphic.h">
-      <Filter>Source Files\Graphic</Filter>
-    </ClInclude>
+    <ResourceCompile Include="Resources\resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Sources\Resource\Raws\cross_grey.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\MAINICON.ico">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\cross_black.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\cross_white.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\minus_black.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\minus_grey.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\minus_white.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\square_black.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\square_grey.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-    <Image Include="Sources\Resource\Raws\square_white.png">
-      <Filter>Source Files\Resource\Raws</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="Sources\Resource\MyApp.exe.manifest">
-      <Filter>Source Files\Resource</Filter>
+    <Manifest Include="Resources\Win32GUISample.exe.manifest">
+      <Filter>Resource Files</Filter>
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Sources\Resource\resource.rc">
-      <Filter>Source Files\Resource</Filter>
-    </ResourceCompile>
+    <Image Include="Resources\Raws\ae_active.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ae_default.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ae_hover.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ai_active.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ai_default.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ai_hover.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\arrowdown_dark.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\arrowdown_light.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\arrowdown_monokai.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\cross_black.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\cross_grey.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\cross_white.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\MAINICON.ico">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\me_active.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\me_default.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\me_hover.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\minus_black.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\minus_grey.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\minus_white.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ps_active.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ps_default.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\ps_hover.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\square_black.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\square_grey.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+    <Image Include="Resources\Raws\square_white.png">
+      <Filter>Resource Files\Raws</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Headers\app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\forward_declarations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\graphic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\marco.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\my_includes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\standard_includes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\subclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

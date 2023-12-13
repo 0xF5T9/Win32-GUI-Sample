@@ -1,0 +1,80 @@
+﻿#include "../Headers/resources.h"
+#include <windows.h>
+
+/// Adding the.manifest file to the application resource is required to enable Visual Style.
+/// https://learn.microsoft.com/en-us/windows/win32/controls/cookbook-overview
+/// If compiling as a Visual Studio project, either comment out this line or set "Generate Manifest File" property to "NO".
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "Win32GUISample.exe.manifest"
+
+MYVERSION VERSIONINFO
+FILEVERSION 1, 0, 0, 0
+PRODUCTVERSION 1, 0, 0, 0
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "040904E4"
+BEGIN
+VALUE "FileDescription", "Win32GUISample"
+VALUE "FileVersion", "1.0.0.0"
+VALUE "ProductVersion", "1.0.0.0"
+VALUE "OriginalFilename", "Win32GUISample.exe"
+END
+END
+
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x0409, 1252
+END
+END
+
+MAINICON ICON "Raws\\MAINICON.ico"
+
+IDR_FONT_UBUNTU FONT "Raws\\ubuntu_font.ttf"
+
+IDR_IMAGE_AE_DEFAULT IMAGE "Raws\\ae_default.png"
+
+IDR_IMAGE_AE_HOVER IMAGE "Raws\\ae_hover.png"
+
+IDR_IMAGE_AE_ACTIVE IMAGE "Raws\\ae_active.png"
+
+IDR_IMAGE_PS_DEFAULT IMAGE "Raws\\ps_default.png"
+
+IDR_IMAGE_PS_HOVER IMAGE "Raws\\ps_hover.png"
+
+IDR_IMAGE_PS_ACTIVE IMAGE "Raws\\ps_active.png"
+
+IDR_IMAGE_AI_DEFAULT IMAGE "Raws\\ai_default.png"
+
+IDR_IMAGE_AI_HOVER IMAGE "Raws\\ai_hover.png"
+
+IDR_IMAGE_AI_ACTIVE IMAGE "Raws\\ai_active.png"
+
+IDR_IMAGE_ME_DEFAULT IMAGE "Raws\\me_default.png"
+
+IDR_IMAGE_ME_HOVER IMAGE "Raws\\me_hover.png"
+
+IDR_IMAGE_ME_ACTIVE IMAGE "Raws\\me_active.png"
+
+IDR_IMAGE1 IMAGE "Raws\\cross_grey.png"
+
+IDR_IMAGE2 IMAGE "Raws\\cross_white.png"
+
+IDR_IMAGE3 IMAGE "Raws\\cross_black.png"
+
+IDR_IMAGE4 IMAGE "Raws\\square_grey.png"
+
+IDR_IMAGE5 IMAGE "Raws\\square_white.png"
+
+IDR_IMAGE6 IMAGE "Raws\\square_black.png"
+
+IDR_IMAGE7 IMAGE "Raws\\minus_grey.png"
+
+IDR_IMAGE8 IMAGE "Raws\\minus_white.png"
+
+IDR_IMAGE9 IMAGE "Raws\\minus_black.png"
+
+IDR_IMAGE10 IMAGE "Raws\\arrowdown_light.png"
+
+IDR_IMAGE11 IMAGE "Raws\\arrowdown_dark.png"
+
+IDR_IMAGE12 IMAGE "Raws\\arrowdown_monokai.png"
