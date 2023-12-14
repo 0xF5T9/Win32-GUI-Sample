@@ -2,27 +2,10 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "[MSBuild] Clean",
-			"detail": "Clean the build files.",
+			"label": "[Mingw64] Build Debug",
+			"detail": "Build with debug configuration.",
 			"type": "shell",
-			"command": "./tasks.bat msbuild-clean",
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": [
-				"$msCompile"
-			]
-		},
-		{
-			"label": "[MSBuild] Dynamic Linking Build",
-			"detail": "Build dynamic linking configuration.",
-			"type": "shell",
-			"command": "./tasks.bat msbuild-build-dl",
+			"command": "./task.ps1 build mingw64-debug",
 			"group": {
 				"kind": "build",
 				"isDefault": false
@@ -33,59 +16,17 @@
 				"focus": false,
 				"panel": "shared",
 				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": [
-				"$msCompile"
-			]
-		},
-		{
-			"label": "[MSBuild] Static Linking Build",
-			"detail": "Build static linking configuration.",
-			"type": "shell",
-			"command": "./tasks.bat msbuild-build-sl",
-			"group": {
-				"kind": "build",
-				"isDefault": false
-			},
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
-			},
-			"problemMatcher": [
-				"$msCompile"
-			]
-		},
-		{
-			"label": "[MinGW] Dynamic Linking Build (Symbols)",
-			"detail": "Build dynamic linking configuration with symbols.",
-			"type": "shell",
-			"command": "./tasks.bat mingw-clean; ./tasks.bat mingw-build-rc; ./tasks.bat mingw-build-dl",
-			"group": {
-				"kind": "build",
-				"isDefault": false
-			},
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": false,
-				"clear": false
+				"clear": true
 			},
 			"problemMatcher": [
 				"$gcc"
 			]
 		},
 		{
-			"label": "[MinGW] Dynamic Linking Build (No Symbols)",
-			"detail": "Build dynamic linking configuration without symbols.",
+			"label": "[Mingw64] Build Release",
+			"detail": "Build with release configuration.",
 			"type": "shell",
-			"command": "./tasks.bat mingw-clean; ./tasks.bat mingw-build-rc; ./tasks.bat mingw-build-dls",
+			"command": "./task.ps1 build mingw64-release",
 			"group": {
 				"kind": "build",
 				"isDefault": false
@@ -96,17 +37,17 @@
 				"focus": false,
 				"panel": "shared",
 				"showReuseMessage": false,
-				"clear": false
+				"clear": true
 			},
 			"problemMatcher": [
 				"$gcc"
 			]
 		},
 		{
-			"label": "[MinGW] Static Linking Build",
-			"detail": "Build static linking configuration.",
+			"label": "[MSBuild] Build Debug",
+			"detail": "Build with debug configuration.",
 			"type": "shell",
-			"command": "./tasks.bat mingw-clean; ./tasks.bat mingw-build-rc; ./tasks.bat mingw-build-sl",
+			"command": "./task.ps1 build msbuild-debug",
 			"group": {
 				"kind": "build",
 				"isDefault": false
@@ -117,11 +58,32 @@
 				"focus": false,
 				"panel": "shared",
 				"showReuseMessage": false,
-				"clear": false
+				"clear": true
 			},
 			"problemMatcher": [
-				"$gcc"
+				"$msCompile"
 			]
 		},
+		{
+			"label": "[MSBuild] Build Release",
+			"detail": "Build with release configuration.",
+			"type": "shell",
+			"command": "./task.ps1 build msbuild-release",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		}
 	]
 }
