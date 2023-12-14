@@ -84,6 +84,38 @@
 			"problemMatcher": [
 				"$msCompile"
 			]
+		},
+		{
+			"label": "[MSBuild] Clean Build",
+			"detail": "Clean MSBuild build files.",
+			"type": "shell",
+			"command": "./task.ps1 clean msbuild",
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "[Mingw64] Clean Build",
+			"detail": "Clean Mingw64 build files.",
+			"type": "shell",
+			"command": "./task.ps1 clean mingw64",
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"problemMatcher": []
 		}
 	]
 }

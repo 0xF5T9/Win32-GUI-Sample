@@ -109,7 +109,7 @@ $task_name = $args[0]
 
 # [Build tasks]
 if ($task_name -match "build") {
-    # Print task options
+    # Print build options
     if (($args.Count -eq 1) -or ($args[1] -match "\?") -or ($args[1] -match "help")) {
         Write-Color "Build options:" Yellow
         Write-Color -text "mingw64-debug", ": Build the executable using Mingw64 compiler. (Debug)" -color Cyan, White
@@ -293,6 +293,61 @@ if ($task_name -match "build") {
     # Invalid build option.
     else {
         Write-Color "Invalid build option." Red
+        exit 1
+    }
+}
+
+# [Other tasks]
+elseif ($task_name -match "clean") {
+     # Print clean options
+    if (($args.Count -eq 1) -or ($args[1] -match "\?") -or ($args[1] -match "help")) {
+        Write-Color "Build options:" Yellow
+        Write-Color -text "all", ": Clean all build files." -color Cyan, White
+        Write-Color -text "mingw64", ": Clean Mingw64 build files." -color Cyan, White
+        Write-Color -text "msbuild", ": Clean MSBuild build files." -color Cyan, White
+        Write-Color -text "Example: ", "./task.ps1 clean all" -color Yellow, DarkGray
+        exit 0
+    }
+
+    # 'all'
+    if ($args[1] -match "all") {
+        if (!(Test-Path("./Build"))) {
+            Write-Color "No build files exist." DarkGray
+            exit 0
+        }
+        Write-Color "Cleaned build files." Green
+        Remove-Item -path "./Build" -recurse
+        exit 0
+    }
+
+    # 'mingw64'
+    elseif ($args[1] -match "mingw64") {
+        if ((!(Test-Path("./Build"))) -or (!(Test-Path("./Build/Mingw64")))) {
+            Write-Color "No build files exist." DarkGray
+            exit 0
+        }
+        Write-Color "Cleaned build files." Green
+        Remove-Item ./Build/Mingw64/* -recurse
+        exit 0
+    }
+
+    # 'msbuild'
+    elseif ($args[1] -match "msbuild") {
+        if ((!(Test-Path("./Build"))) -or (!(Test-Path("./Build/MSBuild")))) {
+            Write-Color "No build files exist." DarkGray
+            exit 0
+        }
+        $clean_debug_command = "msbuild $($project_file_path) -noLogo /t:Clean /p:Configuration=Debug /p:Platform=x64"
+        $clean_release_command = "msbuild $($project_file_path) -noLogo /t:Clean /p:Configuration=Release /p:Platform=x64"
+        Invoke-Expression $clean_debug_command
+        Invoke-Expression $clean_release_command
+        Write-Color "Cleaned build files." Green
+        exit 0
+    }
+
+    # Invalid clean option.
+    else {
+        Write-Color "Invalid clean option." Red
         exit 1
     }
 }
