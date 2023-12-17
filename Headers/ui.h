@@ -287,6 +287,7 @@ public:
     std::unique_ptr<HFONT, HFONTDeleter> hfoCaption;
     std::unique_ptr<HFONT, HFONTDeleter> hfoHeading;
     std::unique_ptr<HFONT, HFONTDeleter> hfoNote;
+    std::unique_ptr<HFONT, HFONTDeleter> hfoText1;
 
 private:
     HANDLE hFontResourceUbuntu = nullptr;

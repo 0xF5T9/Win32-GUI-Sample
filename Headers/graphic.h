@@ -538,6 +538,7 @@ private:
 /**
  * @brief Singleton class encapsulating the un/initialization of all graphic-related engines.
  * @note All the graphic-related operations can be accessed via this interface.
+ * @note The COM library must be initialized first before `MyGraphicEngine` initialization.
  */
 class MyGraphicEngine : public MyEngine
 {

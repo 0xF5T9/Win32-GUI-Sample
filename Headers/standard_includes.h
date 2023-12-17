@@ -42,5 +42,6 @@
 #include <dwrite.h>      // Windows API: DirectWrite (DWrite), hardware-accelerated text rendering.
 #include <wincodec.h>    // Windows API: Windows Imaging Component (WIC), image processing.
 #include <richedit.h>    // Windows API: Rich Edit control classes.
+#include <shobjidl.h>    // Windows API: Working with shell objects.
 
 #endif // STANDARD_INCLUDES_H

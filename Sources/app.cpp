@@ -52,7 +52,7 @@ bool MyApp::initialize(HINSTANCE hInstance)
         }
 
         // Enable DPI Awareness.
-        if (!SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE))
+        if (!SetProcessDPIAware())
         {
             error_message = "Failed to set DPI awareness.";
             break;
@@ -123,6 +123,17 @@ bool MyApp::initialize(HINSTANCE hInstance)
                 break;
             }
             this->logger.writeLog("WinAPI libraries loaded successfully.", "", MyLogType::Debug);
+        }
+
+        // Initialize the COM library.
+        {
+            HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+            if (FAILED(hr))
+            {
+                error_message = "Failed to initialize the COM library.";
+                break;
+            }
+            this->logger.writeLog("COM library initialized successfully.", "", MyLogType::Debug);
         }
 
         // Initialize graphic engine.
@@ -203,6 +214,10 @@ bool MyApp::uninitialize()
         }
         this->pGraphic.reset();
         this->logger.writeLog("Graphic engine uninitialized.", "", MyLogType::Debug);
+
+        // Uninitialize the COM library.
+        CoUninitialize();
+        this->logger.writeLog("COM library uninitialized.", "", MyLogType::Debug);
 
         // Unregister my window class.
         if (!UnregisterClassW(this->windowClassName, this->hInstance))
@@ -491,7 +506,7 @@ bool MyApp::setAppTheme(MyTheme theme)
         RedrawWindow(this->hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
         SetActiveWindow(this->hWnd);
 
-        this->logger.writeLog("Application theme changed:", ("'" + theme_name + "'").c_str(), MyLogType::Info);
+        this->logger.writeLog("Application theme selected:", ("'" + theme_name + "'").c_str(), MyLogType::Info);
 
         are_all_operation_success = true;
     }
@@ -1046,7 +1061,90 @@ bool MyApp::onCreate(HWND hWnd)
         {
             MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
                                                     10, 770,
-                                                    130, 40, (HMENU)IDC_DC_COMBOBOXSELECTTHEME, true, true);
+                                                    130, 40, (HMENU)IDC_DC_COMBOBOXEMPTY, true, true);
+            std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
+            if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
+                break;
+            if (!p_container->addWindow(p_ddlcombobox_window))
+                break;
+        }
+        {
+            MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
+                                                    150, 770,
+                                                    130, 40, (HMENU)IDC_DC_COMBOBOXNORMAL, true, true);
+            std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
+            if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
+                break;
+            if (!p_container->addWindow(p_ddlcombobox_window))
+                break;
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Option 1");
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Option 2");
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Option 3");
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Option 4");
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Option 5");
+            ComboBox_SetCurSel(p_ddlcombobox_window.get()->hWnd(), 2);
+        }
+        error_message = "";
+
+        // Header text: 'Testing'
+        {
+            std::shared_ptr<MyWindow> p_window(new MyWindow());
+            if (!p_window->createCustomWindow(0, WC_STATIC, L"TESTING", WS_VISIBLE | WS_CHILD,
+                                              10, 820, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING6, nullptr, nullptr))
+                break;
+            if (!p_container->addWindow(p_window))
+                break;
+            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
+        }
+
+        // Open log file button
+        {
+            MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
+                                                       10, 856,
+                                                       140, 40, (HMENU)IDC_DC_OPENLOGFILE, true, true, L"Open log file");
+            std::shared_ptr<MyWindow> p_button_window(new MyWindow());
+            if (!p_button_window.get()->createStandardButton(window_config))
+                break;
+            if (!p_container->addWindow(p_button_window))
+                break;
+        }
+        {
+            std::shared_ptr<MyWindow> p_window(new MyWindow());
+            if (!p_window->createCustomWindow(0, WC_STATIC, L"OPEN LOG FILE", WS_VISIBLE | WS_CHILD,
+                                              160, 856 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_OPENLOGFILENOTE, nullptr, nullptr))
+                break;
+            if (!p_container->addWindow(p_window))
+                break;
+            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
+        }
+
+        // Select file button
+        {
+            MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
+                                                       10, 906,
+                                                       140, 40, (HMENU)IDC_DC_SELECTFILE, true, true, L"Select file(s)");
+            std::shared_ptr<MyWindow> p_button_window(new MyWindow());
+            if (!p_button_window.get()->createStandardButton(window_config))
+                break;
+            if (!p_container->addWindow(p_button_window))
+                break;
+        }
+        {
+            std::shared_ptr<MyWindow> p_window(new MyWindow());
+            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT FILE", WS_VISIBLE | WS_CHILD,
+                                              160, 906 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_SELECTFILENOTE, nullptr, nullptr))
+                break;
+            if (!p_container->addWindow(p_window))
+                break;
+            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
+        }
+
+        // Select theme combobox
+        {
+            error_message = "Failed to create the select theme combobox.";
+            MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
+                                                    10, 956,
+                                                    140, 40, (HMENU)IDC_DC_COMBOBOXSELECTTHEME, true, true);
             std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
             if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
                 break;
@@ -1069,8 +1167,48 @@ bool MyApp::onCreate(HWND hWnd)
             ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Dark");
             ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Monokai");
             ComboBox_SetCurSel(p_ddlcombobox_window.get()->hWnd(), current_theme_combobox_index);
+            error_message = "";
         }
-        error_message = "";
+        {
+            std::shared_ptr<MyWindow> p_window(new MyWindow());
+            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT THEME (F9)", WS_VISIBLE | WS_CHILD,
+                                              160, 956 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTTHEMENOTE, nullptr, nullptr))
+                break;
+            if (!p_container->addWindow(p_window))
+                break;
+            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
+        }
+
+        // Select font combobox
+        {
+            error_message = "Failed to create the select font combobox.";
+            MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
+                                                    10, 1006,
+                                                    150, 40, (HMENU)IDC_DC_COMBOBOXSELECTFONT, true, true);
+            std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
+            if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
+                break;
+            if (!p_container->addWindow(p_ddlcombobox_window))
+                break;
+            int current_font_combobox_index = 0;
+            if (g_pApp->pUIManager->fonts.defaultFamily == L"Bahnschrift")
+                current_font_combobox_index = 0;
+            else if (g_pApp->pUIManager->fonts.defaultFamily == L"Ubuntu")
+                current_font_combobox_index = 1;
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Bahnschrift");
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Ubuntu");
+            ComboBox_SetCurSel(p_ddlcombobox_window.get()->hWnd(), current_font_combobox_index);
+            error_message = "";
+        }
+        {
+            std::shared_ptr<MyWindow> p_window(new MyWindow());
+            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT FONT", WS_VISIBLE | WS_CHILD,
+                                              170, 1006 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTFONTNOTE, nullptr, nullptr))
+                break;
+            if (!p_container->addWindow(p_window))
+                break;
+            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
+        }
 
         are_all_operation_success = true;
     }
@@ -1166,6 +1304,12 @@ bool MyApp::onDestroy()
             this->logger.writeLog("'MySubclass' instances: " + std::to_string(MySubclass::totalInstances), "[CLASS: 'MyApp' | FUNC: 'onDestroy()']", MyLogType::Warn);
             error_message = "Failed to destroy the windows and their resources.";
             break;
+        }
+        if (this->logger.getLogLevel() > 1)
+        {
+            this->logger.writeLog("'MyContainer' instances: " + std::to_string(MyContainer::totalInstances), "", MyLogType::Debug);
+            this->logger.writeLog("'MyWindow' instances: " + std::to_string(MyWindow::totalInstances), "", MyLogType::Debug);
+            this->logger.writeLog("'MySubclass' instances: " + std::to_string(MySubclass::totalInstances), "", MyLogType::Debug);
         }
 
         are_all_operation_success = true;

@@ -275,14 +275,6 @@ bool MyWAMEngine::initialize()
             break;
         }
 
-        // Initialize the COM library.
-        hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-        if (FAILED(hr))
-        {
-            error_message = "Failed to initialize the COM library.";
-            break;
-        }
-
         // Initialize the animation mananger.
         hr = CoCreateInstance(CLSID_UIAnimationManager, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&this->pAnimationManager));
         if (FAILED(hr))
@@ -355,9 +347,6 @@ bool MyWAMEngine::uninitialize()
             break;
         }
         this->pAnimationManager = nullptr;
-
-        // Uninitialize the COM library.
-        CoUninitialize();
 
         this->initialized = false;
 

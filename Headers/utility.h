@@ -27,6 +27,7 @@ namespace MyUtility
     /**
      * @brief Show the useful informations of a window via message box.
      * @note Used for debugging purposes.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @param hWnd Handle to the window.
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
@@ -35,6 +36,7 @@ namespace MyUtility
     /**
      * @brief Show the last WinAPI error message via message box.
      * @note Used for debugging purposes.
+     * @note `<windows.h>`, `<string>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool ShowLastWinAPIErrorMessage();
@@ -43,6 +45,7 @@ namespace MyUtility
      * @brief Get the user desktop resolution.
      * @param horizontal Reference to the variable that will hold the horizontal value. [OUT]
      * @param vertical   Reference to the variable that will hold the vertical value. [OUT]
+     * @note `<windows.h>`, `<string>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool GetDesktopResolution(INT &horizontal, INT &vertical);
@@ -50,6 +53,7 @@ namespace MyUtility
     /**
      * @brief Get the name of the current user's preferred power plan.
      * @param preferredPowerPlanName Reference to the string variable that will hold the power plan name. [OUT]
+     * @note `<windows.h>`, `<string>`, `<powrprof.h>(powrprof.lib)`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool GetUserPreferredPowerPlanName(std::wstring &preferredPowerPlanName);
@@ -57,6 +61,7 @@ namespace MyUtility
     /**
      * @brief Get the class name of the target window.
      * @param hWnd Handle to the window.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @return Returns the class name of the target window, empty string otherwise.
      */
     std::string GetWindowClassNameString(const HWND &hWnd);
@@ -64,6 +69,7 @@ namespace MyUtility
     /**
      * @brief Get the class name of the target window (as wide string).
      * @param hWnd Handle to the window.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @return Returns the class name of the target window, empty string otherwise.
      */
     std::wstring GetWindowClassNameWideString(const HWND &hWnd);
@@ -71,6 +77,7 @@ namespace MyUtility
     /**
      * @brief Get the window text (window name) of the target window.
      * @param hWnd Handle to the window.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @return Returns the window text of the target window, empty string otherwise.
      */
     std::string GetWindowTextString(const HWND &hWnd);
@@ -78,6 +85,7 @@ namespace MyUtility
     /**
      * @brief Get the window text (window name) of the target window (as wide string).
      * @param hWnd Handle to the window.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @return Returns the window text of the target window, empty string otherwise.
      */
     std::wstring GetWindowTextWideString(const HWND &hWnd);
@@ -87,6 +95,7 @@ namespace MyUtility
      * @param hWnd Handle to the window.
      * @param windowPosXRef Reference to the variable that will hold the x-postion. [OUT]
      * @param windowPosYRef Reference to the variable that will hold the y-postion. [OUT]
+     * @note `<windows.h>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool GetWindowRelativePosition(HWND hWnd, INT &windowPosXRef, INT &windowPosYRef);
@@ -96,6 +105,7 @@ namespace MyUtility
      * @param hWnd Handle to the window.
      * @param windowWidthRef Reference to the variable that will hold the width value. [OUT]
      * @param windowHeightRef Reference to the variable that will hold the height value. [OUT]
+     * @note `<windows.h>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool GetWindowDimensions(HWND hWnd, INT &windowWidthRef, INT &windowHeightRef);
@@ -104,6 +114,7 @@ namespace MyUtility
      * @brief Get the scroll info of a scrollbar window.
      * @param hWnd Handle to the window.
      * @param scrollInfo Reference to the variable that will hold the scroll info value. [OUT]
+     * @note `<windows.h>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool GetScrollInfo(HWND hWnd, SCROLLINFO &scrollInfo);
@@ -112,6 +123,7 @@ namespace MyUtility
      * @brief Remove a specific window style from a window.
      * @param hWnd Handle to the window.
      * @param style The window style to be removed.
+     * @note `<windows.h>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool RemoveWindowStyle(HWND hWnd, LONG style);
@@ -120,6 +132,7 @@ namespace MyUtility
      * @brief Remove a specific window extended style from a window.
      * @param hWnd Handle to the window.
      * @param style The window extended style to be removed.
+     * @note `<windows.h>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool RemoveWindowExStyle(HWND hWnd, LONG style);
@@ -129,6 +142,7 @@ namespace MyUtility
      * @note All windows using the window class are affected.
      * @param hWnd A handle to the window and, indirectly, the class to which the window belongs.
      * @param style The class style to be removed.
+     * @note `<windows.h>`
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool RemoveWindowClassStyle(HWND hWnd, LONG style);
@@ -141,6 +155,7 @@ namespace MyUtility
      * @param checkBoundaries Specifies whether to check word boundaries.
      *                         If true, the word must be surrounded by word boundaries (space, punctuation, etc.) to be considered a match.
      *                         If false, the function will search for partial matches as well.
+     * @note `<string>`, `<cwctype>`
      * @return Returns true if the string contains the whole word, false otherwise.
      */
     bool ContainsWord(const std::string &str, const std::string &word, bool caseSensitive = false, bool checkBoundaries = false);
@@ -153,6 +168,7 @@ namespace MyUtility
      * @param checkBoundaries Specifies whether to check word boundaries.
      *                         If true, the word must be surrounded by word boundaries (space, punctuation, etc.) to be considered a match.
      *                         If false, the function will search for partial matches as well.
+     * @note `<string>`, `<cwctype>`
      * @return Returns true if the string contains the whole word, false otherwise.
      */
     bool ContainsWord(const std::wstring &str, const std::wstring &word, bool caseSensitive = false, bool checkBoundaries = false);
@@ -160,6 +176,7 @@ namespace MyUtility
     /**
      * @brief Check if a string contains at least one digit.
      * @param str The string to search within.
+     * @note `<string>`
      * @return Returns true if the string contains at least one digit, false otherwise.
      */
     bool ContainsDigit(const std::string &str);
@@ -167,6 +184,7 @@ namespace MyUtility
     /**
      * @brief Check if a wide string contains at least one digit.
      * @param str The string to search within.
+     * @note `<string>`
      * @return Returns true if the string contains at least one digit, false otherwise.
      */
     bool ContainsDigit(const std::wstring &str);
@@ -174,6 +192,7 @@ namespace MyUtility
     /**
      * @brief Converts a string (std::string) to a wide string (std::wstring).
      * @param str The string to convert.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @return Returns the converted string.
      */
     std::wstring ConvertStringToWideString(const std::string &str);
@@ -181,6 +200,7 @@ namespace MyUtility
     /**
      * @brief Converts a wide string (std::wstring) to a string (std::string).
      * @param str The string to convert.
+     * @note `<windows.h>`, `<string>`, `<memory>`
      * @return Returns the converted string.
      */
     std::string ConvertWideStringToString(const std::wstring &wstr);
@@ -188,6 +208,7 @@ namespace MyUtility
     /**
      * @brief Removes non-digit characters from a given string.
      * @param str The input string from which non-digit characters are to be removed.
+     * @note `<string>`, `<regex>`
      * @return Returns the resulting string with non-digit characters removed.
      */
     std::string RemoveNonDigitFromString(const std::string &str);
@@ -195,9 +216,32 @@ namespace MyUtility
     /**
      * @brief Removes non-digit characters from a given string.
      * @param str The input string from which non-digit characters are to be removed.
+     * @note `<string>`, `<regex>`
      * @return Returns the resulting string with non-digit characters removed.
      */
     std::wstring RemoveNonDigitFromString(const std::wstring &str);
+
+    /**
+     * @brief Open a dialog to select item(s) or folder(s).
+     * @param paths Specifies the reference to the string vector that will receive the file or folder path(s). [IN]
+     * @param selectFolder Specifies whether to select folder(s) rather than file(s). (optional)
+     * @param multiSelect Specifies whether to allow the user to select multiple items. (optional)
+     * @note If no item(s) were selected, the function still returns true, and the given vector is unmodified.
+     * @note `<windows.h>`, `<string>`, `<vector>`, `<shobjidl.h>`
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool OpenFileDialog(std::vector<std::wstring> &paths, bool selectFolder = false, bool multiSelect = false);
+
+    /**
+     * @brief Open a dialog to save an item.
+     * @param path Specifies the reference to the string that will receive the target save path. [IN]
+     * @param defaultFileName Specifies the default save file name. (optional)
+     * @param pFilterInfo Specifies the pointer to the pair that contains filter information. (optional)
+     * @note If no path was selected, the function still returns true, and the given string is unmodified.
+     * @note `<windows.h>`, `<string>`, `<vector>`, `<shobjidl.h>`
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool SaveFileDialog(std::wstring &path, std::wstring defaultFileName = L"", std::pair<COMDLG_FILTERSPEC *, int> *pFilterInfo = nullptr);
 
     /**
      * @brief Callback functions that are to be used with 'EnumChildWindows()' function.
@@ -208,6 +252,7 @@ namespace MyUtility
          * @brief Set font callback.
          * @param hWndChild Handle to the child window.
          * @param hFont HFONT passed as a LPARAM.
+         * @note `<windows.h>`
          * @return Returns true if all the operations are successfully performed, false otherwise.
          */
         bool CALLBACK SetFontOnChild(HWND hWndChild, LPARAM hFont);

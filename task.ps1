@@ -243,7 +243,10 @@ if ($task_name -match "build") {
         if (!(Test-Path("./Build/MSBuild"))) {
                 Write-Color -Text "Creating '", "MSBuild", "' folder ..." -color DarkGray, Cyan, DarkGray
                 New-Item -ItemType Directory -Path ./Build/MSBuild | Out-Null
-            }
+        }
+        if (Test-Path("./Build/MSBuild/Output")) {
+            Remove-Item ./Build/MSBuild/Output/*.exe
+        }
 
         $build_flags = "-noLogo /p:Configuration=Debug /p:Platform=x64"
         Write-Color -text "Build flags: ", "$($build_flags)" -color Yellow, Cyan
@@ -274,6 +277,9 @@ if ($task_name -match "build") {
         if (!(Test-Path("./Build/MSBuild"))) {
                 Write-Color -Text "Creating '", "MSBuild", "' folder ..." -color DarkGray, Cyan, DarkGray
                 New-Item -ItemType Directory -Path ./Build/MSBuild | Out-Null
+        }
+        if (Test-Path("./Build/MSBuild/Output")) {
+            Remove-Item ./Build/MSBuild/Output/*.exe
         }
 
         $build_flags = "-noLogo /p:Configuration=Release /p:Platform=x64"

@@ -235,10 +235,7 @@ std::string MyUtility::GetWindowClassNameString(const HWND &hWnd)
 
     // Get the window class name.
     if (!GetClassNameA(hWnd, p_text_buffer.get(), MAX_CLASS_NAME_LENGTH))
-    {
-        g_pApp->logger.writeLog("Failed to retrieve the window class name.", "[NAMESPACE: 'MyUtility' | FUNC: 'GetWindowClassNameString()']", MyLogType::Error);
         return "";
-    }
 
     // Convert the text buffer to a string.
     std::string class_name(p_text_buffer.get());
@@ -254,10 +251,7 @@ std::wstring MyUtility::GetWindowClassNameWideString(const HWND &hWnd)
 
     // Get the window class name.
     if (!GetClassNameW(hWnd, p_text_buffer.get(), MAX_CLASS_NAME_LENGTH))
-    {
-        g_pApp->logger.writeLog("Failed to retrieve the window class name.", "[NAMESPACE: 'MyUtility' | FUNC: 'GetWindowClassNameWideString()']", MyLogType::Error);
         return L"";
-    }
 
     // Convert the text buffer to a wide string.
     std::wstring class_name(p_text_buffer.get());
@@ -270,18 +264,12 @@ std::string MyUtility::GetWindowTextString(const HWND &hWnd)
     SetLastError(ERROR_SUCCESS);
     size_t text_length = static_cast<size_t>(GetWindowTextLengthA(hWnd));
     if (!text_length && GetLastError())
-    {
-        g_pApp->logger.writeLog("Failed to retrieve the window text length.", "[NAMESPACE: 'MyUtility' | FUNC: 'GetWindowTextString()']", MyLogType::Error);
         return "";
-    }
 
     // Allocate the text buffer for the window text.
     std::unique_ptr<CHAR[]> p_text_buffer(new CHAR[text_length + 1]); // +1 for the null terminator.
     if (!GetWindowTextA(hWnd, p_text_buffer.get(), static_cast<INT>(text_length) + 1) && text_length)
-    {
-        g_pApp->logger.writeLog("Failed to retrieve the window text.", "[NAMESPACE: 'MyUtility' | FUNC: 'GetWindowTextString()']", MyLogType::Error);
         return "";
-    }
 
     // Convert the text buffer to a string.
     std::string window_text(p_text_buffer.get());
@@ -294,18 +282,12 @@ std::wstring MyUtility::GetWindowTextWideString(const HWND &hWnd)
     SetLastError(ERROR_SUCCESS);
     size_t text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
     if (!text_length && GetLastError())
-    {
-        g_pApp->logger.writeLog("Failed to retrieve the window text length.", "[NAMESPACE: 'MyUtility' | FUNC: 'GetWindowTextWideString()']", MyLogType::Error);
         return L"";
-    }
 
     // Allocate the text buffer for the window text.
     std::unique_ptr<WCHAR[]> p_text_buffer(new WCHAR[text_length + 1]); // +1 for the null terminator.
     if (!GetWindowTextW(hWnd, p_text_buffer.get(), static_cast<INT>(text_length) + 1) && text_length)
-    {
-        g_pApp->logger.writeLog("Failed to retrieve the window text.", "[NAMESPACE: 'MyUtility' | FUNC: 'GetWindowTextWideString()']", MyLogType::Error);
         return L"";
-    }
 
     // Convert the text buffer to a wide string.
     std::wstring window_text(p_text_buffer.get());
@@ -614,6 +596,146 @@ std::wstring MyUtility::RemoveNonDigitFromString(const std::wstring &str)
     std::wstring ret = std::regex_replace(str, std::wregex(L"\\D"), L"");
 
     return ret;
+}
+bool MyUtility::OpenFileDialog(std::vector<std::wstring> &paths, bool selectFolder, bool multiSelect)
+{
+    IFileOpenDialog *p_file_open = nullptr;
+    bool are_all_operation_success = false;
+    while (!are_all_operation_success)
+    {
+        HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+                                      IID_IFileOpenDialog, reinterpret_cast<void **>(&p_file_open));
+        if (FAILED(hr))
+            break;
+
+        if (selectFolder || multiSelect)
+        {
+            FILEOPENDIALOGOPTIONS options = 0;
+            hr = p_file_open->GetOptions(&options);
+            if (FAILED(hr))
+                break;
+
+            if (selectFolder)
+                options |= FOS_PICKFOLDERS;
+            if (multiSelect)
+                options |= FOS_ALLOWMULTISELECT;
+
+            hr = p_file_open->SetOptions(options);
+            if (FAILED(hr))
+                break;
+        }
+
+        hr = p_file_open->Show(NULL);
+        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) // No items were selected.
+        {
+            are_all_operation_success = true;
+            break;
+        }
+        else if (FAILED(hr))
+            break;
+
+        IShellItemArray *p_items;
+        hr = p_file_open->GetResults(&p_items);
+        if (FAILED(hr))
+            break;
+        DWORD total_items = 0;
+        hr = p_items->GetCount(&total_items);
+        if (FAILED(hr))
+            break;
+
+        for (int i = 0; i < static_cast<int>(total_items); ++i)
+        {
+            IShellItem *p_item;
+            p_items->GetItemAt(i, &p_item);
+            if (SUCCEEDED(hr))
+            {
+                PWSTR path;
+                hr = p_item->GetDisplayName(SIGDN_FILESYSPATH, &path);
+                if (SUCCEEDED(hr))
+                {
+                    paths.push_back(path);
+                    CoTaskMemFree(path);
+                }
+                p_item->Release();
+            }
+        }
+
+        p_items->Release();
+        are_all_operation_success = true;
+    }
+
+    if (p_file_open)
+        p_file_open->Release();
+    return are_all_operation_success;
+}
+bool MyUtility::SaveFileDialog(std::wstring &path, std::wstring defaultFileName, std::pair<COMDLG_FILTERSPEC *, int> *pFilterInfo)
+{
+    IFileSaveDialog *p_file_save = nullptr;
+    bool are_all_operation_success = false;
+    while (!are_all_operation_success)
+    {
+        HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL,
+                                      IID_IFileSaveDialog, reinterpret_cast<void **>(&p_file_save));
+        if (FAILED(hr))
+            break;
+
+        if (!pFilterInfo)
+        {
+            COMDLG_FILTERSPEC save_filter[1];
+            save_filter[0].pszName = L"All files";
+            save_filter[0].pszSpec = L"*.*";
+            hr = p_file_save->SetFileTypes(1, save_filter);
+            if (FAILED(hr))
+                break;
+            hr = p_file_save->SetFileTypeIndex(1);
+            if (FAILED(hr))
+                break;
+        }
+        else
+        {
+            hr = p_file_save->SetFileTypes(pFilterInfo->second, pFilterInfo->first);
+            if (FAILED(hr))
+                break;
+            hr = p_file_save->SetFileTypeIndex(1);
+            if (FAILED(hr))
+                break;
+        }
+
+        if (!defaultFileName.empty())
+        {
+            hr = p_file_save->SetFileName(defaultFileName.c_str());
+            if (FAILED(hr))
+                break;
+        }
+
+        hr = p_file_save->Show(NULL);
+        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) // No item was selected.
+        {
+            are_all_operation_success = true;
+            break;
+        }
+        else if (FAILED(hr))
+            break;
+
+        IShellItem *p_item;
+        hr = p_file_save->GetResult(&p_item);
+        if (FAILED(hr))
+            break;
+
+        PWSTR item_path;
+        hr = p_item->GetDisplayName(SIGDN_FILESYSPATH, &item_path);
+        if (FAILED(hr))
+            break;
+        path = item_path;
+        CoTaskMemFree(item_path);
+        p_item->Release();
+
+        are_all_operation_success = true;
+    }
+
+    if (p_file_save)
+        p_file_save->Release();
+    return are_all_operation_success;
 }
 bool CALLBACK MyUtility::Callback::SetFontOnChild(HWND hWndChild, LPARAM hFont)
 {

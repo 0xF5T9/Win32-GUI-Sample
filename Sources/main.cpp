@@ -2,6 +2,8 @@
  * @file main.cpp
  * @brief Define the application entry and window procedures.
  * @todo Implement scroll focus.
+ * @todo Add predefined text window type.
+ * @todo Add select file test control.
  */
 
 #include "../Headers/standard_includes.h"
@@ -806,48 +808,6 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
     {
         switch (wParam)
         {
-        case VK_F3: // todo: continue
-        {
-            g_pApp->pUIManager->fonts.updateFonts(L"Bahnschrift");
-            auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
-            if (p_container)
-            {
-                SetWindowFont(GetDlgItem(g_pApp->hWnd, IDC_NONCLIENT_CAPTIONTITLE_STATIC), *g_pApp->pUIManager->fonts.hfoCaption, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING1)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING2)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING3)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING4)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING5)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXNORMALNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXPASSWORDNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXMULTILINENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                p_container->refresh(false);
-            }
-
-            MessageBeep(MB_OK);
-            return 0;
-        }
-        case VK_F4:
-        {
-            g_pApp->pUIManager->fonts.updateFonts(L"Ubuntu");
-            auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
-            if (p_container)
-            {
-                SetWindowFont(GetDlgItem(g_pApp->hWnd, IDC_NONCLIENT_CAPTIONTITLE_STATIC), *g_pApp->pUIManager->fonts.hfoCaption, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING1)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING2)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING3)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING4)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_HEADING5)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXNORMALNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXPASSWORDNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXMULTILINENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                p_container->refresh(false);
-            }
-
-            MessageBeep(MB_OK);
-            return 0;
-        }
         // Change application theme.
         case VK_F9:
         {
@@ -937,6 +897,11 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
 
             return 0;
         }
+        case VK_F5:
+        {
+            MessageBeep(MB_OK);
+            return 0;
+        }
         }
         break;
     }
@@ -986,6 +951,10 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
         case IDC_DC_EDITBOXNORMALNOTE:
         case IDC_DC_EDITBOXPASSWORDNOTE:
         case IDC_DC_EDITBOXMULTILINENOTE:
+        case IDC_DC_OPENLOGFILENOTE:
+        case IDC_DC_COMBOBOXSELECTTHEMENOTE:
+        case IDC_DC_COMBOBOXSELECTFONTNOTE:
+        case IDC_DC_SELECTFILENOTE:
         {
             SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
             SetTextColor(hdc, g_pApp->pUIManager->colors.textInactive.getCOLORREF());
@@ -1101,12 +1070,9 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                     // Subclassed controls.
                     if (MyDDLComboboxSubclass::getSubclassPointer(draw_items_struct->hwndItem))
                     {
-                        // Check if item ID is valid.
+                        // Check if the combobox is empty or system run out of memory (very unlikely).
                         if (draw_items_struct->itemID == static_cast<UINT>(CB_ERR))
-                        {
-                            error_message = "Invalid item ID or system ran out of memory.";
-                            break;
-                        }
+                            return TRUE;
 
                         // Get the combobox item text length.
                         INT text_length = static_cast<INT>(SendMessageW(draw_items_struct->hwndItem, CB_GETLBTEXTLEN, draw_items_struct->itemID, 0));
@@ -1467,6 +1433,45 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                 MessageBeep(MB_OK);
                 return 0;
             }
+            case IDC_DC_OPENLOGFILE:
+            {
+                // Get current directory.
+                std::wstring command_line = GetCommandLineW();
+                if (command_line.size() <= 2)
+                    throw std::runtime_error("Unexpected command line string.");
+                command_line.erase(0, 1);
+                command_line.pop_back();
+                std::filesystem::path path(command_line);
+
+                if ((ULONGLONG)ShellExecuteW(NULL, L"OPEN", (path.parent_path().c_str() + static_cast<std::wstring>(L"\\") + L"log.log").c_str(), NULL, NULL, SW_SHOW) == ERROR_FILE_NOT_FOUND)
+                {
+                    // If the file doesn't exists, create one.
+                    std::ofstream log_file((path.parent_path().c_str() + static_cast<std::wstring>(L"\\") + L"log.log").c_str());
+                    log_file.close();
+
+                    // Open the file again.
+                    ShellExecuteW(NULL, L"OPEN", (path.parent_path().c_str() + static_cast<std::wstring>(L"\\") + L"log.log").c_str(), NULL, NULL, SW_SHOW);
+                }
+
+                return 0;
+            }
+            case IDC_DC_SELECTFILE:
+            {
+                std::vector<std::wstring> paths;
+                if (MyUtility::OpenFileDialog(paths, false, true))
+                {
+                    if (!paths.empty())
+                    {
+                        g_pApp->logger.writeLog("Total selected items: " + std::to_string(paths.size()), true);
+                        for (int i = 0; i < static_cast<int>(paths.size()); ++i)
+                            g_pApp->logger.writeLog("Path " + std::to_string(i + 1) + ": " + MyUtility::ConvertWideStringToString(paths[i]), true);
+                    }
+                    else
+                        g_pApp->logger.writeLog("No items were selected.", true);
+                }
+
+                return 0;
+            }
             }
 
             break;
@@ -1475,6 +1480,64 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
         {
             switch (LOWORD(wParam))
             {
+            case IDC_DC_COMBOBOXNORMAL:
+            {
+                HWND combobox_window = reinterpret_cast<HWND>(lParam);
+                INT combobox_index = static_cast<INT>(SendMessageW(combobox_window, CB_GETCURSEL, 0, 0));
+                if (combobox_index == CB_ERR)
+                {
+                    g_pApp->logger.writeLog("No combobox item was selected.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
+                    break;
+                }
+
+                // Get the combobox value (in this case a string) of the current selected item.
+                // INT item_text_length = static_cast<INT>(SendMessageW(combobox_window, CB_GETLBTEXTLEN, combobox_index, 0));
+                // if (item_text_length == CB_ERR)
+                // {
+                //     error_message = "Failed to retrieve the combobox item text length.";
+                //     break;
+                // }
+                // WCHAR *text_buffer = new WCHAR[item_text_length + 1];
+                // if (SendMessageW(combobox_window, CB_GETLBTEXT, combobox_index, reinterpret_cast<LPARAM>(text_buffer)) == CB_ERR)
+                // {
+                //     delete[] text_buffer;
+                //     error_message = "Failed to retrieve the combobox item text.";
+                //     break;
+                // }
+                // std::wstring item_text(text_buffer);
+                // delete[] text_buffer;
+
+                switch (combobox_index)
+                {
+                case 0:
+                {
+                    g_pApp->logger.writeLog("Combobox option 1 selected.", true);
+                    break;
+                }
+                case 1:
+                {
+                    g_pApp->logger.writeLog("Combobox option 2 selected.", true);
+                    break;
+                }
+                case 2:
+                {
+                    g_pApp->logger.writeLog("Combobox option 3 selected.", true);
+                    break;
+                }
+                case 3:
+                {
+                    g_pApp->logger.writeLog("Combobox option 4 selected.", true);
+                    break;
+                }
+                case 4:
+                {
+                    g_pApp->logger.writeLog("Combobox option 5 selected.", true);
+                    break;
+                }
+                }
+
+                return 0;
+            }
             case IDC_DC_COMBOBOXSELECTTHEME:
             {
                 HWND combobox_window = reinterpret_cast<HWND>(lParam);
@@ -1542,6 +1605,104 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                 if (!is_switch_success)
                 {
                     g_pApp->logger.writeLog("Failed to change the application theme.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
+                    break;
+                }
+                return 0;
+            }
+            case IDC_DC_COMBOBOXSELECTFONT:
+            {
+                HWND combobox_window = reinterpret_cast<HWND>(lParam);
+                INT combobox_index = static_cast<INT>(SendMessageW(combobox_window, CB_GETCURSEL, 0, 0));
+                if (combobox_index == CB_ERR)
+                {
+                    g_pApp->logger.writeLog("No combobox item was selected.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
+                    break;
+                }
+
+                // Get the combobox value (in this case a string) of the current selected item.
+                // INT item_text_length = static_cast<INT>(SendMessageW(combobox_window, CB_GETLBTEXTLEN, combobox_index, 0));
+                // if (item_text_length == CB_ERR)
+                // {
+                //     error_message = "Failed to retrieve the combobox item text length.";
+                //     break;
+                // }
+                // WCHAR *text_buffer = new WCHAR[item_text_length + 1];
+                // if (SendMessageW(combobox_window, CB_GETLBTEXT, combobox_index, reinterpret_cast<LPARAM>(text_buffer)) == CB_ERR)
+                // {
+                //     delete[] text_buffer;
+                //     error_message = "Failed to retrieve the combobox item text.";
+                //     break;
+                // }
+                // std::wstring item_text(text_buffer);
+                // delete[] text_buffer;
+
+                bool is_switch_success = false;
+                switch (combobox_index)
+                {
+                case 0:
+                {
+                    if (g_pApp->pUIManager->fonts.defaultFamily == L"Bahnschrift")
+                        return 0;
+
+                    g_pApp->pUIManager->fonts.updateFonts(L"Bahnschrift");
+                    auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
+                    if (p_container)
+                    {
+                        SetWindowFont(GetDlgItem(g_pApp->hWnd, IDC_NONCLIENT_CAPTIONTITLE_STATIC), *g_pApp->pUIManager->fonts.hfoCaption, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING1)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING2)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING3)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING4)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING5)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING6)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXNORMALNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXPASSWORDNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXMULTILINENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_OPENLOGFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTTHEMENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTFONTNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_SELECTFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        p_container->refresh(false);
+                    }
+                    g_pApp->logger.writeLog("Application font selected:", "'Bahnschrift'", MyLogType::Info);
+
+                    is_switch_success = true;
+                    break;
+                }
+                case 1:
+                {
+                    if (g_pApp->pUIManager->fonts.defaultFamily == L"Ubuntu")
+                        return 0;
+
+                    g_pApp->pUIManager->fonts.updateFonts(L"Ubuntu");
+                    auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
+                    if (p_container)
+                    {
+                        SetWindowFont(GetDlgItem(g_pApp->hWnd, IDC_NONCLIENT_CAPTIONTITLE_STATIC), *g_pApp->pUIManager->fonts.hfoCaption, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING1)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING2)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING3)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING4)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING5)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING6)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXNORMALNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXPASSWORDNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXMULTILINENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_OPENLOGFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTTHEMENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTFONTNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_SELECTFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        p_container->refresh(false);
+                    }
+                    g_pApp->logger.writeLog("Application font selected:", "'Ubuntu'", MyLogType::Info);
+
+                    is_switch_success = true;
+                    break;
+                }
+                }
+                if (!is_switch_success)
+                {
+                    g_pApp->logger.writeLog("Failed to change the application font.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
                     break;
                 }
                 return 0;
