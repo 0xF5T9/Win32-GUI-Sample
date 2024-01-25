@@ -11,4 +11,4 @@
  *******************************/
 
 std::unique_ptr<MyApp> g_pApp = std::make_unique<MyApp>();
-MyRadioGroup SampleRadio;
+MyRadioGroup g_SampleRadioGroup;

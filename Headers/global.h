@@ -11,6 +11,6 @@
  *****************************/
 
 extern std::unique_ptr<MyApp> g_pApp;
-extern MyRadioGroup SampleRadio;
+extern MyRadioGroup g_SampleRadioGroup;
 
 #endif // GLOBAL_H

@@ -1158,13 +1158,35 @@ bool MyContainer::scrollContainer(INT scrollAmount, bool scrollAlternative)
     std::string error_message = "";
     while (!are_all_operation_success)
     {
+        scrollAmount = -scrollAmount;
+
         if (!this->isContainerWindowExists)
         {
             error_message = "The container window must be created first.";
             break;
         }
 
-        if (!scrollAlternative)
+        if (!scrollAlternative) // Scroll the window using ScrollWindowEx().
+        {
+            RECT rect_window;
+            if (!GetClientRect(this->container()->hWnd(), &rect_window))
+            {
+                error_message = "Failed to get the window client rect.";
+                break;
+            }
+
+            std::unique_ptr<HRGN, HRGNDeleter> pRegion(new HRGN());
+            *pRegion = CreateRectRgn(rect_window.left, rect_window.top, rect_window.right, rect_window.bottom);
+            if (!*pRegion)
+            {
+                error_message = "Failed to create the redraw region.";
+                break;
+            }
+
+            ScrollWindowEx(this->container()->hWnd(), 0, scrollAmount, nullptr, nullptr, *pRegion, nullptr, SW_SCROLLCHILDREN);
+            RedrawWindow(this->container()->hWnd(), 0, *pRegion, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+        }
+        else // Scroll the window using DeferWindowPos().
         {
             int total_child_windows = 0;
             {
@@ -1203,39 +1225,6 @@ bool MyContainer::scrollContainer(INT scrollAmount, bool scrollAlternative)
                 child_window = GetWindow(child_window, GW_HWNDNEXT);
             }
             RedrawWindow(this->container()->hWnd(), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOCHILDREN);
-        }
-        else
-        {
-            // METHOD 1:
-            /*
-            ScrollWindowEx(this->container()->hWnd(), 0, scrollAmount, nullptr, nullptr, nullptr, nullptr, SW_SCROLLCHILDREN);
-            auto child_window = GetWindow(this->container()->hWnd(), GW_CHILD);
-            RedrawWindow(this->container()->hWnd(), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOCHILDREN);
-            while (child_window)
-            {
-                RedrawWindow(child_window, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-                child_window = GetWindow(child_window, GW_HWNDNEXT);
-            }
-            */
-
-            // METHOD 2:
-            RECT rect_window;
-            if (!GetClientRect(this->container()->hWnd(), &rect_window))
-            {
-                error_message = "Failed to get the window client rect.";
-                break;
-            }
-
-            std::unique_ptr<HRGN, HRGNDeleter> pRegion(new HRGN());
-            *pRegion = CreateRectRgn(rect_window.left, rect_window.top, rect_window.right, rect_window.bottom);
-            if (!*pRegion)
-            {
-                error_message = "Failed to create the redraw region.";
-                break;
-            }
-
-            ScrollWindowEx(this->container()->hWnd(), 0, scrollAmount, nullptr, nullptr, *pRegion, nullptr, SW_SCROLLCHILDREN);
-            RedrawWindow(this->container()->hWnd(), 0, *pRegion, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
         }
 
         are_all_operation_success = true;

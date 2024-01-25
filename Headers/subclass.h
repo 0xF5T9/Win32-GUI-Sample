@@ -601,7 +601,6 @@ private:
 /**
  * @brief Radio group responsible for managing a collection of radio buttons,
  *        ensuring that only one button in the group can be selected at a time.
- * @todo add 'removeRadioButton' function.
  * @note Each object represents a single group.
  */
 class MyRadioGroup
@@ -617,10 +616,18 @@ public:
     bool addRadioButton(HWND hWnd);
 
     /**
+     * @brief Remove a radio button from the radio group.
+     * @param hWnd Handle to the window.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool removeRadioButton(HWND hWnd);
+
+    /**
      * @brief Get the current state of the radio group.
      * @return Returns the ID of the currently selected button in the group.
+     * @note If no button is selected, the return value is zero.
      */
-    INT getRadioState();
+    int getRadioState();
 
     /**
      * @brief Update the state of the radio group.
@@ -638,8 +645,8 @@ private:
     // Map associating radio button IDs with pointers to subclass objects (class MyRadioButtonSubclass).
     // Key: The ID of the radio button.
     // Value: Pointer to the subclass object that subclasses the button (class MyRadioButtonSubclass).
-    std::map<INT, std::pair<HWND, MyRadioButtonSubclass *>> mapButtons;
-    INT currentSelectedButtonID = 0; // This indicates which button in the radio group is selected.
+    std::map<int, std::pair<HWND, MyRadioButtonSubclass *>> mapButtons;
+    int currentSelectedButtonID = 0; // This indicates which button in the radio group is selected.
 };
 
 /**
@@ -928,6 +935,47 @@ public:
     // [UTILITY FUNCTIONS]
 
     /**
+     * @brief Scroll the associated container window by amount.
+     * @param scrollAmount Number of pixels to scroll. Positive number for downward direction, negative number for upward direction.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool scrollWindowByAmount(INT scrollAmount);
+
+    /**
+     * @brief Scroll the associated container window by pos.
+     * @param scrollPos The target scroll position.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool scrollWindowByPos(INT scrollPos);
+
+    /**
+     * @brief Scroll the associated container window by amount. (Smooth)
+     * @param scrollAmount Number of pixels to scroll. Positive number for downward direction, negative number for upward direction.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool scrollWindowByAmountSmooth(INT scrollAmount);
+
+    /**
+     * @brief Scroll the associated container window by pos. (Smooth)
+     * @param scrollPos The target scroll position.
+     * @param milliseconds The duration of the smooth scrolling animation in milliseconds.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool scrollWindowByPosSmooth(INT scrollPos, FLOAT milliseconds);
+
+    /**
+     * @brief Get the scrollbar scroll informations.
+     * @param scrollInfo Reference to the SCROLLINFO struct that will receive the scroll information. [OUT]
+     * @param pCurrentPos Pointer to the variable that will receive the current scroll position. [OUT] (optional)
+     * @param pMinScrollPos Pointer to the variable that will receive the min scroll position. [OUT] (optional)
+     * @param pMaxScrollPos Pointer to the variable that will receive the max scroll position. [OUT] (optional)
+     * @param pMaxUpwardScrollAmount Pointer to the variable that will receive the max upward scroll amount. [OUT] (optional)
+     * @param pMaxDownwardScrollAmount Pointer to the variable that will receive the max downward scroll amount. [OUT] (optional)
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool getScrollInfo(SCROLLINFO &scrollInfo, int *pCurrentPos = nullptr, int *pMinScrollPos = nullptr, int *pMaxScrollPos = nullptr, int *pMaxUpwardScrollAmount = nullptr, int *pMaxDownwardScrollAmount = nullptr);
+
+    /**
      * @brief Get the window associated static window handle.
      * @return Returns the window associated static window handle.
      */
@@ -1036,11 +1084,14 @@ private:
 
 private:
     // Scrollbar-related variables.
-    HWND scrollbarWindow = nullptr;    // Handle to the scrollbar window.
-    HWND staticWindow = nullptr;       // Handle to the scrollbar-associated static window that represents the scrollbar appearance.
-    MyContainer *pContainer = nullptr; // Handle to the container window that will be scrolled.
-    int initialThumbPos = 0;           // The initial position of the scrollbar thumb when the dragging starts.
-    int initialClickPos = 0;           // The initial position of the mouse cursor when the dragging starts.
+    inline static const UINT_PTR IDT_ANIMATION_SCROLLBAR = 2; // Animation scrollbar timer ID.
+    HWND scrollbarWindow = nullptr;                           // Handle to the scrollbar window.
+    HWND staticWindow = nullptr;                              // Handle to the scrollbar-associated static window that represents the scrollbar appearance.
+    MyContainer *pContainer = nullptr;                        // Handle to the container window that will be scrolled.
+    int initialThumbPos = 0;                                  // The initial position of the scrollbar thumb when the dragging starts.
+    int initialClickPos = 0;                                  // The initial position of the mouse cursor when the dragging starts.
+    int lastScrollPos = 0;                                    // Indicate the last scroll position.
+    bool scrollInProgress = false;                            // Indicate whether scrolling animation is in progress.
 
     // Animation-related variables.
     FLOAT defaultAnimationDuration = 0.100f;                                                                               // Default state animation duration.
@@ -1050,6 +1101,7 @@ private:
     std::vector<std::unique_ptr<IUIAnimationVariable *, IUIAnimationVariableDeleter>> pAnimationVariableScrollbarThumbRGB; // Animation variable: Scrollbar thumb color (RGB).
     bool isThumbHoverState = false;                                                                                        // Indicate whether the scrollbar thumb is hovered.
     bool isThumbDragging = false;                                                                                          // Indicate whether the scrollbar thumb is being dragged.
+    std::unique_ptr<IUIAnimationVariable *, IUIAnimationVariableDeleter> pAnimationVariableLastScrollPos;                  // Animation variable: Last scroll position.
 
     // Direct2D-related variables.
     // Shared resources: These are resources that are utilized by all instances of the class.

@@ -20,6 +20,7 @@
 #include <string>        // String handling.
 #include <cwctype>       // Character classification and conversion.
 #include <regex>         // Regular expressions (String conversions).
+#include <cmath>         // Mathematical functions and constants.
 #include <limits>        // Numeric limits.
 #include <locale>        // Localization.
 #include <exception>     // Exception handling.

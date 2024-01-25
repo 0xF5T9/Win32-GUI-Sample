@@ -856,7 +856,7 @@ bool MyApp::onCreate(HWND hWnd)
                 break;
             if (!p_container->addWindow(p_radio_button_window))
                 break;
-            if (!SampleRadio.addRadioButton(p_radio_button_window.get()->hWnd()))
+            if (!g_SampleRadioGroup.addRadioButton(p_radio_button_window.get()->hWnd()))
                 break;
         }
         {
@@ -868,7 +868,7 @@ bool MyApp::onCreate(HWND hWnd)
                 break;
             if (!p_container->addWindow(p_radio_button_window))
                 break;
-            if (!SampleRadio.addRadioButton(p_radio_button_window.get()->hWnd()))
+            if (!g_SampleRadioGroup.addRadioButton(p_radio_button_window.get()->hWnd()))
                 break;
         }
         {
@@ -880,7 +880,7 @@ bool MyApp::onCreate(HWND hWnd)
                 break;
             if (!p_container->addWindow(p_radio_button_window))
                 break;
-            if (!SampleRadio.addRadioButton(p_radio_button_window.get()->hWnd()))
+            if (!g_SampleRadioGroup.addRadioButton(p_radio_button_window.get()->hWnd()))
                 break;
         }
         error_message = "";
@@ -1204,6 +1204,33 @@ bool MyApp::onCreate(HWND hWnd)
             std::shared_ptr<MyWindow> p_window(new MyWindow());
             if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT FONT", WS_VISIBLE | WS_CHILD,
                                               170, 1006 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTFONTNOTE, nullptr, nullptr))
+                break;
+            if (!p_container->addWindow(p_window))
+                break;
+            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
+        }
+
+        // Select scroll mode.
+        {
+            error_message = "Failed to create the select scroll mode combobox.";
+            MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
+                                                    10, 1056,
+                                                    150, 40, (HMENU)IDC_DC_COMBOBOXSELECTSCROLLMODE, true, true);
+            std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
+            if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
+                break;
+            if (!p_container->addWindow(p_ddlcombobox_window))
+                break;
+            int index = (p_container->enableSmoothScroll ? 1 : 0);
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Instant");
+            ComboBox_AddString(p_ddlcombobox_window.get()->hWnd(), L"Smooth");
+            ComboBox_SetCurSel(p_ddlcombobox_window.get()->hWnd(), index);
+            error_message = "";
+        }
+        {
+            std::shared_ptr<MyWindow> p_window(new MyWindow());
+            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT SCROLL MODE", WS_VISIBLE | WS_CHILD,
+                                              170, 1056 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTSCROLLMODENOTE, nullptr, nullptr))
                 break;
             if (!p_container->addWindow(p_window))
                 break;

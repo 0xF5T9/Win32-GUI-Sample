@@ -540,10 +540,10 @@ public:
     /**
      * @brief Scroll the container.
      * @param scrollAmount Specifies the scroll amount in pixels.
-     * @param scrollAlternative Specifies whether to scroll the container using ScrollWindowEx() method.
+     * @param scrollAlternative Specifies whether to scroll the container using DeferWindowPos() method.
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
-    bool scrollContainer(INT scrollAmount, bool scrollAlternative = true);
+    bool scrollContainer(INT scrollAmount, bool scrollAlternative = false);
 
     /**
      * @brief Set the bottom padding value.
@@ -592,6 +592,7 @@ private:
 public:
     inline static UINT64 totalInstances = 0;               // Indicate the total number of MyContainer instances. [DEBUG]
     inline static bool autoUpdateScrollInformation = true; // Specifies whether to automatically update the container scroll information after added/removed a window. [TESTING IN PROGRESS]
+    bool enableSmoothScroll = true;                        // Specifies whether to use smooth scrolling for the container.
 
 private:
     std::unique_ptr<MyWindow> pContainerWindow;         // Container window.

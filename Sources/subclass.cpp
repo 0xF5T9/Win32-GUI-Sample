@@ -3451,7 +3451,45 @@ bool MyRadioGroup::addRadioButton(HWND hWnd)
 
     return are_all_operation_success;
 }
-INT MyRadioGroup::getRadioState()
+bool MyRadioGroup::removeRadioButton(HWND hWnd)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        auto window_id = GetDlgCtrlID(hWnd);
+        auto it = this->mapButtons.find(window_id);
+        if (it != this->mapButtons.end())
+        {
+            auto p_subclass = MyRadioButtonSubclass::getSubclassPointer(hWnd);
+            if (!p_subclass)
+            {
+                error_message = "The window is incompatible (Not subclassed by MyRadioButtonSubclass class).";
+                break;
+            }
+            p_subclass->updateSelectionState(false); // Deselect the radio button.
+            p_subclass->pRadioGroup = nullptr;       // Unlink the radio button from the group.
+
+            if (this->currentSelectedButtonID == window_id) // Set the radio group state to none.
+                this->currentSelectedButtonID = 0;
+
+            this->mapButtons.erase(it);
+        }
+        else
+        {
+            error_message = "This window doesn't exist in the radio group.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyRadioGroup' | FUNC: 'removeRadioButton()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+int MyRadioGroup::getRadioState()
 {
     return this->currentSelectedButtonID;
 }
@@ -5332,6 +5370,370 @@ MyVerticalScrollbarSubclass ::~MyVerticalScrollbarSubclass()
     if (!DestroyWindow(this->staticWindow))
         g_pApp->logger.writeLog("Failed to destroy the associated static window.", "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'Destructor']", MyLogType::Error);
 }
+bool MyVerticalScrollbarSubclass::scrollWindowByAmount(INT scrollAmount)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // Get the scroll informations.
+        SCROLLINFO scroll_info;
+        int current_scroll_pos = 0,
+            min_scroll_pos = 0,
+            max_scroll_pos = 0,
+            max_upward_scroll_amount = 0,
+            max_downward_scroll_amount = 0;
+        if (!this->getScrollInfo(scroll_info, &current_scroll_pos, &min_scroll_pos, &max_scroll_pos, &max_upward_scroll_amount, &max_downward_scroll_amount))
+        {
+            error_message = "Failed to get the scroll information.";
+            break;
+        }
+
+        // Adjust the scroll amount if it exceeds the boundaries.
+        if (current_scroll_pos + scrollAmount > max_scroll_pos)
+            scrollAmount = max_downward_scroll_amount;
+        else if (current_scroll_pos + scrollAmount < min_scroll_pos)
+            scrollAmount = max_upward_scroll_amount;
+
+        if (!pContainer->scrollContainer(scrollAmount))
+        {
+            error_message = "Failed to scroll the container.";
+            break;
+        }
+
+        // Update the scroll information.
+        scroll_info.nPos += scrollAmount;
+        SendMessageW(this->scrollbarWindow, SBM_SETSCROLLINFO, TRUE, reinterpret_cast<LPARAM>(&scroll_info));
+        RedrawWindow(this->staticWindow, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'scrollWindowByAmount()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+bool MyVerticalScrollbarSubclass::scrollWindowByPos(INT scrollPos)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // Get the scroll informations.
+        SCROLLINFO scroll_info;
+        int current_scroll_pos = 0,
+            min_scroll_pos = 0,
+            max_scroll_pos = 0,
+            scroll_amount = 0;
+        if (!this->getScrollInfo(scroll_info, &current_scroll_pos, &min_scroll_pos, &max_scroll_pos))
+        {
+            error_message = "Failed to get the scroll information.";
+            break;
+        }
+
+        // Adjust the scroll position if it exceeds the boundaries.
+        if (scrollPos < min_scroll_pos)
+            scrollPos = min_scroll_pos;
+        else if (scrollPos > max_scroll_pos)
+            scrollPos = max_scroll_pos;
+
+        if (scrollPos == current_scroll_pos) // No scrolling needed.
+        {
+            are_all_operation_success = true;
+            break;
+        }
+        else if (scrollPos > current_scroll_pos) // Scrolling downward.
+        {
+            scroll_amount = scrollPos - current_scroll_pos;
+            scroll_info.nPos += scroll_amount;
+            if (!pContainer->scrollContainer(scroll_amount))
+            {
+                error_message = "Failed to scroll the container.";
+                break;
+            }
+        }
+        else if (scrollPos < current_scroll_pos) // Scrolling upward.
+        {
+            scroll_amount = current_scroll_pos - scrollPos;
+            scroll_info.nPos += -scroll_amount;
+            if (!pContainer->scrollContainer(-scroll_amount))
+            {
+                error_message = "Failed to scroll the container.";
+                break;
+            }
+        }
+
+        // Update the scroll information.
+        SendMessageW(this->scrollbarWindow, SBM_SETSCROLLINFO, TRUE, reinterpret_cast<LPARAM>(&scroll_info));
+        RedrawWindow(this->staticWindow, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'scrollWindowByPos()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+bool MyVerticalScrollbarSubclass::scrollWindowByAmountSmooth(INT scrollAmount)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // Get the scroll informations.
+        SCROLLINFO scroll_info;
+        int current_scroll_pos = 0,
+            min_scroll_pos = 0,
+            max_scroll_pos = 0,
+            max_upward_scroll_amount = 0,
+            max_downward_scroll_amount = 0;
+        if (!this->getScrollInfo(scroll_info, &current_scroll_pos, &min_scroll_pos, &max_scroll_pos, &max_upward_scroll_amount, &max_downward_scroll_amount))
+        {
+            error_message = "Failed to get the scroll information.";
+            break;
+        }
+
+        // Adjust the scroll amount if it exceeds the boundaries.
+        if (current_scroll_pos + scrollAmount > max_scroll_pos)
+            scrollAmount = max_downward_scroll_amount;
+        else if (current_scroll_pos + scrollAmount < min_scroll_pos)
+            scrollAmount = max_upward_scroll_amount;
+
+        bool scroll_direction_changed = false;
+        if (this->scrollInProgress) // If scrolling is in progress:
+        {
+            // Check if the scroll direction has changed.
+            scroll_direction_changed = ((this->lastScrollPos > current_scroll_pos && scrollAmount < 0) || (this->lastScrollPos < current_scroll_pos && scrollAmount > 0) ? true : false);
+            if (scroll_direction_changed)
+                this->lastScrollPos = current_scroll_pos; // Scroll direction changed, stop the scrolling.
+            else
+                this->lastScrollPos += scrollAmount; // The scroll direction has not changed, stack the scroll amount.
+        }
+        else // No scrolling is in progress.
+        {
+            this->lastScrollPos = current_scroll_pos + scrollAmount;
+            this->scrollInProgress = true;
+        }
+
+        // Calculate the scroll distance:
+        int scroll_distance = this->lastScrollPos - current_scroll_pos; // Calculate the scroll distance.
+        if (scroll_distance < 0)                                        // In the case of scrolling upward, the calculated scroll distance is a negative value, converting to a positive value.
+            scroll_distance = -scroll_distance;
+        else if (scroll_distance == 0) // Make sure the scroll distance value is non-zero to avoid the dividing by zero exception.
+            scroll_distance = 1;
+
+        // Calculate the scrolling speed based on the scroll distance:
+        int base_scroll_speed = 800,                                        // The base scroll speed.
+            max_scroll_speed = 4000,                                        // Maximum scroll speed.
+            base_distance_interval = (scroll_direction_changed ? 10 : 100), // This base interval will determine the scrolling speed. If the scroll direction has changed, accelerate the scroll speed by lowering the interval.
+            distance_interval = static_cast<int>(std::sqrt(base_distance_interval * scroll_distance)),
+            scroll_speed = base_scroll_speed + (scroll_distance / distance_interval) * 400;
+        if (scroll_speed > max_scroll_speed)
+            scroll_speed = max_scroll_speed;
+
+        // Adjust the scroll position if it exceeds the boundaries.
+        if (this->lastScrollPos > max_scroll_pos)
+            this->lastScrollPos = max_scroll_pos;
+        else if (this->lastScrollPos < min_scroll_pos)
+            this->lastScrollPos = min_scroll_pos;
+
+        std::unique_ptr<IUIAnimationStoryboard *, IUIAnimationStoryboardDeleter>
+        p_storyboard(new IUIAnimationStoryboard *(nullptr));
+        std::unique_ptr<IUIAnimationTransition *, IUIAnimationTransitionDeleter> p_transition_last_scroll_pos(new IUIAnimationTransition *(nullptr));
+        std::unique_ptr<IUIAnimationTransition *, IUIAnimationTransitionDeleter> p_transition_target_scroll_pos(new IUIAnimationTransition *(nullptr));
+
+        HRESULT hr = this->graphics()->wamEngine().manager()->CreateStoryboard(&*p_storyboard);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to create the animation storyboard.";
+            break;
+        }
+
+        error_message = "Failed to create the animation transitions.";
+        hr = this->graphics()->wamEngine().transitionLibrary()->CreateInstantaneousTransition(current_scroll_pos, &*p_transition_last_scroll_pos);
+        if (FAILED(hr))
+            break;
+        hr = this->graphics()->wamEngine().transitionLibrary()->CreateLinearTransitionFromSpeed(scroll_speed, this->lastScrollPos, &*p_transition_target_scroll_pos);
+        if (FAILED(hr))
+            break;
+        error_message = "";
+
+        error_message = "Failed to add the transitions to the storyboard.";
+        hr = (*p_storyboard)->AddTransition(*this->pAnimationVariableLastScrollPos, *p_transition_last_scroll_pos);
+        if (FAILED(hr))
+            break;
+        UI_ANIMATION_KEYFRAME key_frame;
+        hr = (*p_storyboard)->AddKeyframeAfterTransition(*p_transition_last_scroll_pos, &key_frame);
+        if (FAILED(hr))
+            break;
+        hr = (*p_storyboard)->AddTransitionAtKeyframe(*this->pAnimationVariableLastScrollPos, *p_transition_target_scroll_pos, key_frame);
+        if (FAILED(hr))
+            break;
+        error_message = "";
+
+        UI_ANIMATION_SECONDS seconds_now;
+        hr = this->graphics()->wamEngine().timer()->GetTime(&seconds_now);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to retrieve the current time.";
+            break;
+        }
+
+        hr = (*p_storyboard)->SetTag(NULL, GetDlgCtrlID(this->scrollbarWindow));
+        if (FAILED(hr))
+        {
+            error_message = "Failed to set the storyboard tag.";
+            break;
+        }
+
+        hr = (*p_storyboard)->Schedule(seconds_now);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to schedule the storyboard.";
+            break;
+        }
+
+        this->scrollInProgress = true;
+        SetTimer(this->scrollbarWindow, IDT_ANIMATION_SCROLLBAR, USER_TIMER_MINIMUM, (TIMERPROC)NULL);
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'scrollAnimation2()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+bool MyVerticalScrollbarSubclass::scrollWindowByPosSmooth(INT scrollPos, FLOAT milliseconds)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // Get the scroll informations.
+        int current_scroll_pos = 0;
+        SCROLLINFO scroll_info;
+        if (!this->getScrollInfo(scroll_info, &current_scroll_pos))
+        {
+            error_message = "Failed to get the scroll information.";
+            break;
+        }
+
+        if (scrollPos == scroll_info.nPos) // No scrolling needed.
+        {
+            are_all_operation_success = true;
+            break;
+        }
+
+        int last_scroll_pos = 0;
+        HRESULT hr = (*this->pAnimationVariableLastScrollPos)->GetIntegerValue(&last_scroll_pos);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to get the animation variable value.";
+            break;
+        }
+
+        std::unique_ptr<IUIAnimationStoryboard *, IUIAnimationStoryboardDeleter> p_storyboard(new IUIAnimationStoryboard *(nullptr));
+        std::unique_ptr<IUIAnimationTransition *, IUIAnimationTransitionDeleter> p_transition_last_scroll_pos(new IUIAnimationTransition *(nullptr));
+        std::unique_ptr<IUIAnimationTransition *, IUIAnimationTransitionDeleter> p_transition_target_scroll_pos(new IUIAnimationTransition *(nullptr));
+
+        hr = this->graphics()->wamEngine().manager()->CreateStoryboard(&*p_storyboard);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to create the animation storyboard.";
+            break;
+        }
+
+        error_message = "Failed to create the animation transitions.";
+        hr = this->graphics()->wamEngine().transitionLibrary()->CreateInstantaneousTransition(current_scroll_pos, &*p_transition_last_scroll_pos);
+        if (FAILED(hr))
+            break;
+        hr = this->graphics()->wamEngine().transitionLibrary()->CreateAccelerateDecelerateTransition(milliseconds, scrollPos, 0.5, 0.5, &*p_transition_target_scroll_pos);
+        if (FAILED(hr))
+            break;
+        error_message = "";
+
+        error_message = "Failed to add the transitions to the storyboard.";
+        hr = (*p_storyboard)->AddTransition(*this->pAnimationVariableLastScrollPos, *p_transition_last_scroll_pos);
+        if (FAILED(hr))
+            break;
+        UI_ANIMATION_KEYFRAME key_frame;
+        hr = (*p_storyboard)->AddKeyframeAfterTransition(*p_transition_last_scroll_pos, &key_frame);
+        if (FAILED(hr))
+            break;
+        hr = (*p_storyboard)->AddTransitionAtKeyframe(*this->pAnimationVariableLastScrollPos, *p_transition_target_scroll_pos, key_frame);
+        if (FAILED(hr))
+            break;
+        error_message = "";
+
+        UI_ANIMATION_SECONDS seconds_now;
+        hr = this->graphics()->wamEngine().timer()->GetTime(&seconds_now);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to retrieve the current time.";
+            break;
+        }
+
+        hr = (*p_storyboard)->SetTag(NULL, GetDlgCtrlID(this->scrollbarWindow));
+        if (FAILED(hr))
+        {
+            error_message = "Failed to set the storyboard tag.";
+            break;
+        }
+
+        hr = (*p_storyboard)->Schedule(seconds_now);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to schedule the storyboard.";
+            break;
+        }
+
+        SetTimer(this->scrollbarWindow, this->IDT_ANIMATION_SCROLLBAR, USER_TIMER_MINIMUM, (TIMERPROC)NULL);
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'scrollWindowByPosSmooth()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+bool MyVerticalScrollbarSubclass::getScrollInfo(SCROLLINFO &scrollInfo, int *pCurrentPos, int *pMinScrollPos, int *pMaxScrollPos, int *pMaxUpwardScrollAmount, int *pMaxDownwardScrollAmount)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        scrollInfo.cbSize = sizeof(SCROLLINFO);
+        scrollInfo.fMask = SIF_ALL;
+
+        if (!SendMessageW(this->scrollbarWindow, SBM_GETSCROLLINFO, 0, reinterpret_cast<LPARAM>(&scrollInfo)))
+        {
+            error_message = "Failed to get the scroll information.";
+            break;
+        }
+
+        if (pCurrentPos)
+            *pCurrentPos = scrollInfo.nPos;
+        if (pMinScrollPos)
+            *pMinScrollPos = scrollInfo.nMin;
+        if (pMaxScrollPos)
+            *pMaxScrollPos = scrollInfo.nMax - static_cast<int>(scrollInfo.nPage);
+        if (pMaxUpwardScrollAmount)
+            *pMaxUpwardScrollAmount = -(scrollInfo.nPos - scrollInfo.nMin);
+        if (pMaxDownwardScrollAmount)
+            *pMaxDownwardScrollAmount = (scrollInfo.nMax - static_cast<int>(scrollInfo.nPage)) - scrollInfo.nPos;
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'getScrollInfo()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
 HWND MyVerticalScrollbarSubclass::getStaticHandle()
 {
     return this->staticWindow;
@@ -5430,6 +5832,7 @@ bool MyVerticalScrollbarSubclass::setWindow(HWND hWnd, MyContainer *pContainer)
             pAnimationVariableScrollbarThumbRGB.emplace_back(new IUIAnimationVariable *(nullptr));
             pAnimationVariableScrollbarThumbRGB.emplace_back(new IUIAnimationVariable *(nullptr));
             pAnimationVariableScrollbarThumbRGB.emplace_back(new IUIAnimationVariable *(nullptr));
+            pAnimationVariableLastScrollPos.reset(new IUIAnimationVariable *(nullptr));
             error_message = "Failed to create the animation variables.";
             if (!this->graphics()->wamEngine().createAnimationVariable(*this->pAnimationVariableScrollbarThumbRGB[0],
                                                                        this->objects()->colors.scrollbarThumbDefault.getRed(),
@@ -5442,6 +5845,10 @@ bool MyVerticalScrollbarSubclass::setWindow(HWND hWnd, MyContainer *pContainer)
             if (!this->graphics()->wamEngine().createAnimationVariable(*this->pAnimationVariableScrollbarThumbRGB[2],
                                                                        this->objects()->colors.scrollbarThumbDefault.getBlue(),
                                                                        0.0, 255.0, UI_ANIMATION_ROUNDING_FLOOR))
+                break;
+            if (!this->graphics()->wamEngine().createAnimationVariable(*this->pAnimationVariableLastScrollPos,
+                                                                       0,
+                                                                       -100000.0, 100000.0, UI_ANIMATION_ROUNDING_FLOOR))
                 break;
             error_message = "";
         }
@@ -5719,7 +6126,7 @@ bool MyVerticalScrollbarSubclass::startAnimation(ScrollbarAnimationState animati
 LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureScrollbar(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     // Extract the subclass object pointer from reference data and use it to access non-static members.
-    // MyVerticalScrollbarSubclass *p_this = reinterpret_cast<MyVerticalScrollbarSubclass *>(dwRefData);
+    MyVerticalScrollbarSubclass *p_this = reinterpret_cast<MyVerticalScrollbarSubclass *>(dwRefData);
 
     // Process the message.
     switch (uMsg)
@@ -5727,6 +6134,92 @@ LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureScrollbar(HWND hW
     // Suppress all system background erase requests.
     case WM_ERASEBKGND:
         return 1;
+
+    // Process the scroll animation timer.
+    case WM_TIMER:
+    {
+        switch (wParam)
+        {
+        case IDT_ANIMATION_SCROLLBAR:
+        {
+            HRESULT hr;
+            bool are_all_operation_success = false;
+            std::string error_message = "";
+            while (!are_all_operation_success)
+            {
+                int current_scroll_pos = 0;
+                hr = (*p_this->pAnimationVariableLastScrollPos)->GetIntegerValue(&current_scroll_pos);
+                if (FAILED(hr))
+                {
+                    error_message = "Failed to get the animation variable value.";
+                    break;
+                }
+
+                if (!p_this->scrollWindowByPos(current_scroll_pos))
+                {
+                    error_message = "Failed to scroll the window by pos.";
+                    break;
+                }
+
+                IUIAnimationStoryboard *p_storyboard;
+                hr = p_this->graphics()->wamEngine().manager()->GetStoryboardFromTag(NULL, GetDlgCtrlID(hWnd), &p_storyboard);
+                if (SUCCEEDED(hr))
+                {
+                    if (!p_storyboard)
+                    {
+                        if (!KillTimer(hWnd, IDT_ANIMATION_SCROLLBAR))
+                        {
+                            error_message = "[WM_TIMER] Failed to kill the timer.";
+                            break;
+                        }
+                        p_this->scrollInProgress = false;
+                        are_all_operation_success = true;
+                        break;
+                    }
+
+                    UI_ANIMATION_STORYBOARD_STATUS storyboard_status;
+                    hr = p_storyboard->GetStatus(&storyboard_status);
+                    if (FAILED(hr))
+                    {
+                        error_message = "[WM_TIMER] Failed to get the storyboard status.";
+                        break;
+                    }
+
+                    if (storyboard_status == UI_ANIMATION_STORYBOARD_READY)
+                    {
+                        if (!KillTimer(hWnd, IDT_ANIMATION_SCROLLBAR))
+                        {
+                            error_message = "[WM_TIMER] Failed to kill the timer.";
+                            break;
+                        }
+                        p_this->scrollInProgress = false;
+                    }
+                }
+
+                are_all_operation_success = true;
+            }
+
+            if (!are_all_operation_success)
+            {
+                // Kill the timer if an error occurs.
+                if (!KillTimer(hWnd, IDT_ANIMATION_SCROLLBAR))
+                    g_pApp->logger.writeLog("[WM_TIMER] Failed to kill the timer.", "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureScrollbar()']", MyLogType::Error);
+                p_this->scrollInProgress = false;
+                g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureScrollbar()']", MyLogType::Error);
+            }
+
+            return 0;
+        }
+
+        default:
+        {
+            g_pApp->logger.writeLog("[WM_TIMER] Unprocessed timer message.", "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureScrollbar()']", MyLogType::Error);
+            break;
+        }
+        }
+
+        break;
+    }
 
     // Remove the window subclass callback and destroy any associated windows when the window is being destroyed.
     case WM_DESTROY:
@@ -5926,9 +6419,9 @@ LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureStatic(HWND hWnd,
             {
                 // Kill the timer if an error occurs.
                 if (!KillTimer(hWnd, MyVerticalScrollbarSubclass::IDT_ANIMATION_INVALIDATE))
-                    g_pApp->logger.writeLog("[WM_TIMER] Failed to kill the timer.", "[CLASS: 'MyImageButtonSubclass' | FUNC: 'subclassProcedure()']", MyLogType::Error);
+                    g_pApp->logger.writeLog("[WM_TIMER] Failed to kill the timer.", "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureStatic()']", MyLogType::Error);
 
-                g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedure()']", MyLogType::Error);
+                g_pApp->logger.writeLog(error_message, "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureStatic()']", MyLogType::Error);
             }
 
             return 0;
@@ -5936,7 +6429,7 @@ LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureStatic(HWND hWnd,
 
         default:
         {
-            g_pApp->logger.writeLog("[WM_TIMER] Unprocessed timer message.", "[CLASS: 'MyImageButtonSubclass' | FUNC: 'subclassProcedure()']", MyLogType::Error);
+            g_pApp->logger.writeLog("[WM_TIMER] Unprocessed timer message.", "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureStatic()']", MyLogType::Error);
             break;
         }
         }
@@ -6027,20 +6520,23 @@ LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureStatic(HWND hWnd,
                 else if (new_scroll_position > scroll_info.nMax - static_cast<int>(scroll_info.nPage))
                     new_scroll_position = scroll_info.nMax - static_cast<int>(scroll_info.nPage);
 
-                // Calculate the scroll amount based on the previous and new scroll positions.
-                int scroll_amount = scroll_info.nPos - new_scroll_position;
-
-                // Update the scroll position.
-                scroll_info.nPos = new_scroll_position;
-
-                // Set the new scroll position.
-                SendMessageW(p_this->scrollbarWindow, SBM_SETPOS, new_scroll_position, FALSE);
-
-                // Scroll the container window.
-                p_this->pContainer->scrollContainer(scroll_amount, true);
-
-                // Redraw the scrollbar.
-                RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+                // Scroll to the new position.
+                if (p_this->pContainer->enableSmoothScroll)
+                {
+                    if (!p_this->scrollWindowByPosSmooth(new_scroll_position, 0.15f))
+                    {
+                        error_message = "Failed to scroll the window by pos. (Smooth)";
+                        break;
+                    }
+                }
+                else
+                {
+                    if (!p_this->scrollWindowByPos(new_scroll_position))
+                    {
+                        error_message = "Failed to scroll the window by pos.";
+                        break;
+                    }
+                }
             }
 
             are_all_operation_success = true;
@@ -6146,7 +6642,7 @@ LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureStatic(HWND hWnd,
                 SendMessageW(p_this->scrollbarWindow, SBM_SETPOS, new_scroll_position, TRUE);
 
                 // Scroll the target window.
-                p_this->pContainer->scrollContainer(scroll_amount, true);
+                p_this->pContainer->scrollContainer(-scroll_amount);
 
                 // Redraw the scrollbar.
                 RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);

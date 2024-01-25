@@ -3,7 +3,6 @@
  * @brief Define the application entry and window procedures.
  * @todo Implement scroll focus.
  * @todo Add predefined text window type.
- * @todo Add select file test control.
  */
 
 #include "../Headers/standard_includes.h"
@@ -710,20 +709,17 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
             std::string error_message = "";
             while (!are_all_operation_success)
             {
-                bool is_scrolling_downward = false; // Indicate whether scrolling is occurring in a downward direction.
-                INT scroll_pixel = 10,              // Number of pixels to scroll per scroll.
-                    scroll_delta = 0,               // The actual number of pixels that will be scrolled per scroll event.
-                    wheel_delta = 0;                // Wheel Delta.
-                HWND scroll_container = p_defaultcontainer->container()->hWnd(),
-                     hwnd_scrollbar = p_defaultcontainer->verticalScrollbar()->hWnd();
+                bool is_scrolling_downward = false;                                     // Indicate whether scrolling is occurring in a downward direction.
+                int scroll_pixel = (p_defaultcontainer->enableSmoothScroll ? 100 : 50), // Number of pixels to scroll per scroll.
+                    scroll_delta = 0,                                                   // The actual number of pixels that will be scrolled per scroll event.
+                    wheel_delta = 0;                                                    // Wheel Delta.
+                auto p_subclass_scrollbar_window = static_cast<MyVerticalScrollbarSubclass *>(p_defaultcontainer->verticalScrollbar()->data());
 
-                // Get the container scroll information struct.
+                // Get the container scroll information.
                 SCROLLINFO scroll_info;
-                scroll_info.cbSize = sizeof(SCROLLINFO);
-                scroll_info.fMask = SIF_ALL;
-                if (!SendMessageW(hwnd_scrollbar, SBM_GETSCROLLINFO, 0, reinterpret_cast<LPARAM>(&scroll_info)))
+                if (!p_subclass_scrollbar_window->getScrollInfo(scroll_info))
                 {
-                    error_message = "Failed to retrieve the container scroll information struct.";
+                    error_message = "Failed to retrieve the container scroll information.";
                     break;
                 }
 
@@ -740,52 +736,31 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
                     // The scrolling is occurring in a downward direction.
                     is_scrolling_downward = true;
                     scroll_delta = scroll_pixel * -(wheel_delta / WHEEL_DELTA);
-                    scroll_info.nPos += scroll_delta;
                 }
                 else
                 {
                     // The scrolling is occurring in an upward direction.
                     is_scrolling_downward = false;
                     scroll_delta = scroll_pixel * (wheel_delta / WHEEL_DELTA);
-                    scroll_info.nPos -= scroll_delta;
                 }
 
-                // Check for boundary conditions and update the position.
-                if (scroll_info.nPos < scroll_info.nMin)
+                // Scroll the container window.
+                if (p_defaultcontainer->enableSmoothScroll)
                 {
-                    // Update scroll position and the window with a scroll of size specified by the ScrollDelta.
-                    p_defaultcontainer->scrollContainer((scroll_delta) - (-(scroll_info.nPos)), true);
-                    scroll_info.nPos = scroll_info.nMin;
-                }
-                else if (scroll_info.nPos > scroll_info.nMax - (int)scroll_info.nPage)
-                {
-                    // Update scroll position and the window with a scroll of size specified by the ScrollDelta.
-                    p_defaultcontainer->scrollContainer(-(scroll_delta) + -((scroll_info.nMax - (int)scroll_info.nPage) - scroll_info.nPos), true);
-                    scroll_info.nPos = scroll_info.nMax - (int)scroll_info.nPage;
+                    if (!p_subclass_scrollbar_window->scrollWindowByAmountSmooth(is_scrolling_downward ? scroll_delta : -scroll_delta))
+                    {
+                        error_message = "Failed to scroll the container window.";
+                        break;
+                    }
                 }
                 else
                 {
-                    // Update scroll position and the window with a scroll of size specified by the ScrollDelta.
-                    p_defaultcontainer->scrollContainer((is_scrolling_downward ? -(scroll_delta) : scroll_delta), true);
+                    if (!p_subclass_scrollbar_window->scrollWindowByAmount(is_scrolling_downward ? scroll_delta : -scroll_delta))
+                    {
+                        error_message = "Failed to scroll the container window.";
+                        break;
+                    }
                 }
-
-                // Get the container dimensions.
-                RECT rect_container;
-                if (!GetClientRect(scroll_container, &rect_container))
-                {
-                    error_message = "Failed to retrieve the container window client rect.";
-                    break;
-                }
-
-                // New container height dimension equivalent to new page size.
-                scroll_info.nPage = rect_container.bottom - rect_container.top;
-
-                // Set scroll info.
-                SendMessageW(hwnd_scrollbar, SBM_SETSCROLLINFO, TRUE, reinterpret_cast<LPARAM>(&scroll_info));
-
-                // Redraw the scrollbar window.
-                auto p_casted_subclass = MyVerticalScrollbarSubclass::getSubclassPointer(hwnd_scrollbar);
-                RedrawWindow(p_casted_subclass->getStaticHandleRef(), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 
                 are_all_operation_success = true;
             }
@@ -899,6 +874,21 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
         }
         case VK_F5:
         {
+            // auto current_selected = g_SampleRadioGroup.getRadioState();
+            // g_pApp->logger.writeLog("Current selected: " + std::to_string(current_selected));
+            auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
+            if (p_container)
+            {
+                g_pApp->logger.writeLog("Container found: 'IDC_DC_CONTAINER'", true);
+                auto p_window = p_container->findWindow(IDC_DC_RADIOBUTTON1);
+                if (p_window)
+                {
+                    g_pApp->logger.writeLog("Window found: 'IDC_DC_RADIOBUTTON1'", true);
+                    if (g_SampleRadioGroup.removeRadioButton(p_window->hWnd()))
+                        g_pApp->logger.writeLog("Removed the button from the radio group.", true);
+                }
+            }
+
             MessageBeep(MB_OK);
             return 0;
         }
@@ -955,6 +945,7 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
         case IDC_DC_COMBOBOXSELECTTHEMENOTE:
         case IDC_DC_COMBOBOXSELECTFONTNOTE:
         case IDC_DC_SELECTFILENOTE:
+        case IDC_DC_COMBOBOXSELECTSCROLLMODENOTE:
         {
             SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
             SetTextColor(hdc, g_pApp->pUIManager->colors.textInactive.getCOLORREF());
@@ -1661,6 +1652,7 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                         SetWindowFont(p_container->findWindow(IDC_DC_OPENLOGFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTTHEMENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTFONTNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTSCROLLMODENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         SetWindowFont(p_container->findWindow(IDC_DC_SELECTFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         p_container->refresh(false);
                     }
@@ -1691,10 +1683,77 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                         SetWindowFont(p_container->findWindow(IDC_DC_OPENLOGFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTTHEMENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTFONTNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
+                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTSCROLLMODENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         SetWindowFont(p_container->findWindow(IDC_DC_SELECTFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
                         p_container->refresh(false);
                     }
                     g_pApp->logger.writeLog("Application font selected:", "'Ubuntu'", MyLogType::Info);
+
+                    is_switch_success = true;
+                    break;
+                }
+                }
+                if (!is_switch_success)
+                {
+                    g_pApp->logger.writeLog("Failed to change the application font.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
+                    break;
+                }
+                return 0;
+            }
+            case IDC_DC_COMBOBOXSELECTSCROLLMODE:
+            {
+                HWND combobox_window = reinterpret_cast<HWND>(lParam);
+                INT combobox_index = static_cast<INT>(SendMessageW(combobox_window, CB_GETCURSEL, 0, 0));
+                if (combobox_index == CB_ERR)
+                {
+                    g_pApp->logger.writeLog("No combobox item was selected.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
+                    break;
+                }
+
+                // Get the combobox value (in this case a string) of the current selected item.
+                // INT item_text_length = static_cast<INT>(SendMessageW(combobox_window, CB_GETLBTEXTLEN, combobox_index, 0));
+                // if (item_text_length == CB_ERR)
+                // {
+                //     error_message = "Failed to retrieve the combobox item text length.";
+                //     break;
+                // }
+                // WCHAR *text_buffer = new WCHAR[item_text_length + 1];
+                // if (SendMessageW(combobox_window, CB_GETLBTEXT, combobox_index, reinterpret_cast<LPARAM>(text_buffer)) == CB_ERR)
+                // {
+                //     delete[] text_buffer;
+                //     error_message = "Failed to retrieve the combobox item text.";
+                //     break;
+                // }
+                // std::wstring item_text(text_buffer);
+                // delete[] text_buffer;
+
+                bool is_switch_success = false;
+                switch (combobox_index)
+                {
+                case 0:
+                {
+                    auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
+                    if (p_container)
+                    {
+                        p_container->enableSmoothScroll = false;
+                        g_pApp->logger.writeLog("Scroll mode selected:", "'Instant'", MyLogType::Info);
+                    }
+                    else
+                        g_pApp->logger.writeLog("Failed to change the container scroll mode.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
+
+                    is_switch_success = true;
+                    break;
+                }
+                case 1:
+                {
+                    auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
+                    if (p_container)
+                    {
+                        p_container->enableSmoothScroll = true;
+                        g_pApp->logger.writeLog("Scroll mode selected:", "'Smooth'", MyLogType::Info);
+                    }
+                    else
+                        g_pApp->logger.writeLog("Failed to change the container scroll mode.", "[MESSAGE: 'WM_COMMAND/CBN_SELCHANGE' | CALLBACK: 'DefaultContainerProcedure()']", MyLogType::Error);
 
                     is_switch_success = true;
                     break;

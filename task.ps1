@@ -22,10 +22,10 @@
 
 # Function that will be used to write colored output.
 function Write-Color {
-param(
-    [Parameter(Mandatory=$true)][string[]]$Text,
-    [Parameter(Mandatory=$true)][ConsoleColor[]]$Color
-)
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Text,
+        [Parameter(Mandatory = $true)][ConsoleColor[]]$Color
+    )
     # Fallback defaults if one of the values isn't set.
     $LastForegroundColor = [console]::ForegroundColor
     # The real deal coloring.
@@ -47,8 +47,8 @@ $disable_mingw64_tasks = $false # The variable determine whether to disable Ming
 $disable_msbuild_tasks = $false # The variable determine whether to disable MSbuild tasks.
 
 # Set required paths here:
-$compiler_path = "C:\msys64\mingw64\bin\g++.exe"              # G++.exe     (Mingw64)
-$resource_compiler_path = "C:\msys64\mingw64\bin\windres.exe" # windres.exe (Mingw64)
+$compiler_path = "C:\msys64\ucrt64\bin\g++.exe"              # G++.exe     (Mingw64)
+$resource_compiler_path = "C:\msys64\ucrt64\bin\windres.exe" # windres.exe (Mingw64)
 $project_file_path = ".\Win32-GUI-Sample.sln"                 # Project file .sln (MSBuild)
 
 # Test the set paths.
@@ -133,9 +133,9 @@ if ($task_name -match "build") {
             New-Item -ItemType Directory -Path ./Build | Out-Null
         }
         if (!(Test-Path("./Build/Mingw64"))) {
-                Write-Color -Text "Creating '", "Mingw64", "' folder ..." -color DarkGray, Cyan, DarkGray
-                New-Item -ItemType Directory -Path ./Build/Mingw64 | Out-Null
-            }
+            Write-Color -Text "Creating '", "Mingw64", "' folder ..." -color DarkGray, Cyan, DarkGray
+            New-Item -ItemType Directory -Path ./Build/Mingw64 | Out-Null
+        }
 
         # Clean build files.
         if (Test-Path("./Build/Mingw64")) {
@@ -187,9 +187,9 @@ if ($task_name -match "build") {
             New-Item -ItemType Directory -Path ./Build | Out-Null
         }
         if (!(Test-Path("./Build/Mingw64"))) {
-                Write-Color -Text "Creating '", "Mingw64", "' folder ..." -color DarkGray, Cyan, DarkGray
-                New-Item -ItemType Directory -Path ./Build/Mingw64 | Out-Null
-            }
+            Write-Color -Text "Creating '", "Mingw64", "' folder ..." -color DarkGray, Cyan, DarkGray
+            New-Item -ItemType Directory -Path ./Build/Mingw64 | Out-Null
+        }
 
         # Clean build files.
         if (Test-Path("./Build/Mingw64")) {
@@ -241,8 +241,8 @@ if ($task_name -match "build") {
             New-Item -ItemType Directory -Path ./Build | Out-Null
         }
         if (!(Test-Path("./Build/MSBuild"))) {
-                Write-Color -Text "Creating '", "MSBuild", "' folder ..." -color DarkGray, Cyan, DarkGray
-                New-Item -ItemType Directory -Path ./Build/MSBuild | Out-Null
+            Write-Color -Text "Creating '", "MSBuild", "' folder ..." -color DarkGray, Cyan, DarkGray
+            New-Item -ItemType Directory -Path ./Build/MSBuild | Out-Null
         }
         if (Test-Path("./Build/MSBuild/Output")) {
             Remove-Item ./Build/MSBuild/Output/*.exe
@@ -275,8 +275,8 @@ if ($task_name -match "build") {
             New-Item -ItemType Directory -Path ./Build | Out-Null
         }
         if (!(Test-Path("./Build/MSBuild"))) {
-                Write-Color -Text "Creating '", "MSBuild", "' folder ..." -color DarkGray, Cyan, DarkGray
-                New-Item -ItemType Directory -Path ./Build/MSBuild | Out-Null
+            Write-Color -Text "Creating '", "MSBuild", "' folder ..." -color DarkGray, Cyan, DarkGray
+            New-Item -ItemType Directory -Path ./Build/MSBuild | Out-Null
         }
         if (Test-Path("./Build/MSBuild/Output")) {
             Remove-Item ./Build/MSBuild/Output/*.exe
@@ -305,7 +305,7 @@ if ($task_name -match "build") {
 
 # [Other tasks]
 elseif ($task_name -match "clean") {
-     # Print clean options
+    # Print clean options
     if (($args.Count -eq 1) -or ($args[1] -match "\?") -or ($args[1] -match "help")) {
         Write-Color "Build options:" Yellow
         Write-Color -text "all", ": Clean all build files." -color Cyan, White
