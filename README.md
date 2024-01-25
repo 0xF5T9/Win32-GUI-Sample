@@ -10,9 +10,30 @@ Architecture: x64
 
 Version: C++17
 
-Build with VSCode tasks and PowerShell script.
+### 1. Add workspace settings (`settings.json`)
+* Configure C/C++ workspace settings to match the compiler. (`Ctrl + Shift + P` -> `>C++: Edit Configurations`)
+* Open the `settings.json` file and add the following:
+```json
+{
+    ...
+    // This allows VSCode tasks to execute PowerShell scripts.
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass"
+            ]
+        }
+    }
+    ...
+}
+```
 
-Open `task.ps1` file and update environment paths:
+### 2A. Build with Mingw64
+* Open the `launch.json` file and update `miDebuggerPath` path. (Path to `gdb.exe``)
+* Open the `task.ps1` file and update environment paths:
 ```shell
 ...
 # Set required paths here:
@@ -21,6 +42,13 @@ $resource_compiler_path = "C:\msys64\mingw64\bin\windres.exe" # windres.exe (Min
 $project_file_path = ".\Win32-GUI-Sample.sln"                 # Project file .sln (MSBuild)
 ...
 ```
+
+### 2B. Build with MSBuild
+
+* Install Visual Studio & `Desktop development with C++` workload.
+* Open the Visual Studio Code via the `Developer PowerShell for VS 2022` terminal. VSCode must be opened this way, or the VSCode tasks will be unable to run MSBuild-related tasks.
+
+### 3. Execute tasks.
 
 From the workspace terminal, use `./task.ps1 /?` to show predefined tasks.
 
