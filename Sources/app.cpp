@@ -689,16 +689,23 @@ bool MyApp::onCreate(HWND hWnd)
         {
             // Window title.
             std::wstring text_title = MyUtility::GetWindowTextWideString(hWnd);
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 0;
+            subclass_config.posX = WINDOW_BORDER_DEFAULTWIDTH + 10;
+            subclass_config.posY = WINDOW_BORDER_DEFAULTWIDTH + 6;
+            subclass_config.fontScale = 0.55f;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textActive;
+            MyStandardTextWindowConfig window_config(hWnd, 0, 0, 330, 37,
+                                                     (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, &subclass_config, true, text_title);
             std::shared_ptr<MyWindow> p_window_title(new MyWindow());
-            if (!p_window_title->createCustomWindow(0, WC_STATIC, text_title.c_str(), WS_CHILD | SS_NOPREFIX | SS_LEFT,
-                                                    WINDOW_BORDER_DEFAULTWIDTH + 10, WINDOW_BORDER_DEFAULTWIDTH + 7, 330, 23,
-                                                    hWnd, (HMENU)IDC_NONCLIENT_CAPTIONTITLE_STATIC, NULL, NULL))
+            if (!p_window_title->createStandardText(window_config))
             {
                 error_message = "Failed to create the window title.";
                 break;
             }
-            SendMessageW(p_window_title->hWnd(), WM_SETFONT, (WPARAM) * this->pUIManager->fonts.hfoCaption, FALSE);
             this->vNonClientWindows.push_back(p_window_title);
+            auto p_subclass_window_title = static_cast<MyStandardTextSubclass *>(p_window_title->data());
+            p_subclass_window_title->config.pBackground = &g_pApp->pUIManager->colors.captionBackground;
 
             // Minimize button.
             MyImageButtonSubclassConfig button_minimize_subclass_config(this->pUIManager->images.pWicBitmapMinimizeImageDefault,
@@ -794,18 +801,21 @@ bool MyApp::onCreate(HWND hWnd)
         error_message = "Failed to create standard button sample windows.";
         // Header text: 'STANDARD BUTTONS'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10, 10, 300, 20, (HMENU)IDC_DC_HEADING1, &subclass_config, true, L"STANDARD BUTTONS");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"STANDARD BUTTONS", WS_VISIBLE | WS_CHILD,
-                                              10, 10, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING1, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
         }
         // Standard button windows.
         {
             MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                       10, 46,
+                                                       10, 40,
                                                        130, 40, (HMENU)IDC_DC_STANDARDBUTTON1, true, true, L"Standard 1");
             std::shared_ptr<MyWindow> p_button_window(new MyWindow());
             if (!p_button_window.get()->createStandardButton(window_config))
@@ -815,7 +825,7 @@ bool MyApp::onCreate(HWND hWnd)
         }
         {
             MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                       150, 46,
+                                                       150, 40,
                                                        130, 40, (HMENU)IDC_DC_STANDARDBUTTON2, true, true, L"Standard 2");
             std::shared_ptr<MyWindow> p_button_window(new MyWindow());
             if (!p_button_window.get()->createStandardButton(window_config))
@@ -825,7 +835,7 @@ bool MyApp::onCreate(HWND hWnd)
         }
         {
             MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                       290, 46,
+                                                       290, 40,
                                                        130, 40, (HMENU)IDC_DC_STANDARDBUTTON3, true, true, L"Standard 3");
             std::shared_ptr<MyWindow> p_button_window(new MyWindow());
             if (!p_button_window.get()->createStandardButton(window_config))
@@ -838,18 +848,22 @@ bool MyApp::onCreate(HWND hWnd)
         error_message = "Failed to create radio button sample windows.";
         // Header text: 'RADIO BUTTONS'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10, 90, 300, 20, (HMENU)IDC_DC_HEADING2, &subclass_config, true, L"RADIO BUTTONS");
+
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"RADIO BUTTONS", WS_VISIBLE | WS_CHILD,
-                                              10, 96, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING2, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
         }
         // Radio button windows.
         {
             MyRadioButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10, 132,
+                                                    10, 120,
                                                     130, 40, (HMENU)IDC_DC_RADIOBUTTON1, true, true, L"Radio 1");
             std::shared_ptr<MyWindow> p_radio_button_window(new MyWindow());
             if (!p_radio_button_window.get()->createRadioButton(window_config))
@@ -861,7 +875,7 @@ bool MyApp::onCreate(HWND hWnd)
         }
         {
             MyRadioButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    150, 132,
+                                                    150, 120,
                                                     130, 40, (HMENU)IDC_DC_RADIOBUTTON2, true, true, L"Radio 2");
             std::shared_ptr<MyWindow> p_radio_button_window(new MyWindow());
             if (!p_radio_button_window.get()->createRadioButton(window_config))
@@ -873,7 +887,7 @@ bool MyApp::onCreate(HWND hWnd)
         }
         {
             MyRadioButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    290, 132,
+                                                    290, 120,
                                                     130, 40, (HMENU)IDC_DC_RADIOBUTTON3, true, true, L"Radio 3");
             std::shared_ptr<MyWindow> p_radio_button_window(new MyWindow());
             if (!p_radio_button_window.get()->createRadioButton(window_config))
@@ -888,13 +902,16 @@ bool MyApp::onCreate(HWND hWnd)
         error_message = "Failed to create image button sample windows.";
         // Header text: 'IMAGE BUTTONS'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10, 170, 300, 20, (HMENU)IDC_DC_HEADING3, &subclass_config, true, L"IMAGE BUTTONS");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"IMAGE BUTTONS", WS_VISIBLE | WS_CHILD,
-                                              10, 182, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING3, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
         }
         // Image button windows.
         {
@@ -906,7 +923,7 @@ bool MyApp::onCreate(HWND hWnd)
                                                         &g_pApp->pUIManager->colors.background,
                                                         0, 0, 90, 90);
             MyImageButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10, 218,
+                                                    10, 200,
                                                     90, 90, (HMENU)IDC_DC_IMAGEBUTTON1, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_image_button_window(new MyWindow());
             if (!p_image_button_window.get()->createImageButton(window_config))
@@ -923,7 +940,7 @@ bool MyApp::onCreate(HWND hWnd)
                                                         &g_pApp->pUIManager->colors.background,
                                                         0, 0, 90, 90);
             MyImageButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10 + 100, 218,
+                                                    10 + 100, 200,
                                                     90, 90, (HMENU)IDC_DC_IMAGEBUTTON2, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_image_button_window(new MyWindow());
             if (!p_image_button_window.get()->createImageButton(window_config))
@@ -940,7 +957,7 @@ bool MyApp::onCreate(HWND hWnd)
                                                         &g_pApp->pUIManager->colors.background,
                                                         0, 0, 90, 90);
             MyImageButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10 + 100 + 100, 218,
+                                                    10 + 100 + 100, 200,
                                                     90, 90, (HMENU)IDC_DC_IMAGEBUTTON3, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_image_button_window(new MyWindow());
             if (!p_image_button_window.get()->createImageButton(window_config))
@@ -957,7 +974,7 @@ bool MyApp::onCreate(HWND hWnd)
                                                         &g_pApp->pUIManager->colors.background,
                                                         0, 0, 90, 90);
             MyImageButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10 + 100 + 100 + 100, 218,
+                                                    10 + 100 + 100 + 100, 200,
                                                     90, 90, (HMENU)IDC_DC_IMAGEBUTTON4, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_image_button_window(new MyWindow());
             if (!p_image_button_window.get()->createImageButton(window_config))
@@ -972,19 +989,22 @@ bool MyApp::onCreate(HWND hWnd)
         error_message = "Failed to create editbox sample windows.";
         // Header text: 'EDITBOXES'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10, 300, 300, 20, (HMENU)IDC_DC_HEADING4, &subclass_config, true, L"EDITBOXES");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"EDITBOXES", WS_VISIBLE | WS_CHILD,
-                                              10, 318, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING4, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
         }
         // Editbox windows.
         {
             MyEditboxSubclassConfig subclass_config(reinterpret_cast<HMENU>(IDC_DC_EDITBOXNORMALBORDER));
             MyEditboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                10, 354,
+                                                10, 330,
                                                 390, 30, (HMENU)IDC_DC_EDITBOXNORMAL, MyEditboxType::Singleline, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_editbox_text_window(new MyWindow());
             if (!p_editbox_text_window.get()->createEditbox(window_config))
@@ -995,7 +1015,7 @@ bool MyApp::onCreate(HWND hWnd)
         {
             MyEditboxSubclassConfig subclass_config(reinterpret_cast<HMENU>(IDC_DC_EDITBOXPASSWORDBORDER));
             MyEditboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                10, 389,
+                                                10, 365,
                                                 390, 30, (HMENU)IDC_DC_EDITBOXPASSWORD, MyEditboxType::SinglelinePassword, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_editbox_password_window(new MyWindow());
             if (!p_editbox_password_window.get()->createEditbox(window_config))
@@ -1006,7 +1026,7 @@ bool MyApp::onCreate(HWND hWnd)
         {
             MyEditboxSubclassConfig subclass_config(reinterpret_cast<HMENU>(IDC_DC_EDITBOXMULTILINEBORDER));
             MyEditboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                10, 424,
+                                                10, 400,
                                                 390, 300, (HMENU)IDC_DC_EDITBOXMULTILINE, MyEditboxType::Multiline, &subclass_config, true, true, L"");
             std::shared_ptr<MyWindow> p_editbox_multiline_window(new MyWindow());
             if (!p_editbox_multiline_window.get()->createEditbox(window_config))
@@ -1016,51 +1036,66 @@ bool MyApp::onCreate(HWND hWnd)
         }
         // Note text: '(Normal)'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10 + 390 + 10, 330 + 6, 200, 17, (HMENU)IDC_DC_EDITBOXNORMALNOTE, &subclass_config, true, L"(Normal)");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"(Normal)", WS_VISIBLE | WS_CHILD,
-                                              10 + 390 + 10, 354 + 3, 200, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_EDITBOXNORMALNOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoNote, FALSE);
         }
         // Note text: '(Password)'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10 + 390 + 10, 365 + 6, 200, 17, (HMENU)IDC_DC_EDITBOXPASSWORDNOTE, &subclass_config, true, L"(Password)");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"(Password)", WS_VISIBLE | WS_CHILD,
-                                              10 + 390 + 10, 389 + 3, 200, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_EDITBOXPASSWORDNOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoNote, FALSE);
         }
         // Note text: '(Multiline)'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10 + 390 + 10, 400 + 6, 200, 17, (HMENU)IDC_DC_EDITBOXMULTILINENOTE, &subclass_config, true, L"(Multiline)");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"(Multiline)", WS_VISIBLE | WS_CHILD,
-                                              10 + 390 + 10, 424 + 3, 200, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_EDITBOXMULTILINENOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoNote, FALSE);
         }
         error_message = "";
 
         error_message = "Failed to create combobox sample windows.";
         // Header text: 'COMBOBOXES'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10, 710, 300, 20, (HMENU)IDC_DC_HEADING5, &subclass_config, true, L"COMBOBOXES");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"COMBOBOXES", WS_VISIBLE | WS_CHILD,
-                                              10, 734, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING5, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
         }
         // Combobox windows.
         {
             MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10, 770,
+                                                    10, 740,
                                                     130, 40, (HMENU)IDC_DC_COMBOBOXEMPTY, true, true);
             std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
             if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
@@ -1070,7 +1105,7 @@ bool MyApp::onCreate(HWND hWnd)
         }
         {
             MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                    150, 770,
+                                                    150, 740,
                                                     130, 40, (HMENU)IDC_DC_COMBOBOXNORMAL, true, true);
             std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
             if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
@@ -1088,19 +1123,22 @@ bool MyApp::onCreate(HWND hWnd)
 
         // Header text: 'Testing'
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     10, 790, 300, 20, (HMENU)IDC_DC_HEADING6, &subclass_config, true, L"TESTING");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"TESTING", WS_VISIBLE | WS_CHILD,
-                                              10, 820, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_HEADING6, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoHeading, FALSE);
         }
 
         // Open log file button
         {
             MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                       10, 856,
+                                                       10, 820,
                                                        140, 40, (HMENU)IDC_DC_OPENLOGFILE, true, true, L"Open log file");
             std::shared_ptr<MyWindow> p_button_window(new MyWindow());
             if (!p_button_window.get()->createStandardButton(window_config))
@@ -1109,19 +1147,23 @@ bool MyApp::onCreate(HWND hWnd)
                 break;
         }
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     160, 820 + 10, 300, 19, (HMENU)IDC_DC_OPENLOGFILENOTE, &subclass_config, true, L"OPEN LOG FILE");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"OPEN LOG FILE", WS_VISIBLE | WS_CHILD,
-                                              160, 856 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_OPENLOGFILENOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
         }
 
         // Select file button
         {
             MyStandardButtonWindowConfig window_config(p_container->container()->hWnd(),
-                                                       10, 906,
+                                                       10, 870,
                                                        140, 40, (HMENU)IDC_DC_SELECTFILE, true, true, L"Select file(s)");
             std::shared_ptr<MyWindow> p_button_window(new MyWindow());
             if (!p_button_window.get()->createStandardButton(window_config))
@@ -1130,20 +1172,24 @@ bool MyApp::onCreate(HWND hWnd)
                 break;
         }
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     160, 870 + 10, 300, 19, (HMENU)IDC_DC_SELECTFILENOTE, &subclass_config, true, L"SELECT FILE");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT FILE", WS_VISIBLE | WS_CHILD,
-                                              160, 906 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_SELECTFILENOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
         }
 
         // Select theme combobox
         {
             error_message = "Failed to create the select theme combobox.";
             MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10, 956,
+                                                    10, 920,
                                                     140, 40, (HMENU)IDC_DC_COMBOBOXSELECTTHEME, true, true);
             std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
             if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
@@ -1170,20 +1216,24 @@ bool MyApp::onCreate(HWND hWnd)
             error_message = "";
         }
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     160, 920 + 10, 300, 19, (HMENU)IDC_DC_COMBOBOXSELECTTHEMENOTE, &subclass_config, true, L"SELECT THEME (F9)");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT THEME (F9)", WS_VISIBLE | WS_CHILD,
-                                              160, 956 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTTHEMENOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
         }
 
         // Select font combobox
         {
             error_message = "Failed to create the select font combobox.";
             MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10, 1006,
+                                                    10, 970,
                                                     150, 40, (HMENU)IDC_DC_COMBOBOXSELECTFONT, true, true);
             std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
             if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
@@ -1201,20 +1251,24 @@ bool MyApp::onCreate(HWND hWnd)
             error_message = "";
         }
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     170, 970 + 10, 300, 19, (HMENU)IDC_DC_COMBOBOXSELECTFONTNOTE, &subclass_config, true, L"SELECT FONT");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT FONT", WS_VISIBLE | WS_CHILD,
-                                              170, 1006 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTFONTNOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
         }
 
         // Select scroll mode.
         {
             error_message = "Failed to create the select scroll mode combobox.";
             MyDDLComboboxWindowConfig window_config(p_container->container()->hWnd(),
-                                                    10, 1056,
+                                                    10, 1020,
                                                     150, 40, (HMENU)IDC_DC_COMBOBOXSELECTSCROLLMODE, true, true);
             std::shared_ptr<MyWindow> p_ddlcombobox_window(new MyWindow());
             if (!p_ddlcombobox_window.get()->createDDLCombobox(window_config))
@@ -1228,13 +1282,17 @@ bool MyApp::onCreate(HWND hWnd)
             error_message = "";
         }
         {
+            MyStandardTextSubclassConfig subclass_config;
+            subclass_config.centerMode = 2;
+            subclass_config.fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+            subclass_config.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+            MyStandardTextWindowConfig window_config(p_container->container()->hWnd(),
+                                                     170, 1020 + 10, 300, 19, (HMENU)IDC_DC_COMBOBOXSELECTSCROLLMODENOTE, &subclass_config, true, L"SELECT SCROLL MODE");
             std::shared_ptr<MyWindow> p_window(new MyWindow());
-            if (!p_window->createCustomWindow(0, WC_STATIC, L"SELECT SCROLL MODE", WS_VISIBLE | WS_CHILD,
-                                              170, 1056 + 8, 300, 26, p_container->container()->hWnd(), (HMENU)IDC_DC_COMBOBOXSELECTSCROLLMODENOTE, nullptr, nullptr))
+            if (!p_window->createStandardText(window_config))
                 break;
             if (!p_container->addWindow(p_window))
                 break;
-            SendMessageW(p_window->hWnd(), WM_SETFONT, (WPARAM)*g_pApp->pUIManager->fonts.hfoText1, FALSE);
         }
 
         are_all_operation_success = true;

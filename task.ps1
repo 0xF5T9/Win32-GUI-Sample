@@ -47,8 +47,8 @@ $disable_mingw64_tasks = $false # The variable determine whether to disable Ming
 $disable_msbuild_tasks = $false # The variable determine whether to disable MSbuild tasks.
 
 # Set required paths here:
-$compiler_path = "C:\msys64\ucrt64\bin\g++.exe"              # G++.exe     (Mingw64)
-$resource_compiler_path = "C:\msys64\ucrt64\bin\windres.exe" # windres.exe (Mingw64)
+$compiler_path = "C:\msys64\mingw64\bin\g++.exe"              # G++.exe     (Mingw64)
+$resource_compiler_path = "C:\msys64\mingw64\bin\windres.exe" # windres.exe (Mingw64)
 $project_file_path = ".\Win32-GUI-Sample.sln"                 # Project file .sln (MSBuild)
 
 # Test the set paths.

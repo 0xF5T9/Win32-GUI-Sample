@@ -2,7 +2,6 @@
  * @file main.cpp
  * @brief Define the application entry and window procedures.
  * @todo Implement scroll focus.
- * @todo Add predefined text window type.
  */
 
 #include "../Headers/standard_includes.h"
@@ -300,28 +299,18 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
         const HBRUSH *p_background_brush = nullptr;
         HDC hdc = reinterpret_cast<HDC>(wParam);
         HWND window = reinterpret_cast<HWND>(lParam);
-        INT window_id = GetDlgCtrlID(window);
+        // INT window_id = GetDlgCtrlID(window);
 
-        switch (window_id)
+        if (MyStandardTextSubclass::getSubclassPointer(window))
         {
-        // Priority processings.
-        // Caption title.
-        case IDC_NONCLIENT_CAPTIONTITLE_STATIC:
-        {
-            SetBkColor(hdc, g_pApp->pUIManager->colors.captionBackground.getCOLORREF());
-            SetTextColor(hdc, (g_pApp->isWindowActive ? g_pApp->pUIManager->colors.textActive.getCOLORREF() : g_pApp->pUIManager->colors.textInactive.getCOLORREF()));
-            p_background_brush = &g_pApp->pUIManager->colors.captionBackground.getSolidBrush();
-            break;
+            p_background_brush = &g_pApp->pUIManager->colors.nullBrush;
         }
-
-        // Default processing.
-        default:
+        else
         {
+            // Default processing.
             SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
             SetTextColor(hdc, g_pApp->pUIManager->colors.textActive.getCOLORREF());
             p_background_brush = &g_pApp->pUIManager->colors.background.getSolidBrush();
-            break;
-        }
         }
 
         if (!p_background_brush)
@@ -429,6 +418,18 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
                     g_pApp->logger.writeLog("Failed to set the window border attribute.", "[MESSAGE: 'WM_ACTIVATE/WA_CLICKACTIVE||WA_ACTIVE' | CALLBACK: 'ApplicationWindowProcedure()']", MyLogType::Error);
             }
 
+            // Update window title color.
+            for (auto &window : g_pApp->vNonClientWindows)
+            {
+                if (GetDlgCtrlID(window->hWnd()) == IDC_NONCLIENT_CAPTIONTITLE_STATIC)
+                {
+                    auto p_subclass = MyStandardTextSubclass::getSubclassPointer(window->hWnd());
+                    if (p_subclass)
+                        p_subclass->textConfig.pTextColor = &g_pApp->pUIManager->colors.textActive;
+                    break;
+                }
+            }
+
             break;
         }
 
@@ -444,6 +445,18 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
                 HRESULT hr = DwmSetWindowAttribute(hWnd, DWMWA_BORDER_COLOR, &border_color, sizeof(border_color));
                 if (FAILED(hr))
                     g_pApp->logger.writeLog("Failed to set the window border attribute.", "[MESSAGE: 'WM_ACTIVATE/WA_INACTIVE' | CALLBACK: 'ApplicationWindowProcedure()']", MyLogType::Error);
+            }
+
+            // Update window title color.
+            for (auto &window : g_pApp->vNonClientWindows)
+            {
+                if (GetDlgCtrlID(window->hWnd()) == IDC_NONCLIENT_CAPTIONTITLE_STATIC)
+                {
+                    auto p_subclass = MyStandardTextSubclass::getSubclassPointer(window->hWnd());
+                    if (p_subclass)
+                        p_subclass->textConfig.pTextColor = &g_pApp->pUIManager->colors.textInactive;
+                    break;
+                }
             }
 
             break;
@@ -872,26 +885,6 @@ LRESULT CALLBACK ApplicationWindowProcedure(HWND hWnd, UINT message, WPARAM wPar
 
             return 0;
         }
-        case VK_F5:
-        {
-            // auto current_selected = g_SampleRadioGroup.getRadioState();
-            // g_pApp->logger.writeLog("Current selected: " + std::to_string(current_selected));
-            auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
-            if (p_container)
-            {
-                g_pApp->logger.writeLog("Container found: 'IDC_DC_CONTAINER'", true);
-                auto p_window = p_container->findWindow(IDC_DC_RADIOBUTTON1);
-                if (p_window)
-                {
-                    g_pApp->logger.writeLog("Window found: 'IDC_DC_RADIOBUTTON1'", true);
-                    if (g_SampleRadioGroup.removeRadioButton(p_window->hWnd()))
-                        g_pApp->logger.writeLog("Removed the button from the radio group.", true);
-                }
-            }
-
-            MessageBeep(MB_OK);
-            return 0;
-        }
         }
         break;
     }
@@ -934,41 +927,23 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
         const HBRUSH *p_background_brush = nullptr;
         HDC hdc = reinterpret_cast<HDC>(wParam);
         HWND window = reinterpret_cast<HWND>(lParam);
-        INT window_id = GetDlgCtrlID(window);
+        // INT window_id = GetDlgCtrlID(window);
 
-        switch (window_id)
-        {
-        case IDC_DC_EDITBOXNORMALNOTE:
-        case IDC_DC_EDITBOXPASSWORDNOTE:
-        case IDC_DC_EDITBOXMULTILINENOTE:
-        case IDC_DC_OPENLOGFILENOTE:
-        case IDC_DC_COMBOBOXSELECTTHEMENOTE:
-        case IDC_DC_COMBOBOXSELECTFONTNOTE:
-        case IDC_DC_SELECTFILENOTE:
-        case IDC_DC_COMBOBOXSELECTSCROLLMODENOTE:
+        if (MyUtility::GetWindowClassNameWideString(window) == WC_EDIT)
         {
             SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
             SetTextColor(hdc, g_pApp->pUIManager->colors.textInactive.getCOLORREF());
             p_background_brush = &g_pApp->pUIManager->colors.background.getSolidBrush();
-            break;
         }
-        default:
+        else if (MyStandardTextSubclass::getSubclassPointer(window))
         {
-            if (MyUtility::GetWindowClassNameWideString(window) == WC_EDIT)
-            {
-                SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
-                SetTextColor(hdc, g_pApp->pUIManager->colors.textInactive.getCOLORREF());
-                p_background_brush = &g_pApp->pUIManager->colors.background.getSolidBrush();
-            }
-            else
-            {
-                SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
-                SetTextColor(hdc, g_pApp->pUIManager->colors.textActive.getCOLORREF());
-                p_background_brush = &g_pApp->pUIManager->colors.background.getSolidBrush();
-            }
-
-            break;
+            p_background_brush = &g_pApp->pUIManager->colors.nullBrush;
         }
+        else
+        {
+            SetBkColor(hdc, g_pApp->pUIManager->colors.background.getCOLORREF());
+            SetTextColor(hdc, g_pApp->pUIManager->colors.textActive.getCOLORREF());
+            p_background_brush = &g_pApp->pUIManager->colors.background.getSolidBrush();
         }
 
         if (!p_background_brush)
@@ -1636,26 +1611,21 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                         return 0;
 
                     g_pApp->pUIManager->fonts.updateFonts(L"Bahnschrift");
-                    auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
-                    if (p_container)
+
+                    // Refresh non-client windows.
+                    for (auto &p_nonclient_window : g_pApp->vNonClientWindows)
                     {
-                        SetWindowFont(GetDlgItem(g_pApp->hWnd, IDC_NONCLIENT_CAPTIONTITLE_STATIC), *g_pApp->pUIManager->fonts.hfoCaption, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING1)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING2)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING3)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING4)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING5)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING6)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXNORMALNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXPASSWORDNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXMULTILINENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_OPENLOGFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTTHEMENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTFONTNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTSCROLLMODENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_SELECTFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        p_container->refresh(false);
+                        auto p_subclass = MyStandardTextSubclass::getSubclassPointer(p_nonclient_window->hWnd());
+                        if (p_subclass)
+                            p_nonclient_window->refresh();
                     }
+
+                    // Refresh the containers.
+                    for (auto &[id, container] : g_pApp->mContainers)
+                    {
+                        container->refresh();
+                    }
+
                     g_pApp->logger.writeLog("Application font selected:", "'Bahnschrift'", MyLogType::Info);
 
                     is_switch_success = true;
@@ -1667,26 +1637,21 @@ LRESULT CALLBACK DefaultContainerProcedure(HWND hWnd, UINT message, WPARAM wPara
                         return 0;
 
                     g_pApp->pUIManager->fonts.updateFonts(L"Ubuntu");
-                    auto p_container = g_pApp->findContainer(IDC_DC_CONTAINER);
-                    if (p_container)
+
+                    // Refresh non-client windows.
+                    for (auto &p_nonclient_window : g_pApp->vNonClientWindows)
                     {
-                        SetWindowFont(GetDlgItem(g_pApp->hWnd, IDC_NONCLIENT_CAPTIONTITLE_STATIC), *g_pApp->pUIManager->fonts.hfoCaption, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING1)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING2)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING3)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING4)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING5)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_HEADING6)->hWnd(), *g_pApp->pUIManager->fonts.hfoHeading, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXNORMALNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXPASSWORDNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_EDITBOXMULTILINENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoNote, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_OPENLOGFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTTHEMENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTFONTNOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_COMBOBOXSELECTSCROLLMODENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        SetWindowFont(p_container->findWindow(IDC_DC_SELECTFILENOTE)->hWnd(), *g_pApp->pUIManager->fonts.hfoText1, TRUE);
-                        p_container->refresh(false);
+                        auto p_subclass = MyStandardTextSubclass::getSubclassPointer(p_nonclient_window->hWnd());
+                        if (p_subclass)
+                            p_nonclient_window->refresh();
                     }
+
+                    // Refresh the containers.
+                    for (auto &[id, container] : g_pApp->mContainers)
+                    {
+                        container->refresh();
+                    }
+
                     g_pApp->logger.writeLog("Application font selected:", "'Ubuntu'", MyLogType::Info);
 
                     is_switch_success = true;

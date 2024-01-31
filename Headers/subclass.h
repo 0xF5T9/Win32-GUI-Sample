@@ -67,7 +67,7 @@ public:
     bool skipHoverAnimationState = false;    // Skip all hover-related animation states.
     bool skipActiveAnimationState = false;   // Skip all down-related animation states.
     bool skipSelectedAnimationState = false; // Skip all selected-related animation states.
-    bool ignoreTextScalingLimits = false;    // Ignore text format scaling limits. By default, the limits prevent text quality loss when getting scaled too small or too big.
+    bool ignoreTextScalingLimits = true;     // Ignore text format scaling limits. Enabled by default.
     FLOAT textLowerBoundSizeLimit = 20.0f;   // Lower bound text size limit.
     FLOAT textUpperBoundSizeLimit = 100.0f;  // Upper bound text size limit.
 };
@@ -155,6 +155,49 @@ public:
     INT associatedWMCommandMessageID = 0;           // The associated WM_COMMAND message ID that will be sent by the editbox on the enter key press. (optional)
     std::wstring editboxWindowFontFamilyName = L""; // The font family name for the editbox window. If not set, default font will be used. (optional)
     FLOAT fontSize = 0;                             // Font size in pixels, internal leading included. If not specified (0), the font size will be calculated automatically. (optional)
+};
+
+/**
+ * @brief Contains information that determines the behavior of a subclassed window (MyStandardTextSubclass).
+ */
+struct MyStandardTextSubclassConfig
+{
+public:
+    // [CONSTRUCTOR/DESTRUCTOR/..]
+
+    /**
+     * @brief Default constructor.
+     */
+    MyStandardTextSubclassConfig();
+
+    /**
+     * @brief Constructor.
+     * @param centerMode Specifies the centering mode. (0 - No centering, 1 - Center horizontally, 2 - Center vertically, 3 - Center horizontally and vertically.)
+     * @param posX Specifies the relative x position.
+     * @param posY Specifies the relative Y position.
+     * @param fontWeight Specifies the font weight. (https://learn.microsoft.com/en-us/windows/win32/api/dwrite/ne-dwrite-dwrite_font_weight)
+     * @param fontStyle Specifies the font style. (https://learn.microsoft.com/en-us/windows/win32/api/dwrite/ne-dwrite-dwrite_font_style)
+     * @param fontScale Specifies the font scale, the default is at maximum 1.0f (100%), the minimum scale is 0.1f (10%).
+     * @param pTextColor Specifies the pointer to the text color object. If nullptr, use the default text color.
+     */
+    MyStandardTextSubclassConfig(int centerMode, int posX, int posY, DWRITE_FONT_WEIGHT fontWeight, DWRITE_FONT_STYLE fontStyle, float fontScale, MyColor *pTextColor);
+
+    // [VALIDATE FUNCTIONS]
+
+    /**
+     * @brief Check if the configuration structure is valid.
+     * @return Returns true if the configuration structure is valid, otherwise false.
+     */
+    bool isValid();
+
+public:
+    int centerMode = 0;                                        // The centering mode. (0 - No centering, 1 - Center horizontally, 2 - Center vertically, 3 - Center horizontally and vertically.)
+    int posX = 0;                                              // The text relative X position.
+    int posY = 0;                                              // The text relative Y position.
+    DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL; // The font weight. (https://learn.microsoft.com/en-us/windows/win32/api/dwrite/ne-dwrite-dwrite_font_weight)
+    DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;    // The font style. (https://learn.microsoft.com/en-us/windows/win32/api/dwrite/ne-dwrite-dwrite_font_style)
+    float fontScale = 1.0f;                                    // The font scale, the default is at maximum 1.0f (100%), the minimum scale is 0.1f (10%).
+    MyColor *pTextColor = nullptr;                             // Pointer to the text color object. If nullptr, use the default text color.
 };
 
 /********************
@@ -858,9 +901,11 @@ private:
      * @note Any existing device resources will be automatically released beforehand. (This doesn't include shared resources unless specified.)
      * @note The class shared device resources will be created if they do not exist yet.
      * @param recreateSharedResources Specifies whether to recreate the shared resources.
+     * @param comboboxHeight Specifies the combobox height on the first time creating device resources.
+     *                       so the font height can be calculated correctly.
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
-    bool createDeviceResources(bool recreateSharedResources = false);
+    bool createDeviceResources(bool recreateSharedResources = false, int comboboxHeight = 0);
 
     // [ANIMATION FUNCTIONS]
 
@@ -1085,6 +1130,7 @@ private:
 private:
     // Scrollbar-related variables.
     inline static const UINT_PTR IDT_ANIMATION_SCROLLBAR = 2; // Animation scrollbar timer ID.
+    inline static const UINT SMOOTH_SCROLL_SPEED = 150;       // Smooth scroll speed. (Recommended: 150)
     HWND scrollbarWindow = nullptr;                           // Handle to the scrollbar window.
     HWND staticWindow = nullptr;                              // Handle to the scrollbar-associated static window that represents the scrollbar appearance.
     MyContainer *pContainer = nullptr;                        // Handle to the container window that will be scrolled.
@@ -1107,6 +1153,94 @@ private:
     // Shared resources: These are resources that are utilized by all instances of the class.
     // Non-shared resources: These are resources that are exclusive and associated with a specific instance.
     // ...
+};
+
+/**
+ * @brief Standard text subclass class.
+ */
+class MyStandardTextSubclass : public MySubclass
+{
+public:
+    // [UTILITY FUNCTIONS]
+
+    /**
+     * @brief Refresh the window appearance.
+     * @note Refresh the window to recreate its device resources and update its animation variable values.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool refresh();
+
+    // [DIRECT2D FUNCTIONS]
+
+    /**
+     * @brief Release the shared device resources of the class.
+     */
+    static void releaseSharedDeviceResources();
+
+    // [SUBCLASS FUNCTIONS]
+
+    /**
+     * @brief Associate the subclass object with a window.
+     * @note Each object can only be associated with a single window.
+     * @param hWnd Handle to the window.
+     * @param pConfig Pointer to the configuration structure.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool setWindow(HWND hWnd, MyStandardTextSubclassConfig *pConfig);
+
+    /**
+     * @brief Get a pointer to the associated subclass object of a window.
+     * @param hWnd Handle to the window.
+     * @return Returns a pointer to the associated subclass object of a window. Otherwise, it returns nullptr if the window is not subclassed by this class.
+     */
+    static MyStandardTextSubclass *getSubclassPointer(HWND hWnd);
+
+private:
+    // [DIRECT2D FUNCTIONS]
+
+    /**
+     * @brief Create the shared device resources of the class.
+     * @note Shared resources are the resources used by all instances of the subclass class.
+     * @note The function won't create new shared resources if they already exist.
+     * @note If the shared resource needs updating, call the releaseSharedDeviceResources() function beforehand.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createSharedDeviceResources();
+
+    /**
+     * @brief Create the device resources for the window.
+     * @note Any existing device resources will be automatically released beforehand. (This doesn't include shared resources unless specified.)
+     * @note The class shared device resources will be created if they do not exist yet.
+     * @param recreateSharedResources Specifies whether to recreate the shared resources.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createDeviceResources(bool recreateSharedResources = false);
+
+    // [SUBCLASS FUNCTIONS]
+
+    /**
+     * @brief Subclass callback function for the window.
+     * @param hWnd        The handle to the window.
+     * @param uMsg        The message identifier.
+     * @param wParam      The first message parameter.
+     * @param lParam      The second message parameter.
+     * @param uIdSubclass The subclass ID.
+     * @param dwRefData   DWORD_PTR to reference data.
+     */
+    static LRESULT CALLBACK subclassProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+public:
+    // Configuration variables.
+    MyStandardTextSubclassConfig textConfig;
+
+private:
+    // Text-related variables.
+    HWND textWindow = nullptr; // Handle to the text window.
+
+    // Direct2D-related variables.
+    // Shared resources: These are resources that are utilized by all instances of the class.
+    // Non-shared resources: These are resources that are exclusive and associated with a specific instance.
+    std::unique_ptr<IDWriteTextFormat *, IDWriteTextFormatDeleter> pTextFormat; // Text format. (Non-shared resource)
 };
 
 #endif // SUBCLASS_H

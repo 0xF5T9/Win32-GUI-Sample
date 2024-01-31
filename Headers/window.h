@@ -19,7 +19,8 @@ enum class MyWindowType
     RadioButton,
     Editbox,
     DDLCombobox,
-    VerticalScrollbar
+    VerticalScrollbar,
+    StandardText
 };
 enum class MyEditboxType
 {
@@ -287,6 +288,48 @@ public:
 };
 
 /**
+ * @brief Configuration structure for creating a standard text window.
+ */
+struct MyStandardTextWindowConfig
+{
+public:
+    // [CONSTRUCTOR/DESTRUCTOR/..]
+
+    /**
+     * @brief Constructor.
+     * @param parent Specifies the parent of the window.
+     * @param posX Specifies the relative x-posision.
+     * @param posY Specifies the relative y-posision.
+     * @param width Specifies the window width.
+     * @param height Specifies the window height.
+     * @param id Specifies the window id.
+     * @param pSubclassConfig Specifies the pointer to the subclass configuration structure.
+     * @param visibleByDefault Specifies whether the window is visible by default. (Optional)
+     * @param windowText Specifies the window text. (Optional)
+     */
+    MyStandardTextWindowConfig(HWND parent, INT posX, INT posY, INT width, INT height, HMENU id, MyStandardTextSubclassConfig *pSubclassConfig, bool visibleByDefault, std::wstring windowText);
+
+    // [VALIDATE FUNCTIONS]
+
+    /**
+     * @brief Check if the configuration structure is valid.
+     * @return Returns true if the configuration structure is valid, otherwise false.
+     */
+    bool isValid();
+
+public:
+    HWND parent = nullptr;
+    INT posX = 0;
+    INT posY = 0;
+    INT width = 0;
+    INT height = 0;
+    HMENU id = nullptr;
+    MyStandardTextSubclassConfig *pSubclassConfig = nullptr;
+    bool visibleByDefault = true;
+    std::wstring windowText = L"";
+};
+
+/**
  * @brief Configuration structure for creating a container window.
  */
 struct MyContainerWindowConfig
@@ -442,6 +485,13 @@ public:
      * @return Returns true if all the operations are successfully performed, false otherwise.
      */
     bool createVerticalScrollbar(MyVerticalScrollbarWindowConfig &windowConfig);
+
+    /**
+     * @brief Create a standard text window.
+     * @param windowConfig Specifies the window configuration.
+     * @return Returns true if all the operations are successfully performed, false otherwise.
+     */
+    bool createStandardText(MyStandardTextWindowConfig &windowConfig);
 
 public:
     inline static UINT64 totalInstances = 0; // Indicate the total number of MyWindow instances. [DEBUG]

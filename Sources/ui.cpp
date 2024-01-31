@@ -161,28 +161,6 @@ bool UIFonts::updateFonts(const std::wstring &defaultFamily)
 {
     this->defaultFamily = defaultFamily;
 
-    this->hfoCaption.reset(new HFONT(NULL));
-    this->hfoHeading.reset(new HFONT(NULL));
-    this->hfoNote.reset(new HFONT(NULL));
-    this->hfoText1.reset(new HFONT(NULL));
-    *this->hfoCaption = CreateFontW(23, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                                    CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                    this->defaultFamily.c_str());
-    *this->hfoHeading = CreateFontW(23, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                                    CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                    this->defaultFamily.c_str());
-    *this->hfoNote = CreateFontW(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                                 CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                 this->defaultFamily.c_str());
-    *this->hfoText1 = CreateFontW(23, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                                  CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                  this->defaultFamily.c_str());
-    if (!*this->hfoCaption ||
-        !*this->hfoHeading ||
-        !*this->hfoNote ||
-        !*this->hfoText1)
-        return false;
-
     return true;
 }
 bool UIFonts::addMemoryFontResource(HANDLE &handle, INT resourceID)

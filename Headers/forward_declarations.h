@@ -19,6 +19,7 @@ enum class MyLogType;
 struct SubclassConfig;
 struct MyImageButtonSubclassConfig;
 struct MyEditboxSubclassConfig;
+struct MyStandardTextSubclassConfig;
 
 /***********
  * Classes *

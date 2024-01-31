@@ -45,6 +45,26 @@ bool MyEditboxSubclassConfig::isValid()
     return true;
 }
 
+MyStandardTextSubclassConfig::MyStandardTextSubclassConfig() {}
+MyStandardTextSubclassConfig::MyStandardTextSubclassConfig(int centerMode, int posX, int posY, DWRITE_FONT_WEIGHT fontWeight, DWRITE_FONT_STYLE fontStyle, float fontScale, MyColor *pTextColor)
+    : centerMode(centerMode), posX(posX), posY(posY), fontWeight(fontWeight), fontStyle(fontStyle), fontScale(fontScale), pTextColor(pTextColor) {}
+bool MyStandardTextSubclassConfig::isValid()
+{
+    if (this->centerMode < 0 || this->centerMode > 3)
+    {
+        g_pApp->logger.writeLog("Invalid center mode.", "[STRUCT: 'MyStandardTextSubclassConfig' | FUNC: 'isValid()']", MyLogType::Error);
+        return false;
+    }
+
+    if (this->fontScale < 0.1f || this->fontScale > 1.0f)
+    {
+        g_pApp->logger.writeLog("Invalid font scale (Min: 0.1 | Max: 1.0).", "[STRUCT: 'MyStandardTextSubclassConfig' | FUNC: 'isValid()']", MyLogType::Error);
+        return false;
+    }
+
+    return true;
+}
+
 /**********************************
  * Subclass class implementations *
  **********************************/
@@ -807,6 +827,7 @@ LRESULT CALLBACK MyStandardButtonSubclass::subclassProcedure(HWND hWnd, UINT uMs
             // Begin drawing.
             (*p_this->pD2D1DCRenderTarget)->BeginDraw();
             (*p_this->pD2D1DCRenderTarget)->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+            (*p_this->pD2D1DCRenderTarget)->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
 
             {
                 // Draw the background.
@@ -3026,6 +3047,7 @@ LRESULT CALLBACK MyRadioButtonSubclass::subclassProcedure(HWND hWnd, UINT uMsg, 
             // Begin drawing.
             (*p_this->pD2D1DCRenderTarget)->BeginDraw();
             (*p_this->pD2D1DCRenderTarget)->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+            (*p_this->pD2D1DCRenderTarget)->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
 
             {
                 // Draw the background.
@@ -4530,7 +4552,7 @@ bool MyDDLComboboxSubclass::setWindow(HWND hWnd, INT comboboxHeight)
         }
 
         // Create the device resources.
-        if (!this->createDeviceResources())
+        if (!this->createDeviceResources(false, comboboxHeight))
         {
             error_message = "Failed to create the device resources.";
             break;
@@ -4616,7 +4638,7 @@ bool MyDDLComboboxSubclass::createSharedDeviceResources()
 
     return are_all_operation_success;
 }
-bool MyDDLComboboxSubclass::createDeviceResources(bool recreateSharedResources)
+bool MyDDLComboboxSubclass::createDeviceResources(bool recreateSharedResources, int comboboxHeight)
 {
     bool are_all_operation_success = false;
     std::string error_message = "";
@@ -4663,7 +4685,9 @@ bool MyDDLComboboxSubclass::createDeviceResources(bool recreateSharedResources)
 
         error_message = "Failed to create the device resources.";
         this->pTextFormat.reset(new IDWriteTextFormat *(nullptr));
-        FLOAT font_size = static_cast<FLOAT>((rect_window.bottom - rect_window.top)) * 0.5f;
+        if (!comboboxHeight)
+            comboboxHeight = rect_window.bottom - rect_window.top;
+        FLOAT font_size = static_cast<FLOAT>((comboboxHeight)) * 0.5f;
         if (!this->config.ignoreTextScalingLimits)
         {
             if (font_size < this->config.textLowerBoundSizeLimit)
@@ -5015,6 +5039,7 @@ LRESULT CALLBACK MyDDLComboboxSubclass::subclassProcedureCombobox(HWND hWnd, UIN
             // Begin drawing.
             (*p_this->pD2D1DCRenderTarget)->BeginDraw();
             (*p_this->pD2D1DCRenderTarget)->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+            (*p_this->pD2D1DCRenderTarget)->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
 
             {
                 // Draw the background.
@@ -5525,9 +5550,9 @@ bool MyVerticalScrollbarSubclass::scrollWindowByAmountSmooth(INT scrollAmount)
             scroll_distance = 1;
 
         // Calculate the scrolling speed based on the scroll distance:
-        int base_scroll_speed = 800,                                        // The base scroll speed.
-            max_scroll_speed = 4000,                                        // Maximum scroll speed.
-            base_distance_interval = (scroll_direction_changed ? 10 : 100), // This base interval will determine the scrolling speed. If the scroll direction has changed, accelerate the scroll speed by lowering the interval.
+        int base_scroll_speed = 800,                                                                                // The base scroll speed.
+            max_scroll_speed = 4000,                                                                                // Maximum scroll speed.
+            base_distance_interval = (scroll_direction_changed ? 10 : static_cast<int>(this->SMOOTH_SCROLL_SPEED)), // This base interval will determine the scrolling speed. If the scroll direction has changed, accelerate the scroll speed by lowering the interval.
             distance_interval = static_cast<int>(std::sqrt(base_distance_interval * scroll_distance)),
             scroll_speed = base_scroll_speed + (scroll_distance / distance_interval) * 400;
         if (scroll_speed > max_scroll_speed)
@@ -6715,6 +6740,324 @@ LRESULT CALLBACK MyVerticalScrollbarSubclass::subclassProcedureStatic(HWND hWnd,
     {
         if (!RemoveWindowSubclass(hWnd, &MyVerticalScrollbarSubclass::subclassProcedureStatic, uIdSubclass))
             g_pApp->logger.writeLog("[WM_DESTROY] Failed to remove the window subclass callback.", "[CLASS: 'MyVerticalScrollbarSubclass' | FUNC: 'subclassProcedureStatic()']", MyLogType::Error);
+
+        return 0;
+    }
+    }
+
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+// [MyStandardTextSubclass] class implementations:
+
+bool MyStandardTextSubclass::refresh()
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // Check if the subclass object is not associated with a window.
+        if (this->isAssociated)
+        {
+            error_message = "The subclass object is not associated with a window.";
+            break;
+        }
+
+        // Create the device resources.
+        if (!this->createDeviceResources())
+        {
+            error_message = "Failed to create the device resources.";
+            break;
+        }
+
+        RedrawWindow(this->textWindow, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyStandardTextSubclass' | FUNC: 'refresh()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+void MyStandardTextSubclass::releaseSharedDeviceResources()
+{
+    // <This subclass class doesn't have any shared device resources>
+}
+bool MyStandardTextSubclass::setWindow(HWND hWnd, MyStandardTextSubclassConfig *pConfig)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // Check if the subclass base class is initialized.
+        if (!this->isInitialized)
+        {
+            error_message = "The subclass base class is not initialized.";
+            break;
+        }
+
+        // Check if the subclass object is already associated with a window.
+        if (this->isAssociated)
+        {
+            error_message = "The subclass object is already associated with a window.";
+            break;
+        }
+
+        // Check if the configuration structure is valid.
+        if (!pConfig->isValid())
+        {
+            error_message = "The configuration structure contains invalid parameters.";
+            break;
+        }
+        this->textConfig = *pConfig;
+
+        // Store the window handle(s).
+        this->textWindow = hWnd;
+
+        // Subclass the window.
+        // Store this subclass object pointer as reference data, enabling the subclass procedure to access the non-static object members.
+        if (!SetWindowSubclass(this->textWindow, &MyStandardTextSubclass::subclassProcedure, 0, reinterpret_cast<DWORD_PTR>(this)))
+        {
+            error_message = "Failed to install the window subclass callback.";
+            break;
+        }
+
+        // Create the device resources.
+        if (!this->createDeviceResources())
+        {
+            error_message = "Failed to create the device resources.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyStandardTextSubclass' | FUNC: 'setWindow()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+MyStandardTextSubclass *MyStandardTextSubclass::getSubclassPointer(HWND hWnd)
+{
+    DWORD_PTR reference_data;
+    bool is_subclassed = GetWindowSubclass(hWnd, &MyStandardTextSubclass::subclassProcedure, 0, &reference_data);
+    return (is_subclassed ? reinterpret_cast<MyStandardTextSubclass *>(reference_data) : nullptr);
+}
+bool MyStandardTextSubclass::createSharedDeviceResources()
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        // HRESULT hr;
+
+        error_message = "Failed to create the shared device resources.";
+        // <This subclass class doesn't have any shared device resources>
+        error_message = "";
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyStandardTextSubclass' | FUNC: 'createSharedDeviceResources()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+bool MyStandardTextSubclass::createDeviceResources(bool recreateSharedResources)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        HRESULT hr;
+
+        HDC hdc = GetDC(this->textWindow);
+        if (!hdc)
+        {
+            error_message = "Failed to get the window device context.";
+            break;
+        }
+
+        RECT rect_window;
+        if (!GetClientRect(this->textWindow, &rect_window))
+        {
+            error_message = "Failed to retrieve the window client rect.";
+            break;
+        }
+
+        this->pD2D1DCRenderTarget.reset(new ID2D1DCRenderTarget *(nullptr));
+        if (!this->graphics()->d2d1Engine().createDCRenderTarget(*this->pD2D1DCRenderTarget))
+        {
+            error_message = "Failed to create the window render target.";
+            break;
+        }
+
+        hr = (*this->pD2D1DCRenderTarget)->BindDC(hdc, &rect_window);
+        if (FAILED(hr))
+        {
+            error_message = "Failed to bind the window device context to the window render target.";
+            break;
+        }
+
+        if (recreateSharedResources)
+            MyStandardTextSubclass::releaseSharedDeviceResources();
+
+        if (!this->createSharedDeviceResources())
+        {
+            error_message = "Failed to create the shared device resources.";
+            break;
+        }
+
+        error_message = "Failed to create the device resources.";
+        this->pTextFormat.reset(new IDWriteTextFormat *(nullptr));
+        FLOAT font_size = static_cast<FLOAT>((rect_window.bottom - rect_window.top)) * this->textConfig.fontScale;
+        if (!this->config.ignoreTextScalingLimits)
+        {
+            if (font_size < this->config.textLowerBoundSizeLimit)
+                font_size = this->config.textLowerBoundSizeLimit;
+            else if (font_size > this->config.textUpperBoundSizeLimit)
+                font_size = this->config.textUpperBoundSizeLimit;
+        }
+        if (!this->graphics()->d2d1Engine().createTextFormat(*this->pTextFormat, this->objects()->fonts.defaultFamily, font_size, this->textConfig.fontWeight, this->textConfig.fontStyle))
+            break;
+        error_message = "";
+
+        if (!ReleaseDC(this->textWindow, hdc))
+        {
+            error_message = "Failed to release the window device context.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyStandardTextSubclass' | FUNC: 'createDeviceResources()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+LRESULT CALLBACK MyStandardTextSubclass::subclassProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+    // Extract the subclass object pointer from reference data and use it to access non-static members.
+    MyStandardTextSubclass *p_this = reinterpret_cast<MyStandardTextSubclass *>(dwRefData);
+
+    // Process the message.
+    switch (uMsg)
+    {
+    // Suppress all system background erase requests.
+    case WM_ERASEBKGND:
+        return 1;
+
+    // Override paint messages.
+    case WM_PAINT:
+    {
+        USHORT paint_attempts = 1;
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        bool are_all_operation_success = false;
+        std::string error_message = "";
+        while (!are_all_operation_success)
+        {
+            HRESULT hr;
+
+            // Get the window client rect.
+            RECT rect_window;
+            if (!GetClientRect(hWnd, &rect_window))
+            {
+                error_message = "[WM_PAINT] Failed to retrieve the window client rect.";
+                break;
+            }
+
+            // Get the window text length.
+            SetLastError(ERROR_SUCCESS);
+            size_t window_text_length = static_cast<size_t>(GetWindowTextLengthW(hWnd));
+            if (!window_text_length && GetLastError())
+            {
+                error_message = "[WM_PAINT] Failed to retrieve the window text length.";
+                break;
+            }
+
+            // Get the window text.
+            std::unique_ptr<WCHAR[]> window_text(new WCHAR[window_text_length + 1]);
+            if (!GetWindowTextW(hWnd, window_text.get(), static_cast<INT>(window_text_length) + 1) && window_text_length)
+            {
+                error_message = "[WM_PAINT] Failed to retrieve the window text.";
+                break;
+            }
+
+            // Bind the render target to the window device context.
+            hr = (*p_this->pD2D1DCRenderTarget)->BindDC(hdc, &rect_window);
+            if (FAILED(hr))
+            {
+                error_message = "[WM_PAINT] Failed to bind the render target to the window device context.";
+                break;
+            }
+
+            // Prepare drawing resources.
+            D2D1_RECT_F d2d1_rect_window = D2D1::RectF(0, 0, static_cast<FLOAT>(rect_window.right), static_cast<FLOAT>(rect_window.bottom));
+            const D2D1::ColorF &d2d1_color_text = (p_this->textConfig.pTextColor ? p_this->textConfig.pTextColor->getD2D1Color() : p_this->objects()->colors.textActive.getD2D1Color());
+            std::unique_ptr<ID2D1SolidColorBrush *, ID2D1SolidColorBrushDeleter> p_d2d1_solidcolorbrush_text(new ID2D1SolidColorBrush *(nullptr));
+            {
+                error_message = "[WM_PAINT] Failed to create the resources.";
+                hr = (*p_this->pD2D1DCRenderTarget)->CreateSolidColorBrush(d2d1_color_text, &*p_d2d1_solidcolorbrush_text);
+                if (FAILED(hr))
+                    break;
+                error_message = "";
+            }
+
+            // Begin drawing.
+            (*p_this->pD2D1DCRenderTarget)->BeginDraw();
+            (*p_this->pD2D1DCRenderTarget)->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+            (*p_this->pD2D1DCRenderTarget)->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
+
+            {
+                // Draw the background.
+                (*p_this->pD2D1DCRenderTarget)->Clear((p_this->config.pBackground ? p_this->config.pBackground->getD2D1Color() : p_this->objects()->colors.background.getD2D1Color()));
+
+                // Draw the button text.
+                p_this->graphics()->d2d1Engine().drawText((*p_this->pD2D1DCRenderTarget), *p_this->pTextFormat, d2d1_rect_window, window_text.get(), *p_d2d1_solidcolorbrush_text, static_cast<float>(p_this->textConfig.posX), static_cast<float>(p_this->textConfig.posY), p_this->textConfig.centerMode);
+            }
+
+            // End drawing.
+            hr = (*p_this->pD2D1DCRenderTarget)->EndDraw();
+            if (hr == static_cast<long int>(D2DERR_RECREATE_TARGET))
+            {
+                if (!p_this->createDeviceResources(true))
+                {
+                    error_message = "[WM_PAINT] Failed to create the device resources.";
+                    break;
+                }
+                if (paint_attempts > 10)
+                {
+                    error_message = "[WM_PAINT] Failed to create the device resources after 10 attempts.";
+                    break;
+                }
+                paint_attempts++;
+                continue; // Repeat the paint operation.
+            }
+            else if (FAILED(hr))
+            {
+                error_message = "[WM_PAINT] Failed to end drawing.";
+                break;
+            }
+
+            are_all_operation_success = true;
+        }
+
+        if (!are_all_operation_success)
+            g_pApp->logger.writeLog(error_message, "[CLASS: 'MyStandardTextSubclass' | FUNC: 'subclassProcedure()']", MyLogType::Error);
+
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
+
+    // Remove the window subclass callback and destroy any associated windows when the window is being destroyed.
+    case WM_DESTROY:
+    {
+        if (!RemoveWindowSubclass(hWnd, &MyStandardTextSubclass::subclassProcedure, uIdSubclass))
+            g_pApp->logger.writeLog("[WM_DESTROY] Failed to remove the window subclass callback.", "[CLASS: 'MyStandardTextSubclass' | FUNC: 'subclassProcedure()']", MyLogType::Error);
 
         return 0;
     }

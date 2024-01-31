@@ -238,6 +238,41 @@ bool MyVerticalScrollbarWindowConfig::isValid()
     return are_all_operation_success;
 }
 
+MyStandardTextWindowConfig::MyStandardTextWindowConfig(HWND parent, INT posX, INT posY, INT width, INT height, HMENU id, MyStandardTextSubclassConfig *pSubclassConfig, bool visibleByDefault, std::wstring windowText)
+    : parent(parent), posX(posX), posY(posY), width(width), height(height), id(id), pSubclassConfig(pSubclassConfig), visibleByDefault(visibleByDefault), windowText(windowText) {}
+bool MyStandardTextWindowConfig::isValid()
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        if (!IsWindow(this->parent))
+        {
+            error_message = "Invalid parent.";
+            break;
+        }
+
+        if (!this->id)
+        {
+            error_message = "Invalid id.";
+            break;
+        }
+
+        if (!this->width || !this->height)
+        {
+            error_message = "Invalid width/height value.";
+            break;
+        }
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[STRUCT: 'MyStandardTextWindowConfig' | FUNC: 'isValid()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+
 MyContainerWindowConfig::MyContainerWindowConfig(HWND parent, INT posX, INT posY, INT width, INT height, HMENU id, bool visibleByDefault, SUBCLASSPROC windowProcedure)
     : parent(parent), posX(posX), posY(posY), width(width), height(height), id(id), visibleByDefault(visibleByDefault), windowProcedure(windowProcedure) {}
 bool MyContainerWindowConfig::isValid()
@@ -333,6 +368,12 @@ MyWindow::~MyWindow()
         this->pData = nullptr;
         break;
     }
+    case MyWindowType::StandardText:
+    {
+        delete static_cast<MyStandardTextSubclass *>(this->pData);
+        this->pData = nullptr;
+        break;
+    }
     default:
         break;
     }
@@ -409,6 +450,13 @@ bool MyWindow::refresh()
         case MyWindowType::VerticalScrollbar:
         {
             if (!static_cast<MyVerticalScrollbarSubclass *>(this->pData)->refresh())
+                break;
+            is_switch_success = true;
+            break;
+        }
+        case MyWindowType::StandardText:
+        {
+            if (!static_cast<MyStandardTextSubclass *>(this->pData)->refresh())
                 break;
             is_switch_success = true;
             break;
@@ -853,6 +901,62 @@ bool MyWindow::createVerticalScrollbar(MyVerticalScrollbarWindowConfig &windowCo
 
     if (!are_all_operation_success)
         g_pApp->logger.writeLog(error_message, "[CLASS: 'MyWindow' | FUNC: 'createVerticalScrollbar()']", MyLogType::Error);
+
+    return are_all_operation_success;
+}
+bool MyWindow::createStandardText(MyStandardTextWindowConfig &windowConfig)
+{
+    bool are_all_operation_success = false;
+    std::string error_message = "";
+    while (!are_all_operation_success)
+    {
+        if (this->isWindowExists)
+        {
+            error_message = "The window is already exists.";
+            break;
+        }
+
+        if (!windowConfig.isValid())
+        {
+            error_message = "The window configuration contains invalid parameters.";
+            break;
+        }
+
+        this->pWindow.reset(new HWND(nullptr));
+        auto &window = *this->pWindow;
+
+        DWORD window_flags = WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | SS_NOPREFIX;
+        if (!windowConfig.visibleByDefault)
+            window_flags &= ~WS_VISIBLE;
+
+        window = CreateWindowExW(0, WC_STATIC, windowConfig.windowText.c_str(), window_flags,
+                                 windowConfig.posX, windowConfig.posY,
+                                 windowConfig.width, windowConfig.height,
+                                 windowConfig.parent, windowConfig.id, NULL, NULL);
+        if (!window)
+        {
+            error_message = "Failed to create the window.";
+            break;
+        }
+
+        this->pData = new MyStandardTextSubclass();
+        if (!static_cast<MyStandardTextSubclass *>(this->pData)->setWindow(window, windowConfig.pSubclassConfig))
+        {
+            delete static_cast<MyStandardTextSubclass *>(this->pData);
+            this->pData = nullptr;
+            error_message = "Failed to associate the subclass object to the window.";
+            break;
+        }
+
+        this->windowType = MyWindowType::StandardText;
+
+        this->isWindowExists = true;
+
+        are_all_operation_success = true;
+    }
+
+    if (!are_all_operation_success)
+        g_pApp->logger.writeLog(error_message, "[CLASS: 'MyWindow' | FUNC: 'createStandardText()']", MyLogType::Error);
 
     return are_all_operation_success;
 }
