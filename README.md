@@ -1,7 +1,7 @@
 
 # Win32 GUI Sample
 
-This is a sample project showcasing a Win32 GUI application. The user interfaces are created with custom drawings using Direct2D.
+This is a throw-away Win32 sample project. It uses Direct2D to custom draw controls, read and save configuration files, logging, and random Win32 scraps.
 
 # How to Build
 Compatible Compilers: Mingw64  | MSVC using MSBuild
